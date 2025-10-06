@@ -1,13 +1,32 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Menu, Plus, Search } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import CreateTrendDialog from "@/components/CreateTrendDialog";
 import NavigationMenu from "@/components/NavigationMenu";
+import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
+
+const categories = [
+  "All",
+  "Trending",
+  "Food",
+  "Arts",
+  "Sports",
+  "Fashion",
+  "Photography",
+  "AI",
+  "Entertainment",
+  "Music",
+  "Technology",
+  "Gaming",
+];
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const mockTrends = [
     {
@@ -34,7 +53,7 @@ export default function HomePage() {
       id: "3",
       trendName: "Digital Art Showcase",
       username: "artlover",
-      category: "Art",
+      category: "Arts",
       views: 987,
       participants: 45,
       chatCount: 78,
@@ -75,7 +94,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
           <Button
             size="icon"
             variant="ghost"
@@ -84,10 +103,48 @@ export default function HomePage() {
           >
             <Menu className="w-6 h-6" />
           </Button>
-          <h1 className="text-xl font-bold">Mini Feed</h1>
+          <img 
+            src={logoImage} 
+            alt="Trendz" 
+            className="h-8 object-contain"
+            data-testid="img-logo"
+          />
           <div className="w-10" />
         </div>
       </header>
+
+      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search trends or users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-search"
+            />
+          </div>
+
+          <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+            <div className="flex gap-2 min-w-max pb-1">
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className="whitespace-nowrap"
+                  data-testid={`button-category-${category.toLowerCase()}`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
