@@ -69,7 +69,7 @@ export default function TrendCard({
       onClick={onClick}
       data-testid="card-trend"
     >
-      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+      <div className="relative aspect-video bg-muted overflow-hidden">
         {coverImage ? (
           <img
             src={coverImage}
