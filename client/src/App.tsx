@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import HomePage from "@/pages/HomePage";
+import CreateTrendPage from "@/pages/CreateTrendPage";
 import FeedPage from "@/pages/FeedPage";
 import ProfilePage from "@/pages/ProfilePage";
 import InstructionsPage from "@/pages/InstructionsPage";
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/" component={HomePage} />
+      <Route path="/create-trend" component={CreateTrendPage} />
       <Route path="/feed/:id" component={FeedPage} />
       <Route path="/profile" component={ProfilePage} />
       <Route path="/instructions/:id" component={InstructionsPage} />

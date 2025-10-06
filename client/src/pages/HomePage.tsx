@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Menu, Plus, Search } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
-import CreateTrendDialog from "@/components/CreateTrendDialog";
 import NavigationMenu from "@/components/NavigationMenu";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 
@@ -24,9 +24,9 @@ const categories = [
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [, setLocation] = useLocation();
 
   const mockTrends = [
     {
@@ -114,7 +114,7 @@ export default function HomePage() {
       </header>
 
       <div className="sticky top-24 z-40 bg-background/95 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 pb-3 space-y-3">
+        <div className="max-w-7xl mx-auto px-4 py-2 space-y-2">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -146,26 +146,27 @@ export default function HomePage() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockTrends.map((trend) => (
             <TrendCard
               key={trend.id}
               {...trend}
-              onClick={() => console.log("Navigate to trend", trend.id)}
+              onClick={() => setLocation(`/feed/${trend.id}`)}
             />
           ))}
         </div>
       </main>
 
-      <Button
-        size="icon"
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg"
-        onClick={() => setCreateDialogOpen(true)}
-        data-testid="button-create-trend"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
+      <Link href="/create-trend">
+        <Button
+          size="icon"
+          className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg"
+          data-testid="button-create-trend"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      </Link>
 
       <NavigationMenu
         open={menuOpen}
@@ -173,12 +174,6 @@ export default function HomePage() {
         username="johndoe"
         onProfileClick={() => console.log("Navigate to profile")}
         onLogoutClick={() => console.log("Logout")}
-      />
-
-      <CreateTrendDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSubmit={(data) => console.log("Trend created:", data)}
       />
     </div>
   );
