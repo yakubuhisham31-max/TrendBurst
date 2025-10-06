@@ -106,7 +106,7 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-8 object-contain"
+            className="h-12 object-contain"
             data-testid="img-logo"
           />
           <div className="w-10" />
@@ -116,13 +116,13 @@ export default function HomePage() {
       <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b">
         <div className="max-w-7xl mx-auto px-4 py-3 space-y-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search trends or users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-11 rounded-full"
               data-testid="input-search"
             />
           </div>
@@ -135,7 +135,7 @@ export default function HomePage() {
                   variant={selectedCategory === category ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap rounded-full"
                   data-testid={`button-category-${category.toLowerCase()}`}
                 >
                   {category}
