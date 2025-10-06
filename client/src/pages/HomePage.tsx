@@ -93,8 +93,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur">
+        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-3">
           <Button
             size="icon"
             variant="ghost"
@@ -106,14 +106,14 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-12 object-contain"
+            className="h-16 object-contain"
             data-testid="img-logo"
           />
           <div className="w-10" />
         </div>
       </header>
 
-      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b">
+      <div className="sticky top-20 z-40 bg-background/95 backdrop-blur border-b">
         <div className="max-w-7xl mx-auto px-4 py-3 space-y-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
