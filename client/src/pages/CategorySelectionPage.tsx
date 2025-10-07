@@ -64,15 +64,6 @@ export default function CategorySelectionPage() {
   });
 
   const handleContinue = () => {
-    // TEMPORARY: Skip API call if not authenticated
-    if (!user) {
-      toast({
-        title: "Categories Selected",
-        description: `You selected: ${selectedCategories.join(", ")}`,
-      });
-      setLocation("/onboarding/role");
-      return;
-    }
     updateCategoriesMutation.mutate(selectedCategories);
   };
 

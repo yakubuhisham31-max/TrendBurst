@@ -46,17 +46,6 @@ export default function RoleSelectionPage() {
 
   const handleContinue = () => {
     if (!selectedRole) return;
-    
-    // TEMPORARY: Skip API call if not authenticated
-    if (!user) {
-      toast({
-        title: "Role Selected",
-        description: `You selected: ${selectedRole}`,
-      });
-      setLocation("/home");
-      return;
-    }
-    
     updateRoleMutation.mutate(selectedRole);
   };
 
