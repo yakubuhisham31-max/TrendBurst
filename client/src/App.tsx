@@ -7,6 +7,7 @@ import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import HomePage from "@/pages/HomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
+import DashboardPage from "@/pages/DashboardPage";
 import FeedPage from "@/pages/FeedPage";
 import ProfilePage from "@/pages/ProfilePage";
 import InstructionsPage from "@/pages/InstructionsPage";
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/signup" component={SignupPage} />
       <Route path="/" component={HomePage} />
       <Route path="/create-trend" component={CreateTrendPage} />
+      <Route path="/dashboard" component={DashboardPage} />
       <Route path="/feed/:id" component={FeedPage} />
       <Route path="/profile" component={ProfilePage} />
       <Route path="/instructions/:id" component={InstructionsPage} />

@@ -7,9 +7,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing } from "lucide-react";
+import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface TrendCardProps {
@@ -23,7 +24,9 @@ interface TrendCardProps {
   participants: number;
   chatCount: number;
   createdAt: Date;
+  isHost?: boolean;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
 type NotificationStatus = "all" | "posts" | "muted";
@@ -38,7 +41,9 @@ export default function TrendCard({
   participants,
   chatCount,
   createdAt,
+  isHost = false,
   onClick,
+  onDelete,
 }: TrendCardProps) {
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("all");
 
@@ -49,6 +54,11 @@ export default function TrendCard({
       if (prev === "posts") return "muted";
       return "all";
     });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) onDelete();
   };
 
   const getNotificationIcon = () => {
@@ -69,7 +79,7 @@ export default function TrendCard({
       onClick={onClick}
       data-testid="card-trend"
     >
-      <div className="relative aspect-video bg-muted overflow-hidden">
+      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
         {coverImage ? (
           <img
             src={coverImage}
@@ -122,35 +132,49 @@ export default function TrendCard({
                 {getNotificationIcon()}
                 <span className="ml-2">{getNotificationLabel()}</span>
               </DropdownMenuItem>
+              {isHost && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleDelete} 
+                    className="text-destructive focus:text-destructive"
+                    data-testid="menu-item-delete"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Trend
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
-        <Badge
-          className="absolute top-3 right-3 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs mt-10"
-          data-testid={`badge-category-${category.toLowerCase()}`}
-        >
-          {category}
-        </Badge>
 
         <div className="absolute bottom-3 left-3 right-3 text-white">
           <h3 className="text-xl font-bold line-clamp-2 mb-3 drop-shadow-lg" data-testid="text-trend-name">
             {trendName}
           </h3>
 
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1.5" data-testid="stat-views">
-              <Eye className="w-4 h-4" />
-              <span>{views}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-1.5" data-testid="stat-views">
+                <Eye className="w-4 h-4" />
+                <span>{views}</span>
+              </div>
+              <div className="flex items-center gap-1.5" data-testid="stat-participants">
+                <Users className="w-4 h-4" />
+                <span>{participants}</span>
+              </div>
+              <div className="flex items-center gap-1.5" data-testid="stat-chat">
+                <MessageCircle className="w-4 h-4" />
+                <span>{chatCount}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5" data-testid="stat-participants">
-              <Users className="w-4 h-4" />
-              <span>{participants}</span>
-            </div>
-            <div className="flex items-center gap-1.5" data-testid="stat-chat">
-              <MessageCircle className="w-4 h-4" />
-              <span>{chatCount}</span>
-            </div>
+            <Badge
+              className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs"
+              data-testid={`badge-category-${category.toLowerCase()}`}
+            >
+              {category}
+            </Badge>
           </div>
         </div>
       </div>

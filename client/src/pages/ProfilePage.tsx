@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +8,7 @@ import ProfileStats from "@/components/ProfileStats";
 import TrendCard from "@/components/TrendCard";
 
 export default function ProfilePage() {
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("trends");
 
   const mockUser = {
@@ -16,6 +18,7 @@ export default function ProfilePage() {
     following: 567,
     trendsCreated: 23,
     posts: 156,
+    trendxPoints: 1250,
   };
 
   const mockTrends = [
@@ -48,7 +51,7 @@ export default function ProfilePage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => console.log("Navigate back")}
+            onClick={() => setLocation("/")}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -97,6 +100,7 @@ export default function ProfilePage() {
                 following={mockUser.following}
                 trendsCreated={mockUser.trendsCreated}
                 posts={mockUser.posts}
+                trendxPoints={mockUser.trendxPoints}
               />
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -118,7 +122,7 @@ export default function ProfilePage() {
                       <TrendCard
                         key={trend.id}
                         {...trend}
-                        onClick={() => console.log("Navigate to trend", trend.id)}
+                        onClick={() => setLocation(`/feed/${trend.id}`)}
                       />
                     ))}
                   </div>
