@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Upload, ArrowLeft, Plus, X, Calendar } from "lucide-react";
+import { Upload, ArrowLeft, Plus, X, Calendar, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { InsertTrend } from "@shared/schema";
 
 const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Music", "Food", "Fashion", "Photography"];
 
 export default function CreateTrendPage() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [name, setName] = useState("");
   const [instructions, setInstructions] = useState("");
   const [rules, setRules] = useState([""]);
@@ -18,6 +25,28 @@ export default function CreateTrendPage() {
   const [coverImage, setCoverImage] = useState<string>();
   const [endDate, setEndDate] = useState("");
   const [referenceMedia, setReferenceMedia] = useState<string[]>([]);
+
+  const createTrendMutation = useMutation({
+    mutationFn: async (trendData: Omit<InsertTrend, "userId">) => {
+      const response = await apiRequest("POST", "/api/trends", trendData);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
+      toast({
+        title: "Success!",
+        description: "Your trend has been created successfully.",
+      });
+      setLocation(`/feed/${data.id}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create trend. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleRuleChange = (index: number, value: string) => {
     const newRules = [...rules];
@@ -36,16 +65,29 @@ export default function CreateTrendPage() {
   };
 
   const handleSubmit = () => {
-    console.log("Trend created:", {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a trend.",
+        variant: "destructive",
+      });
+      setLocation("/login");
+      return;
+    }
+
+    const filteredRules = rules.filter(r => r.trim() !== "");
+    
+    const trendData: Omit<InsertTrend, "userId"> = {
       name,
       instructions,
-      rules: rules.filter(r => r.trim() !== ""),
+      rules: filteredRules,
       category: selectedCategory,
-      coverImage,
-      endDate,
-      referenceMedia,
-    });
-    setLocation("/");
+      coverPicture: coverImage || null,
+      referenceMedia: referenceMedia.length > 0 ? referenceMedia : null,
+      endDate: endDate ? new Date(endDate) : null,
+    };
+
+    createTrendMutation.mutate(trendData);
   };
 
   return (
@@ -209,16 +251,20 @@ export default function CreateTrendPage() {
               <Button
                 variant="outline"
                 onClick={() => setLocation("/")}
+                disabled={createTrendMutation.isPending}
                 data-testid="button-cancel"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!name || !instructions || !selectedCategory}
+                disabled={!name || !instructions || !selectedCategory || createTrendMutation.isPending}
                 data-testid="button-create-trend"
               >
-                Create Trend
+                {createTrendMutation.isPending && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {createTrendMutation.isPending ? "Creating..." : "Create Trend"}
               </Button>
             </div>
           </div>

@@ -1,19 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { User, Building2, Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 type Role = "creative" | "brand" | null;
 
 export default function RoleSelectionPage() {
   const [, setLocation] = useLocation();
+  const { user, checkAuth } = useAuth();
+  const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState<Role>(null);
+
+  useEffect(() => {
+    if (user?.role) {
+      setSelectedRole(user.role as Role);
+    }
+  }, [user]);
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async (role: string) => {
+      const response = await apiRequest("PATCH", "/api/users/profile", { role });
+      return response.json();
+    },
+    onSuccess: async () => {
+      await checkAuth();
+      toast({
+        title: "Welcome to Trendz!",
+        description: "Your account has been set up successfully.",
+      });
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update role.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleContinue = () => {
     if (!selectedRole) return;
-    console.log("Selected role:", selectedRole);
-    setLocation("/");
+    updateRoleMutation.mutate(selectedRole);
   };
 
   return (
@@ -97,11 +130,11 @@ export default function RoleSelectionPage() {
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={!selectedRole}
+            disabled={!selectedRole || updateRoleMutation.isPending}
             className="flex-1"
             data-testid="button-continue"
           >
-            Get Started
+            {updateRoleMutation.isPending ? "Setting up..." : "Get Started"}
           </Button>
         </div>
       </Card>

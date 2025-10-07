@@ -12,20 +12,20 @@ import { Link } from "wouter";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 import { useEffect } from "react";
 
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [, setLocation] = useLocation();
-  const { login, user } = useAuth();
+  const { register: registerUser, user } = useAuth();
   const { toast } = useToast();
 
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -38,18 +38,18 @@ export default function LoginPage() {
     }
   }, [user, setLocation]);
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      await login(data.username, data.password);
+      await registerUser(data.username, data.password);
       toast({
         title: "Success",
-        description: "You have been logged in successfully",
+        description: "Your account has been created successfully",
       });
-      setLocation("/");
+      setLocation("/onboarding/categories");
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Invalid username or password",
+        description: error.message || "Failed to create account",
         variant: "destructive",
       });
     }
@@ -66,7 +66,7 @@ export default function LoginPage() {
             data-testid="img-logo"
           />
           <p className="text-muted-foreground">
-            Sign in to your account
+            Create your account
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function LoginPage() {
                   <FormLabel>Username</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your username"
+                      placeholder="Choose a username"
                       data-testid="input-username"
                       {...field}
                     />
@@ -99,7 +99,7 @@ export default function LoginPage() {
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Create a password"
                       data-testid="input-password"
                       {...field}
                     />
@@ -113,22 +113,22 @@ export default function LoginPage() {
               type="submit"
               className="w-full"
               disabled={form.formState.isSubmitting}
-              data-testid="button-login"
+              data-testid="button-register"
             >
-              {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
+              {form.formState.isSubmitting ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
         </Form>
 
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Already have an account?{" "}
             <Link
-              href="/signup"
+              href="/login"
               className="text-primary hover:underline font-medium"
-              data-testid="link-signup"
+              data-testid="link-login"
             >
-              Sign up
+              Sign in
             </Link>
           </p>
         </div>

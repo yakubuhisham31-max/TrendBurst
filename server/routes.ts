@@ -105,7 +105,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const category = req.query.category as string | undefined;
       const trends = await storage.getAllTrends(category);
-      res.json(trends);
+      
+      // Include creator info for each trend
+      const trendsWithCreators = await Promise.all(
+        trends.map(async (trend) => {
+          const creator = await storage.getUser(trend.userId);
+          return {
+            ...trend,
+            creator: creator ? sanitizeUser(creator) : null,
+          };
+        })
+      );
+      
+      res.json(trendsWithCreators);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -277,11 +289,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Posts routes
 
-  // GET /api/posts/trend/:trendId - Get all posts for a trend
+  // GET /api/posts/trend/:trendId - Get all posts for a trend with user info
   app.get("/api/posts/trend/:trendId", async (req, res) => {
     try {
       const posts = await storage.getPostsByTrend(req.params.trendId);
-      res.json(posts);
+      
+      // Include user info and vote status for each post
+      const postsWithUserInfo = await Promise.all(
+        posts.map(async (post) => {
+          const user = await storage.getUser(post.userId);
+          const userVoted = req.session.userId 
+            ? !!(await storage.getVote(post.id, req.session.userId))
+            : false;
+          
+          return {
+            ...post,
+            user: user ? sanitizeUser(user) : null,
+            userVoted,
+          };
+        })
+      );
+      
+      res.json(postsWithUserInfo);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -412,11 +441,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /api/comments/trend/:trendId - Get comments for trend chat
+  // GET /api/comments/trend/:trendId - Get comments for trend chat with user info
   app.get("/api/comments/trend/:trendId", async (req, res) => {
     try {
       const comments = await storage.getCommentsByTrend(req.params.trendId);
-      res.json(comments);
+      
+      // Include user info for each comment
+      const commentsWithUserInfo = await Promise.all(
+        comments.map(async (comment) => {
+          const user = await storage.getUser(comment.userId);
+          return {
+            ...comment,
+            user: user ? sanitizeUser(user) : null,
+          };
+        })
+      );
+      
+      res.json(commentsWithUserInfo);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

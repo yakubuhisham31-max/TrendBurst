@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Plus, Search } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Menu, Plus, Search, AlertCircle } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Trend, User } from "@shared/schema";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
+
+type TrendWithCreator = Trend & {
+  creator: Pick<User, "id" | "username" | "profilePicture"> | null;
+};
 
 const categories = [
   "All",
@@ -27,75 +35,26 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [, setLocation] = useLocation();
+  const { user, logout } = useAuth();
 
-  const mockTrends = [
-    {
-      id: "1",
-      trendName: "Best AI Tools of 2025",
-      username: "techguru",
-      category: "AI",
-      views: 1243,
-      participants: 89,
-      chatCount: 156,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5), // ends in 5 days
+  const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
+  
+  const { data: trends = [], isLoading, error } = useQuery<TrendWithCreator[]>({
+    queryKey: ["/api/trends", categoryParam],
+    queryFn: async () => {
+      const url = categoryParam 
+        ? `/api/trends?category=${encodeURIComponent(categoryParam)}`
+        : "/api/trends";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch trends");
+      const data = await res.json();
+      return data.map((trend: any) => ({
+        ...trend,
+        createdAt: new Date(trend.createdAt),
+        endDate: trend.endDate ? new Date(trend.endDate) : undefined,
+      }));
     },
-    {
-      id: "2",
-      trendName: "Epic Gaming Moments",
-      username: "gamerpro",
-      category: "Entertainment",
-      views: 2891,
-      participants: 234,
-      chatCount: 445,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1), // ends in 1 day (ending soon)
-    },
-    {
-      id: "3",
-      trendName: "Digital Art Showcase",
-      username: "artlover",
-      category: "Arts",
-      views: 987,
-      participants: 45,
-      chatCount: 78,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      endDate: new Date(Date.now() - 1000 * 60 * 60 * 12), // ended 12 hours ago
-    },
-    {
-      id: "4",
-      trendName: "Sports Highlights 2025",
-      username: "sportsfan",
-      category: "Sports",
-      views: 3421,
-      participants: 312,
-      chatCount: 589,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6),
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10), // ends in 10 days
-    },
-    {
-      id: "5",
-      trendName: "Music Production Tips",
-      username: "musicpro",
-      category: "Music",
-      views: 756,
-      participants: 67,
-      chatCount: 123,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18),
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 48), // ends in 2 days (ending soon)
-    },
-    {
-      id: "6",
-      trendName: "Fashion Trends 2025",
-      username: "fashionista",
-      category: "Fashion",
-      views: 2134,
-      participants: 178,
-      chatCount: 267,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8),
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15), // ends in 15 days
-    },
-  ];
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -153,15 +112,54 @@ export default function HomePage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockTrends.map((trend) => (
-            <TrendCard
-              key={trend.id}
-              {...trend}
-              onClick={() => setLocation(`/feed/${trend.id}`)}
-            />
-          ))}
-        </div>
+        {error && (
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <AlertCircle className="w-12 h-12 text-destructive" />
+            <p className="text-lg font-medium text-muted-foreground">Failed to load trends</p>
+            <p className="text-sm text-muted-foreground">{error.message}</p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && !error && trends.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <p className="text-lg font-medium text-muted-foreground">No trends found</p>
+            <p className="text-sm text-muted-foreground">Be the first to create a trend!</p>
+          </div>
+        )}
+
+        {!isLoading && !error && trends.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {trends.map((trend) => (
+              <TrendCard
+                key={trend.id}
+                id={trend.id}
+                coverImage={trend.coverPicture || undefined}
+                trendName={trend.name}
+                username={trend.creator?.username || "Unknown"}
+                userAvatar={trend.creator?.profilePicture || undefined}
+                category={trend.category}
+                views={trend.views || 0}
+                participants={trend.participants || 0}
+                chatCount={trend.chatCount || 0}
+                createdAt={trend.createdAt || new Date()}
+                endDate={trend.endDate || undefined}
+                onClick={() => setLocation(`/feed/${trend.id}`)}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       <Link href="/create-trend">
@@ -177,9 +175,9 @@ export default function HomePage() {
       <NavigationMenu
         open={menuOpen}
         onOpenChange={setMenuOpen}
-        username="johndoe"
-        onLogoutClick={() => {
-          console.log("Logout");
+        username={user?.username || "Guest"}
+        onLogoutClick={async () => {
+          await logout();
           setLocation("/login");
         }}
       />

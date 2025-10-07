@@ -1,68 +1,154 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Info, Trophy, MessageSquare, Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Post, Trend, User } from "@shared/schema";
+
+type PostWithUser = Post & { user: User | null; userVoted: boolean };
+type TrendWithCreator = Trend & { creator: User | null };
 
 export default function FeedPage() {
   const [, setLocation] = useLocation();
   const params = useParams();
   const trendId = params.id;
   const [createPostOpen, setCreatePostOpen] = useState(false);
-  const [userHasPosted, setUserHasPosted] = useState(false);
-  const [votesRemaining, setVotesRemaining] = useState(10);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Mock trend data - in real app this would come from API
-  const mockTrend = {
-    endDate: trendId === "3" 
-      ? new Date(Date.now() - 1000 * 60 * 60 * 12) // ended 12 hours ago
-      : new Date(Date.now() + 1000 * 60 * 60 * 24 * 5), // ends in 5 days
+  // Fetch trend info
+  const { data: trend, isLoading: trendLoading } = useQuery<TrendWithCreator>({
+    queryKey: ["/api/trends", trendId],
+    enabled: !!trendId,
+  });
+
+  // Fetch posts for this trend
+  const { data: posts = [], isLoading: postsLoading } = useQuery<PostWithUser[]>({
+    queryKey: ["/api/posts/trend", trendId],
+    enabled: !!trendId,
+  });
+
+  // Fetch vote count for current user
+  const { data: voteCountData } = useQuery<{ count: number }>({
+    queryKey: ["/api/votes/trend", trendId, "count"],
+    enabled: !!trendId && !!user,
+  });
+
+  const votesRemaining = 10 - (voteCountData?.count || 0);
+  const isTrendEnded = trend?.endDate ? new Date(trend.endDate) < new Date() : false;
+
+  // Vote up mutation
+  const voteUpMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      if (!trendId) throw new Error("Trend ID is required");
+      const response = await apiRequest("POST", "/api/votes", { postId, trendId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Vote failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Vote down mutation
+  const voteDownMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await apiRequest("DELETE", `/api/votes/${postId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove vote",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: async (data: { imageUrl: string; caption: string }) => {
+      if (!trendId) throw new Error("Trend ID is required");
+      const response = await apiRequest("POST", "/api/posts", {
+        trendId,
+        ...data,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      setCreatePostOpen(false);
+      toast({
+        title: "Post created!",
+        description: "Your post has been added to the trend.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleVoteUp = (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please log in to vote on posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (votesRemaining <= 0) {
+      toast({
+        title: "No votes remaining",
+        description: "You have used all 10 votes for this trend.",
+        variant: "destructive",
+      });
+      return;
+    }
+    voteUpMutation.mutate(postId);
   };
 
-  const isTrendEnded = mockTrend.endDate < new Date();
-
-  const mockPosts = [
-    {
-      id: "1",
-      rank: 1,
-      imageUrl: "https://images.unsplash.com/photo-1614680376739-414d95ff43df?w=800&h=600&fit=crop",
-      caption: "This is an amazing post about AI and technology! Really excited to share this with everyone.",
-      username: "techguru",
-      votes: 42,
-      createdAt: new Date(Date.now() - 1000 * 60 * 90),
-      userVoted: true,
-      commentsCount: 12,
-      isTrendHost: true,
-    },
-    {
-      id: "2",
-      rank: 2,
-      imageUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop",
-      caption: "Beautiful art work here! This piece took me several hours to create.",
-      username: "artlover",
-      votes: 35,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60),
-      commentsCount: 8,
-    },
-    {
-      id: "3",
-      rank: 3,
-      imageUrl: "https://images.unsplash.com/photo-1547954575-855750c57bd3?w=800&h=600&fit=crop",
-      caption: "Check out this amazing sunset view!",
-      username: "naturelover",
-      votes: 28,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30),
-      commentsCount: 5,
-      isDisqualified: true,
-    },
-  ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
-  const handleCreatePost = () => {
-    setUserHasPosted(true);
-    setCreatePostOpen(false);
+  const handleVoteDown = (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please log in to vote on posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+    voteDownMutation.mutate(postId);
   };
+
+  const handleCreatePost = (data: { imageUrl: string; caption: string }) => {
+    createPostMutation.mutate(data);
+  };
+
+  // Sort posts by createdAt (oldest first as per requirements)
+  const sortedPosts = [...posts].sort((a, b) => 
+    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
+  );
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -113,19 +199,43 @@ export default function FeedPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-4 space-y-6">
-        {mockPosts.map((post) => (
-          <PostCard
-            key={post.id}
-            {...post}
-            isTrendEnded={isTrendEnded}
-            onVoteUp={() => !isTrendEnded && console.log("Vote up", post.id)}
-            onVoteDown={() => !isTrendEnded && console.log("Vote down", post.id)}
-            onComment={() => console.log("Comment on", post.id)}
-          />
-        ))}
+        {(trendLoading || postsLoading) ? (
+          <>
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </>
+        ) : sortedPosts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No posts yet. Be the first to post!
+          </div>
+        ) : (
+          sortedPosts.map((post, index) => (
+            <PostCard
+              key={post.id}
+              id={post.id}
+              rank={index + 1}
+              imageUrl={post.imageUrl}
+              caption={post.caption || ""}
+              username={post.user?.username || "Unknown"}
+              userAvatar={post.user?.profilePicture || undefined}
+              votes={post.votes || 0}
+              createdAt={new Date(post.createdAt!)}
+              userVoted={post.userVoted}
+              commentsCount={0}
+              isTrendHost={post.userId === trend?.userId}
+              isUserTrendHost={user?.id === trend?.userId}
+              isCreator={user?.id === post.userId}
+              isDisqualified={!!post.isDisqualified}
+              isTrendEnded={isTrendEnded}
+              onVoteUp={() => handleVoteUp(post.id)}
+              onVoteDown={() => handleVoteDown(post.id)}
+              onComment={() => console.log("Comment on", post.id)}
+            />
+          ))
+        )}
       </main>
 
-      {!isTrendEnded && (
+      {!isTrendEnded && user && (
         <Button
           size="icon"
           className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg z-50"

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,23 +9,72 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, Upload } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
 
 export default function EditProfilePage() {
   const [, setLocation] = useLocation();
+  const { user, checkAuth } = useAuth();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
-    username: "johndoe",
-    bio: "Tech enthusiast and content creator. Passionate about AI, design, and digital trends.",
+    bio: "",
     instagram: "",
     tiktok: "",
     twitter: "",
     youtube: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        bio: user.bio || "",
+        instagram: user.instagramUrl || "",
+        tiktok: user.tiktokUrl || "",
+        twitter: user.twitterUrl || "",
+        youtube: user.youtubeUrl || "",
+      });
+    }
+  }, [user]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: Partial<User>) => {
+      const response = await apiRequest("PATCH", "/api/users/profile", data);
+      return response.json();
+    },
+    onSuccess: async () => {
+      await checkAuth();
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+      setLocation("/profile");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Profile updated:", formData);
-    setLocation("/profile");
+    updateProfileMutation.mutate({
+      bio: formData.bio,
+      instagramUrl: formData.instagram,
+      tiktokUrl: formData.tiktok,
+      twitterUrl: formData.twitter,
+      youtubeUrl: formData.youtube,
+    });
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,9 +100,9 @@ export default function EditProfilePage() {
             </CardHeader>
             <CardContent className="flex items-center gap-4">
               <Avatar className="w-20 h-20" data-testid="avatar-profile">
-                <AvatarImage src={undefined} alt={formData.username} />
+                <AvatarImage src={user.profilePicture || undefined} alt={user.username} />
                 <AvatarFallback className="text-xl">
-                  {formData.username.slice(0, 2).toUpperCase()}
+                  {user.username.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <Button variant="outline" className="gap-2" type="button" data-testid="button-upload-avatar">
@@ -71,10 +121,8 @@ export default function EditProfilePage() {
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
+                  value={user.username}
+                  disabled
                   placeholder="Enter username"
                   data-testid="input-username"
                 />
@@ -177,8 +225,13 @@ export default function EditProfilePage() {
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1" data-testid="button-save">
-              Save Changes
+            <Button 
+              type="submit" 
+              className="flex-1" 
+              data-testid="button-save"
+              disabled={updateProfileMutation.isPending}
+            >
+              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
