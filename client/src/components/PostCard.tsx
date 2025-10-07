@@ -12,6 +12,7 @@ import {
 import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
+import FollowButton from "./FollowButton";
 
 interface PostCardProps {
   id: string;
@@ -65,25 +66,35 @@ export default function PostCard({
 
   return (
     <Card className="overflow-hidden" data-testid="card-post">
-      <div className="p-4 pb-0">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Avatar className="w-10 h-10" data-testid="avatar-user">
+      <div className="relative">
+        <Badge
+          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
+          data-testid={`badge-rank-${rank}`}
+        >
+          {getRankBadge(rank)}
+        </Badge>
+
+        <div className="absolute top-3 right-3 left-16 flex items-start justify-between gap-2 z-10">
+          <div className="flex items-center gap-2 flex-1 min-w-0 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
+            <Avatar className="w-8 h-8 border-2 border-white/20" data-testid="avatar-user">
               <AvatarImage src={userAvatar} alt={username} />
               <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium truncate" data-testid="text-username">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-1 min-w-0">
+                <span className="text-sm font-medium truncate text-white" data-testid="text-username">
                   {username}
                 </span>
                 {isTrendHost && (
-                  <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host-star" />
+                  <Star className="w-4 h-4 fill-yellow-500 text-yellow-500 flex-shrink-0" data-testid="icon-host-star" />
                 )}
               </div>
-              <span className="text-xs text-muted-foreground" data-testid="text-time">
-                {formatDistanceToNow(createdAt, { addSuffix: true })}
-              </span>
+              <FollowButton 
+                username={username} 
+                size="sm" 
+                variant="ghost"
+                className="h-6 px-2 text-xs text-white hover:bg-white/20 border-white/40 flex-shrink-0"
+              />
             </div>
           </div>
 
@@ -92,7 +103,7 @@ export default function PostCard({
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8"
+                className="h-8 w-8 bg-black/40 backdrop-blur-sm text-white hover:bg-white/20 flex-shrink-0"
                 data-testid="button-post-menu"
               >
                 <MoreVertical className="w-4 h-4" />
@@ -131,15 +142,6 @@ export default function PostCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-
-      <div className="relative">
-        <Badge
-          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
-          data-testid={`badge-rank-${rank}`}
-        >
-          {getRankBadge(rank)}
-        </Badge>
 
         {isDisqualified && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -160,8 +162,8 @@ export default function PostCard({
       </div>
 
       <div className="p-4 space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
               variant={userVoted ? "default" : "outline"}
@@ -171,18 +173,9 @@ export default function PostCard({
             >
               <ThumbsUp className="w-5 h-5" />
             </Button>
-            <span className="text-lg font-bold min-w-[3ch] text-center" data-testid="text-votes">
+            <span className="text-sm font-bold" data-testid="text-votes">
               {votes}
             </span>
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={onVoteDown}
-              disabled={isDisqualified}
-              data-testid="button-vote-down"
-            >
-              <ThumbsDown className="w-5 h-5" />
-            </Button>
           </div>
 
           <Button
@@ -191,7 +184,7 @@ export default function PostCard({
             onClick={onComment}
             data-testid="button-comments"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-5 h-5" />
             <span>{commentsCount}</span>
           </Button>
         </div>

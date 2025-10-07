@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Star, Calendar } from "lucide-react";
-import { SiInstagram, SiTiktok, SiTwitter, SiYoutube } from "react-icons/si";
+import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import FollowButton from "@/components/FollowButton";
 import { differenceInDays } from "date-fns";
 
@@ -100,7 +100,7 @@ export default function InstructionsPage() {
                     className="text-muted-foreground hover:text-foreground transition-colors"
                     data-testid="link-twitter"
                   >
-                    <SiTwitter className="w-4 h-4" />
+                    <SiX className="w-4 h-4" />
                   </a>
                 )}
                 {mockTrend.host.socialLinks.youtube && (
