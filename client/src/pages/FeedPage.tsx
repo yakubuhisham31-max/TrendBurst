@@ -6,6 +6,7 @@ import { ChevronLeft, Info, Trophy, MessageSquare, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
+import PostCommentsDialog from "@/components/PostCommentsDialog";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -20,6 +21,7 @@ export default function FeedPage() {
   const params = useParams();
   const trendId = params.id;
   const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -221,7 +223,7 @@ export default function FeedPage() {
               votes={post.votes || 0}
               createdAt={new Date(post.createdAt!)}
               userVoted={post.userVoted}
-              commentsCount={0}
+              commentsCount={post.commentCount || 0}
               isTrendHost={post.userId === trend?.userId}
               isUserTrendHost={user?.id === trend?.userId}
               isCreator={user?.id === post.userId}
@@ -229,7 +231,7 @@ export default function FeedPage() {
               isTrendEnded={isTrendEnded}
               onVoteUp={() => handleVoteUp(post.id)}
               onVoteDown={() => handleVoteDown(post.id)}
-              onComment={() => console.log("Comment on", post.id)}
+              onComment={() => setCommentsPostId(post.id)}
             />
           ))
         )}
@@ -260,6 +262,15 @@ export default function FeedPage() {
         onOpenChange={setCreatePostOpen}
         onSubmit={handleCreatePost}
       />
+
+      {commentsPostId && trendId && (
+        <PostCommentsDialog
+          postId={commentsPostId}
+          trendId={trendId}
+          open={!!commentsPostId}
+          onOpenChange={(open) => !open && setCommentsPostId(null)}
+        />
+      )}
     </div>
   );
 }

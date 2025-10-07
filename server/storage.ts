@@ -199,6 +199,9 @@ export class DbStorage implements IStorage {
     if (comment.trendId) {
       await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} + 1` }).where(eq(schema.trends.id, comment.trendId));
     }
+    if (comment.postId) {
+      await db.update(schema.posts).set({ commentCount: sql`${schema.posts.commentCount} + 1` }).where(eq(schema.posts.id, comment.postId));
+    }
     return result[0];
   }
 

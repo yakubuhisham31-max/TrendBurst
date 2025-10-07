@@ -228,9 +228,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let uniqueParticipants = new Set<string>();
 
       for (const trend of userTrends) {
-        const posts = await storage.getPostsForTrend(trend.id);
+        const posts = await storage.getPostsByTrend(trend.id);
         totalPosts += posts.length;
-        posts.forEach(post => uniqueParticipants.add(post.userId));
+        posts.forEach((post) => uniqueParticipants.add(post.userId));
       }
 
       res.json({
@@ -421,10 +421,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
       }
 
-      // Check if user has already voted for this post
+      // Check if user already voted on this post
       const existingVote = await storage.getVote(result.data.postId, req.session.userId!);
       if (existingVote) {
-        return res.status(400).json({ message: "You have already voted for this post" });
+        return res.status(400).json({ message: "You have already voted on this post" });
       }
 
       // Check 10-vote limit per trend
@@ -468,11 +468,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Comments routes
 
-  // GET /api/comments/post/:postId - Get comments for post
+  // GET /api/comments/post/:postId - Get comments for post with user info
   app.get("/api/comments/post/:postId", async (req, res) => {
     try {
       const comments = await storage.getCommentsByPost(req.params.postId);
-      res.json(comments);
+      
+      // Include user info for each comment
+      const commentsWithUserInfo = await Promise.all(
+        comments.map(async (comment) => {
+          const user = await storage.getUser(comment.userId);
+          return {
+            ...comment,
+            user: user ? sanitizeUser(user) : null,
+          };
+        })
+      );
+      
+      res.json(commentsWithUserInfo);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

@@ -43,6 +43,7 @@ export const posts = pgTable("posts", {
   imageUrl: text("image_url").notNull(),
   caption: text("caption"),
   votes: integer("votes").default(0),
+  commentCount: integer("comment_count").default(0),
   isDisqualified: integer("is_disqualified").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -86,6 +87,7 @@ export const insertTrendSchema = createInsertSchema(trends).omit({
 export const insertPostSchema = createInsertSchema(posts).omit({
   id: true,
   votes: true,
+  commentCount: true,
   isDisqualified: true,
   createdAt: true,
 });
