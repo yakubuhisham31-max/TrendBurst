@@ -10,6 +10,8 @@ import {
   insertCommentSchema, 
   insertFollowSchema 
 } from "@shared/schema";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -536,6 +538,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ isFollowing: !!follow });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Object Storage routes
+
+  // GET /objects/:objectPath - Serve protected objects with ACL check
+  app.get("/objects/:objectPath(*)", requireAuth, async (req, res) => {
+    const userId = req.session.userId;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        userId: userId,
+        requestedPermission: ObjectPermission.READ,
+      });
+      if (!canAccess) {
+        return res.sendStatus(401);
+      }
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error checking object access:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // POST /api/objects/upload - Get presigned URL for upload
+  app.post("/api/objects/upload", requireAuth, async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+    res.json({ uploadURL });
+  });
+
+  // PUT /api/posts/:id/image - Update post image and set ACL
+  app.put("/api/posts/:id/image", requireAuth, async (req, res) => {
+    if (!req.body.imageUrl) {
+      return res.status(400).json({ error: "imageUrl is required" });
+    }
+
+    const userId = req.session.userId!;
+
+    try {
+      const post = await storage.getPost(req.params.id);
+      
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+
+      if (post.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden: You can only update your own posts" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.imageUrl,
+        {
+          owner: userId,
+          visibility: "public",
+        }
+      );
+
+      const updatedPost = await storage.updatePost(req.params.id, { imageUrl: objectPath });
+
+      res.status(200).json({
+        objectPath: objectPath,
+        post: updatedPost,
+      });
+    } catch (error) {
+      console.error("Error setting post image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // PUT /api/users/profile-picture - Update profile picture and set ACL
+  app.put("/api/users/profile-picture", requireAuth, async (req, res) => {
+    if (!req.body.profilePictureUrl) {
+      return res.status(400).json({ error: "profilePictureUrl is required" });
+    }
+
+    const userId = req.session.userId!;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.profilePictureUrl,
+        {
+          owner: userId,
+          visibility: "public",
+        }
+      );
+
+      const updatedUser = await storage.updateUser(userId, { profilePicture: objectPath });
+
+      res.status(200).json({
+        objectPath: objectPath,
+        user: updatedUser ? sanitizeUser(updatedUser) : null,
+      });
+    } catch (error) {
+      console.error("Error setting profile picture:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
