@@ -177,7 +177,7 @@ export default function PostCard({
 
       <div className="p-4 space-y-3">
         <div className="flex items-center gap-6">
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-3">
             <Button
               size="icon"
               variant={userVoted ? "default" : "outline"}
@@ -190,6 +190,15 @@ export default function PostCard({
             <span className="text-sm font-bold" data-testid="text-votes">
               {votes}
             </span>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={onVoteDown}
+              disabled={isDisqualified || isTrendEnded}
+              data-testid="button-vote-down"
+            >
+              <ThumbsDown className="w-5 h-5" />
+            </Button>
           </div>
 
           <Button
