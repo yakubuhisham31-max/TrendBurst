@@ -14,6 +14,15 @@ export default function FeedPage() {
   const [userHasPosted, setUserHasPosted] = useState(false);
   const [votesRemaining, setVotesRemaining] = useState(10);
 
+  // Mock trend data - in real app this would come from API
+  const mockTrend = {
+    endDate: trendId === "3" 
+      ? new Date(Date.now() - 1000 * 60 * 60 * 12) // ended 12 hours ago
+      : new Date(Date.now() + 1000 * 60 * 60 * 24 * 5), // ends in 5 days
+  };
+
+  const isTrendEnded = mockTrend.endDate < new Date();
+
   const mockPosts = [
     {
       id: "1",
@@ -78,7 +87,7 @@ export default function FeedPage() {
           <div className="w-10" />
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-between gap-2">
+        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-3">
           <Button
             size="sm"
             variant="outline"
@@ -97,8 +106,8 @@ export default function FeedPage() {
             <Trophy className="w-4 h-4 mr-2" />
             Rankings
           </Button>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
-            <span className="text-sm font-medium">Votes: {votesRemaining}/10</span>
+          <div className="flex items-center gap-2 px-4 py-1.5 bg-muted rounded-full">
+            <span className="text-sm font-medium">Remaining Votes: {votesRemaining}/10</span>
           </div>
         </div>
       </header>
@@ -108,8 +117,9 @@ export default function FeedPage() {
           <PostCard
             key={post.id}
             {...post}
-            onVoteUp={() => console.log("Vote up", post.id)}
-            onVoteDown={() => console.log("Vote down", post.id)}
+            isTrendEnded={isTrendEnded}
+            onVoteUp={() => !isTrendEnded && console.log("Vote up", post.id)}
+            onVoteDown={() => !isTrendEnded && console.log("Vote down", post.id)}
             onComment={() => console.log("Comment on", post.id)}
           />
         ))}
@@ -124,7 +134,7 @@ export default function FeedPage() {
         <MessageSquare className="w-6 h-6" />
       </Button>
 
-      {!userHasPosted && (
+      {!userHasPosted && !isTrendEnded && (
         <Button
           size="icon"
           className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg"

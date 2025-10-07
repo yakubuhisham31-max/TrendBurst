@@ -29,6 +29,7 @@ interface PostCardProps {
   isTrendHost?: boolean;
   isUserTrendHost?: boolean;
   isDisqualified?: boolean;
+  isTrendEnded?: boolean;
   onVoteUp?: () => void;
   onVoteDown?: () => void;
   onComment?: () => void;
@@ -56,6 +57,7 @@ export default function PostCard({
   isTrendHost = false,
   isUserTrendHost = false,
   isDisqualified = false,
+  isTrendEnded = false,
   onVoteUp,
   onVoteDown,
   onComment,
@@ -168,7 +170,7 @@ export default function PostCard({
               size="icon"
               variant={userVoted ? "default" : "outline"}
               onClick={onVoteUp}
-              disabled={isDisqualified}
+              disabled={isDisqualified || isTrendEnded}
               data-testid="button-vote-up"
             >
               <ThumbsUp className="w-5 h-5" />
