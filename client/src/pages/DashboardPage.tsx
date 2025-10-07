@@ -38,108 +38,131 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card data-testid="card-trends-created">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-2">Your Performance</h2>
+          <p className="text-muted-foreground">Track your trends and engagement</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <Card data-testid="card-trends-created" className="hover-elevate transition-all">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Trends Created</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.trendsCreated}</div>
-              <p className="text-xs text-muted-foreground">Total trends you've started</p>
+              <div className="text-3xl font-bold">{stats.trendsCreated}</div>
+              <p className="text-xs text-muted-foreground mt-1">Total trends you've started</p>
             </CardContent>
           </Card>
 
-          <Card data-testid="card-participants">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card data-testid="card-participants" className="hover-elevate transition-all">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Participants</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-chart-2/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-chart-2" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalParticipants}</div>
-              <p className="text-xs text-muted-foreground">Across all your trends</p>
+              <div className="text-3xl font-bold">{stats.totalParticipants}</div>
+              <p className="text-xs text-muted-foreground mt-1">Across all your trends</p>
             </CardContent>
           </Card>
 
-          <Card data-testid="card-join-rate">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card data-testid="card-join-rate" className="hover-elevate transition-all">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average Join Rate</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-chart-3/10 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-chart-3" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.averageJoinRate}</div>
-              <p className="text-xs text-muted-foreground">User engagement rate</p>
+              <div className="text-3xl font-bold">{stats.averageJoinRate}</div>
+              <p className="text-xs text-muted-foreground mt-1">User engagement rate</p>
             </CardContent>
           </Card>
 
-          <Card data-testid="card-posts">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card data-testid="card-posts" className="hover-elevate transition-all">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-chart-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalPosts}</div>
-              <p className="text-xs text-muted-foreground">Posts in your trends</p>
+              <div className="text-3xl font-bold">{stats.totalPosts}</div>
+              <p className="text-xs text-muted-foreground mt-1">Posts in your trends</p>
             </CardContent>
           </Card>
 
-          <Card data-testid="card-active-trends">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card data-testid="card-active-trends" className="hover-elevate transition-all">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Trends</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-chart-5/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-chart-5" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeTrends}</div>
-              <p className="text-xs text-muted-foreground">Currently running</p>
+              <div className="text-3xl font-bold">{stats.activeTrends}</div>
+              <p className="text-xs text-muted-foreground mt-1">Currently running</p>
             </CardContent>
           </Card>
 
-          <Card data-testid="card-trendx-points">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card data-testid="card-trendx-points" className="hover-elevate transition-all border-2 border-primary bg-primary/5">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">TrendX Points</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Award className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.trendxPoints}</div>
-              <p className="text-xs text-muted-foreground">Your total points</p>
+              <div className="text-3xl font-bold text-primary">{stats.trendxPoints}</div>
+              <p className="text-xs text-muted-foreground mt-1">Your total points</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Recent Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentTrends.map((trend) => (
-                <div
-                  key={trend.id}
-                  className="flex items-center justify-between p-4 rounded-lg border hover-elevate cursor-pointer"
-                  onClick={() => setLocation(`/feed/${trend.id}`)}
-                  data-testid={`trend-${trend.id}`}
-                >
-                  <div className="flex-1">
-                    <h3 className="font-medium">{trend.name}</h3>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                      <span>{trend.participants} participants</span>
-                      <span>Join rate: {trend.joinRate}</span>
+        <div>
+          <h2 className="text-xl font-bold mb-4">Your Recent Trends</h2>
+          <div className="space-y-3">
+            {recentTrends.map((trend) => (
+              <Card
+                key={trend.id}
+                className="hover-elevate cursor-pointer transition-all"
+                onClick={() => setLocation(`/feed/${trend.id}`)}
+                data-testid={`trend-${trend.id}`}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-2">{trend.name}</h3>
+                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          <span>{trend.participants} participants</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Activity className="w-4 h-4" />
+                          <span>Join rate: {trend.joinRate}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`px-4 py-2 rounded-full text-sm font-medium ${
+                        trend.status === "active"
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {trend.status}
                     </div>
                   </div>
-                  <div
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      trend.status === "active"
-                        ? "bg-green-500/20 text-green-700 dark:text-green-400"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {trend.status}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </main>
     </div>
   );
