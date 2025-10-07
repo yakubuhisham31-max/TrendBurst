@@ -141,27 +141,9 @@ export default function TrendCard({
                   className="h-6 px-2 text-xs text-white hover:bg-white/20 border-white/40"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-white/80" data-testid="text-time">
-                  {formatDistanceToNow(createdAt, { addSuffix: true })}
-                </span>
-                {status === "ending-soon" && (
-                  <Badge 
-                    className="bg-yellow-500/90 text-yellow-950 text-xs px-2 py-0 h-5"
-                    data-testid="badge-ending-soon"
-                  >
-                    Ending Soon
-                  </Badge>
-                )}
-                {status === "ended" && (
-                  <Badge 
-                    className="bg-red-500/90 text-white text-xs px-2 py-0 h-5"
-                    data-testid="badge-ended"
-                  >
-                    Ended
-                  </Badge>
-                )}
-              </div>
+              <span className="text-xs text-white/80" data-testid="text-time">
+                {formatDistanceToNow(createdAt, { addSuffix: true })}
+              </span>
             </div>
           </div>
 
@@ -221,17 +203,35 @@ export default function TrendCard({
                 <Users className="w-4 h-4" />
                 <span>{participants}</span>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs"
+                data-testid={`badge-category-${category.toLowerCase()}`}
+              >
+                {category}
+              </Badge>
+              {status === "ending-soon" && (
+                <Badge 
+                  className="bg-yellow-500/90 text-yellow-950 text-xs px-2 py-0 h-5"
+                  data-testid="badge-ending-soon"
+                >
+                  Ending Soon
+                </Badge>
+              )}
+              {status === "ended" && (
+                <Badge 
+                  className="bg-red-500/90 text-white text-xs px-2 py-0 h-5"
+                  data-testid="badge-ended"
+                >
+                  Ended
+                </Badge>
+              )}
               <div className="flex items-center gap-1.5" data-testid="stat-chat">
                 <MessageCircle className="w-4 h-4" />
                 <span>{chatCount}</span>
               </div>
             </div>
-            <Badge
-              className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs"
-              data-testid={`badge-category-${category.toLowerCase()}`}
-            >
-              {category}
-            </Badge>
           </div>
         </div>
       </div>
