@@ -210,6 +210,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/dashboard/stats - Get dashboard statistics for current user (protected)
+  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const userTrends = await storage.getTrendsByUser(userId);
+      const trendsCreated = userTrends.length;
+      const activeTrends = userTrends.filter(t => !t.endDate).length;
+
+      let totalPosts = 0;
+      let uniqueParticipants = new Set<string>();
+
+      for (const trend of userTrends) {
+        const posts = await storage.getPostsForTrend(trend.id);
+        totalPosts += posts.length;
+        posts.forEach(post => uniqueParticipants.add(post.userId));
+      }
+
+      res.json({
+        trendsCreated,
+        totalParticipants: uniqueParticipants.size,
+        totalPosts,
+        activeTrends,
+        trendxPoints: user.trendxPoints || 0,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // POST /api/trends/:id/end - End trend and award points (protected, only trend creator)
   app.post("/api/trends/:id/end", requireAuth, async (req, res) => {
     try {
