@@ -172,8 +172,10 @@ export default function HomePage() {
         open={menuOpen}
         onOpenChange={setMenuOpen}
         username="johndoe"
-        onProfileClick={() => console.log("Navigate to profile")}
-        onLogoutClick={() => console.log("Logout")}
+        onLogoutClick={() => {
+          console.log("Logout");
+          setLocation("/login");
+        }}
       />
     </div>
   );

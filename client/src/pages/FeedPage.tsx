@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Info, Trophy, MessageSquare } from "lucide-react";
+import { ChevronLeft, Info, Trophy, MessageSquare, Plus } from "lucide-react";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
+import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 
 export default function FeedPage() {
+  const [, setLocation] = useLocation();
+  const params = useParams();
+  const trendId = params.id;
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [userHasPosted, setUserHasPosted] = useState(false);
   const [votesRemaining, setVotesRemaining] = useState(10);
@@ -51,56 +56,52 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => console.log("Navigate back")}
+            onClick={() => setLocation("/")}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />
           </Button>
 
-          <h1 className="text-lg font-semibold flex-1 text-center line-clamp-1">
-            Best AI Tools of 2025
-          </h1>
+          <img 
+            src={logoImage} 
+            alt="Trendz" 
+            className="h-10 object-contain"
+            data-testid="img-logo"
+          />
 
-          <div className="flex gap-1">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => console.log("Show instructions")}
-              data-testid="button-instructions"
-            >
-              <Info className="w-5 h-5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => console.log("Show rankings")}
-              data-testid="button-rankings"
-            >
-              <Trophy className="w-5 h-5" />
-            </Button>
+          <div className="w-10" />
+        </div>
+
+        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-between gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setLocation(`/instructions/${trendId}`)}
+            data-testid="button-instructions"
+          >
+            <Info className="w-4 h-4 mr-2" />
+            Instructions
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setLocation(`/rankings/${trendId}`)}
+            data-testid="button-rankings"
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Rankings
+          </Button>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
+            <span className="text-sm font-medium">Votes: {votesRemaining}/10</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-          <span className="text-sm text-muted-foreground">
-            Votes remaining: <span className="font-bold text-foreground">{votesRemaining}/10</span>
-          </span>
-          {!userHasPosted && (
-            <Button
-              onClick={() => setCreatePostOpen(true)}
-              data-testid="button-create-post"
-            >
-              Create Post
-            </Button>
-          )}
-        </div>
-
+      <main className="max-w-3xl mx-auto px-4 py-4 space-y-6">
         {mockPosts.map((post) => (
           <PostCard
             key={post.id}
@@ -115,11 +116,22 @@ export default function FeedPage() {
       <Button
         size="icon"
         className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg bg-chart-2"
-        onClick={() => console.log("Open feed chat")}
+        onClick={() => setLocation(`/feed-chat/${trendId}`)}
         data-testid="button-feed-chat"
       >
         <MessageSquare className="w-6 h-6" />
       </Button>
+
+      {!userHasPosted && (
+        <Button
+          size="icon"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg"
+          onClick={() => setCreatePostOpen(true)}
+          data-testid="button-create-post"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      )}
 
       <CreatePostDialog
         open={createPostOpen}
