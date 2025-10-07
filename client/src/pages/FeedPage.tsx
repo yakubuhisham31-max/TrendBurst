@@ -125,10 +125,10 @@ export default function FeedPage() {
         ))}
       </main>
 
-      {!userHasPosted && !isTrendEnded && (
+      {!isTrendEnded && (
         <Button
           size="icon"
-          className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg"
+          className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg z-50"
           onClick={() => setCreatePostOpen(true)}
           data-testid="button-create-post"
         >
@@ -138,7 +138,7 @@ export default function FeedPage() {
 
       <Button
         size="icon"
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg bg-chart-2"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg bg-chart-2 z-50"
         onClick={() => setLocation(`/feed-chat/${trendId}`)}
         data-testid="button-feed-chat"
       >

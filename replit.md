@@ -4,6 +4,13 @@
 
 Mini Feed (also referred to as "Trendz" in the UI) is a social media platform where users create trends, share posts, vote on submissions, and engage with the community. The application features a competitive trend-based system where users can host challenges, submit content, and participate in rankings. The platform supports both creative users and brands, with onboarding flows for category selection and role definition.
 
+## Recent Changes
+
+**October 7, 2025:**
+- Updated trend status badges (Ended/Ending Soon) to display centered over trend card images with red background styling
+- Fixed create post button visibility in feed - now always visible when trend is active (removed userHasPosted condition)
+- Modernized FeedChatPage with new layout: trend info card header, cleaner chat messages with avatars, and fixed message input footer
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

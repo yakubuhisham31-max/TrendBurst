@@ -188,6 +188,28 @@ export default function TrendCard({
           </DropdownMenu>
         </div>
 
+        {status === "ended" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Badge 
+              className="bg-red-500 text-white text-sm font-semibold px-6 py-1.5 shadow-lg"
+              data-testid="badge-ended"
+            >
+              Ended
+            </Badge>
+          </div>
+        )}
+
+        {status === "ending-soon" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Badge 
+              className="bg-red-500 text-white text-sm font-semibold px-6 py-1.5 shadow-lg"
+              data-testid="badge-ending-soon"
+            >
+              Ending Soon
+            </Badge>
+          </div>
+        )}
+
         <div className="absolute bottom-3 left-3 right-3 text-white">
           <h3 className="text-xl font-bold line-clamp-2 mb-3 drop-shadow-lg" data-testid="text-trend-name">
             {trendName}
@@ -211,22 +233,6 @@ export default function TrendCard({
               >
                 {category}
               </Badge>
-              {status === "ending-soon" && (
-                <Badge 
-                  className="bg-yellow-500/90 text-yellow-950 text-xs px-2 py-0 h-5"
-                  data-testid="badge-ending-soon"
-                >
-                  Ending Soon
-                </Badge>
-              )}
-              {status === "ended" && (
-                <Badge 
-                  className="bg-red-500/90 text-white text-xs px-2 py-0 h-5"
-                  data-testid="badge-ended"
-                >
-                  Ended
-                </Badge>
-              )}
               <div className="flex items-center gap-1.5" data-testid="stat-chat">
                 <MessageCircle className="w-4 h-4" />
                 <span>{chatCount}</span>
