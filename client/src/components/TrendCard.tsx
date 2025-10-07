@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 import FollowButton from "./FollowButton";
 
 interface TrendCardProps {
@@ -25,6 +25,7 @@ interface TrendCardProps {
   participants: number;
   chatCount: number;
   createdAt: Date;
+  endDate?: Date;
   isHost?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
@@ -42,11 +43,24 @@ export default function TrendCard({
   participants,
   chatCount,
   createdAt,
+  endDate,
   isHost = false,
   onClick,
   onDelete,
 }: TrendCardProps) {
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("all");
+
+  const getTrendStatus = () => {
+    if (!endDate) return null;
+    const now = new Date();
+    const daysUntilEnd = differenceInDays(endDate, now);
+    
+    if (endDate < now) return "ended";
+    if (daysUntilEnd <= 3) return "ending-soon";
+    return "active";
+  };
+
+  const status = getTrendStatus();
 
   const cycleNotifications = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -111,9 +125,27 @@ export default function TrendCard({
                   className="h-6 px-2 text-xs text-white hover:bg-white/20 border-white/40"
                 />
               </div>
-              <span className="text-xs text-white/80" data-testid="text-time">
-                {formatDistanceToNow(createdAt, { addSuffix: true })}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/80" data-testid="text-time">
+                  {formatDistanceToNow(createdAt, { addSuffix: true })}
+                </span>
+                {status === "ending-soon" && (
+                  <Badge 
+                    className="bg-yellow-500/90 text-yellow-950 text-xs px-2 py-0 h-5"
+                    data-testid="badge-ending-soon"
+                  >
+                    Ending Soon
+                  </Badge>
+                )}
+                {status === "ended" && (
+                  <Badge 
+                    className="bg-red-500/90 text-white text-xs px-2 py-0 h-5"
+                    data-testid="badge-ended"
+                  >
+                    Ended
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 

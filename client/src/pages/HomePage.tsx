@@ -38,6 +38,7 @@ export default function HomePage() {
       participants: 89,
       chatCount: 156,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
+      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5), // ends in 5 days
     },
     {
       id: "2",
@@ -48,6 +49,7 @@ export default function HomePage() {
       participants: 234,
       chatCount: 445,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
+      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1), // ends in 1 day (ending soon)
     },
     {
       id: "3",
@@ -58,6 +60,7 @@ export default function HomePage() {
       participants: 45,
       chatCount: 78,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+      endDate: new Date(Date.now() - 1000 * 60 * 60 * 12), // ended 12 hours ago
     },
     {
       id: "4",
@@ -68,6 +71,7 @@ export default function HomePage() {
       participants: 312,
       chatCount: 589,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6),
+      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10), // ends in 10 days
     },
     {
       id: "5",
@@ -78,6 +82,7 @@ export default function HomePage() {
       participants: 67,
       chatCount: 123,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18),
+      endDate: new Date(Date.now() + 1000 * 60 * 60 * 48), // ends in 2 days (ending soon)
     },
     {
       id: "6",
@@ -88,6 +93,7 @@ export default function HomePage() {
       participants: 178,
       chatCount: 267,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8),
+      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15), // ends in 15 days
     },
   ];
 
@@ -147,7 +153,7 @@ export default function HomePage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {mockTrends.map((trend) => (
             <TrendCard
               key={trend.id}
