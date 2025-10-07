@@ -30,6 +30,7 @@ function Router() {
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/feed/:id" component={FeedPage} />
       <Route path="/profile" component={ProfilePage} />
+      <Route path="/profile/:username" component={ProfilePage} />
       <Route path="/edit-profile" component={EditProfilePage} />
       <Route path="/instructions/:id" component={InstructionsPage} />
       <Route path="/rankings/:id" component={RankingsPage} />

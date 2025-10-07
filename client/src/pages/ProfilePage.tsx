@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,13 +7,20 @@ import { ChevronLeft, Edit, Share2 } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import ProfileStats from "@/components/ProfileStats";
 import TrendCard from "@/components/TrendCard";
+import FollowButton from "@/components/FollowButton";
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
+  const params = useParams();
   const [activeTab, setActiveTab] = useState("trends");
 
+  // Get username from URL params or use current user
+  const currentUser = "johndoe"; // This would come from auth context in real app
+  const viewingUsername = params.username || currentUser;
+  const isOwnProfile = !params.username || params.username === currentUser;
+
   const mockUser = {
-    username: "johndoe",
+    username: viewingUsername,
     bio: "Tech enthusiast and content creator. Passionate about AI, design, and digital trends.",
     followers: 1234,
     following: 567,
@@ -142,18 +149,30 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex gap-2">
-                <Button 
-                  className="flex-1 gap-2" 
-                  onClick={() => setLocation("/edit-profile")}
-                  data-testid="button-edit-profile"
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit Profile
-                </Button>
-                <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
-                  <Share2 className="w-4 h-4" />
-                  Share Profile
-                </Button>
+                {isOwnProfile ? (
+                  <>
+                    <Button 
+                      className="flex-1 gap-2" 
+                      onClick={() => setLocation("/edit-profile")}
+                      data-testid="button-edit-profile"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit Profile
+                    </Button>
+                    <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
+                      <Share2 className="w-4 h-4" />
+                      Share Profile
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <FollowButton username={viewingUsername} className="flex-1" />
+                    <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
+                      <Share2 className="w-4 h-4" />
+                      Share Profile
+                    </Button>
+                  </>
+                )}
               </div>
 
               <ProfileStats
