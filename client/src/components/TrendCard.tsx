@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import FollowButton from "./FollowButton";
 
 interface TrendCardProps {
   id: string;
@@ -99,9 +100,17 @@ export default function TrendCard({
               <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-medium truncate text-white" data-testid="text-username">
-                {username}
-              </span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-medium truncate text-white" data-testid="text-username">
+                  {username}
+                </span>
+                <FollowButton 
+                  username={username} 
+                  size="sm" 
+                  variant="ghost"
+                  className="h-6 px-2 text-xs text-white hover:bg-white/20 border-white/40"
+                />
+              </div>
               <span className="text-xs text-white/80" data-testid="text-time">
                 {formatDistanceToNow(createdAt, { addSuffix: true })}
               </span>

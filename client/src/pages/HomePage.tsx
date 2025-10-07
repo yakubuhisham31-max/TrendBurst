@@ -147,7 +147,7 @@ export default function HomePage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {mockTrends.map((trend) => (
             <TrendCard
               key={trend.id}
@@ -161,7 +161,7 @@ export default function HomePage() {
       <Link href="/create-trend">
         <Button
           size="icon"
-          className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg"
           data-testid="button-create-trend"
         >
           <Plus className="w-6 h-6" />
