@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
+import CategorySelectionPage from "@/pages/CategorySelectionPage";
+import RoleSelectionPage from "@/pages/RoleSelectionPage";
 import HomePage from "@/pages/HomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
@@ -20,6 +22,8 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
+      <Route path="/onboarding/categories" component={CategorySelectionPage} />
+      <Route path="/onboarding/role" component={RoleSelectionPage} />
       <Route path="/" component={HomePage} />
       <Route path="/create-trend" component={CreateTrendPage} />
       <Route path="/dashboard" component={DashboardPage} />

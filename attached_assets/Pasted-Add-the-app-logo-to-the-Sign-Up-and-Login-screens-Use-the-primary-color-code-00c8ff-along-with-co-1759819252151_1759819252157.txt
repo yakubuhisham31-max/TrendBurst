@@ -1,0 +1,69 @@
+Add the app logo to the Sign Up and Login screens.
+
+Use the primary color code #00c8ff along with complementary accent colors throughout the app.
+
+Make all fields and buttons rounded for a modern look.
+
+
+Onboarding Flow
+
+After Sign Up, allow users to select categories of interest to receive notifications about new trends.
+
+Next, prompt users to choose their role — either Creative (User) or Brand — before proceeding to the home page.
+
+
+Home & Feed
+
+Make trend cards slightly smaller.
+
+Add a Follow button next to usernames that toggles between “Follow” and “Following” to show status.
+
+Position the Create Trend button on the right side.
+
+
+Create Trend Page
+
+Allow trend hosts to add or delete rules dynamically.
+
+Include a Reference section where hosts can upload images or videos to serve as examples for participants. These should appear as a slideshow or gallery on the Instructions page.
+
+Add an End Date field. On the Instructions page, display the number of days left until the trend closes.
+
+
+Instructions Page
+
+When a user opens a trend for the first time, direct them to the Instructions page before entering the feed.
+
+Display the trend host’s profile picture, username, verified (yellow star) badge, and social media links at the top, along with a Follow button.
+
+
+Feed Page
+
+Posts should display the username and position at the top.
+
+Place the number of votes just below the thumbs icon, with the comment icon beside it.
+
+Add a Follow button next to the post’s username.
+
+Position the Chat button on the left (leading to Trend Chat) and the Post button on the right.
+
+
+Ranking Page
+
+Show the trend name and host name (e.g., “Hosted by…”).
+
+If the current user is participating, highlight their username, post, and position at the top.
+
+Include post captions in the ranking list.
+
+
+Dashboard
+
+Redesign the dashboard to look professional, clean, and simple, with key analytics presented clearly.
+
+
+Profile Page
+
+Link the Edit Profile button to the Edit Profile page.
+
+Allow users to add links to their Instagram, TikTok, Twitter, and YouTube accounts, displayed as clickable platform icons on their profile.

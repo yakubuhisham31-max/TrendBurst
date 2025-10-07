@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload, User } from "lucide-react";
+import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 
 export default function SignupPage() {
+  const [, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,13 +33,20 @@ export default function SignupPage() {
       bio,
       profilePic,
     });
+    
+    setLocation("/onboarding/categories");
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-primary">Mini Feed</h1>
+        <div className="text-center space-y-4">
+          <img 
+            src={logoImage} 
+            alt="Trendz" 
+            className="h-16 mx-auto object-contain"
+            data-testid="img-logo"
+          />
           <p className="text-muted-foreground">
             Create your account
           </p>
