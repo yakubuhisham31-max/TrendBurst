@@ -7,6 +7,16 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 ## Recent Changes
 
 **October 7, 2025:**
+- **Image Upload System:** Implemented complete image upload functionality using Replit object storage and Uppy file uploader
+  - Added ObjectUploader component with modal interface for image uploads
+  - Integrated image uploads for profile pictures and post creation
+  - Using presigned URLs and ACL policies for secure, direct-to-storage uploads
+  - Fixed Uppy CSS loading by using CDN links in index.html
+- **Removed Mock Data:** Replaced all placeholder data with real API calls
+  - DashboardPage now fetches real user statistics via `/api/dashboard/stats` endpoint
+  - RankingsPage fetches actual rankings from `/api/rankings/:id`
+  - InstructionsPage displays real trend data from `/api/trends/:id`
+  - All pages show proper loading and empty states
 - Updated trend status badges (Ended/Ending Soon) to display centered over trend card images with red background styling
 - Fixed create post button visibility in feed - now always visible when trend is active (removed userHasPosted condition)
 - Modernized FeedChatPage with new layout: trend info card header, cleaner chat messages with avatars, and fixed message input footer
@@ -140,3 +150,9 @@ Preferred communication style: Simple, everyday language.
 
 **Carousel:**
 - **embla-carousel-react**: Touch-friendly carousel for reference media galleries
+
+**File Upload:**
+- **@uppy/core**: File uploader core functionality
+- **@uppy/react**: React components for Uppy
+- **@uppy/dashboard**: Dashboard UI for file uploads
+- **@uppy/aws-s3**: AWS S3 (and compatible services) upload support for Uppy
