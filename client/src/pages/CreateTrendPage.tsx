@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Upload, ArrowLeft } from "lucide-react";
+import { Upload, ArrowLeft, Plus, X, Calendar } from "lucide-react";
 
 const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Music", "Food", "Fashion", "Photography"];
 
@@ -13,14 +13,26 @@ export default function CreateTrendPage() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [rules, setRules] = useState(["", "", ""]);
+  const [rules, setRules] = useState([""]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [coverImage, setCoverImage] = useState<string>();
+  const [endDate, setEndDate] = useState("");
+  const [referenceMedia, setReferenceMedia] = useState<string[]>([]);
 
   const handleRuleChange = (index: number, value: string) => {
     const newRules = [...rules];
     newRules[index] = value;
     setRules(newRules);
+  };
+
+  const addRule = () => {
+    setRules([...rules, ""]);
+  };
+
+  const removeRule = (index: number) => {
+    if (rules.length > 1) {
+      setRules(rules.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = () => {
@@ -30,6 +42,8 @@ export default function CreateTrendPage() {
       rules: rules.filter(r => r.trim() !== ""),
       category: selectedCategory,
       coverImage,
+      endDate,
+      referenceMedia,
     });
     setLocation("/");
   };
@@ -77,7 +91,20 @@ export default function CreateTrendPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Rules</Label>
+              <div className="flex items-center justify-between">
+                <Label>Rules</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRule}
+                  className="gap-1"
+                  data-testid="button-add-rule"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Rule
+                </Button>
+              </div>
               {rules.map((rule, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground w-6">{index + 1}.</span>
@@ -87,6 +114,18 @@ export default function CreateTrendPage() {
                     onChange={(e) => handleRuleChange(index, e.target.value)}
                     data-testid={`input-rule-${index + 1}`}
                   />
+                  {rules.length > 1 && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => removeRule(index)}
+                      className="h-9 w-9 flex-shrink-0"
+                      data-testid={`button-remove-rule-${index + 1}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -110,6 +149,21 @@ export default function CreateTrendPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="end-date">End Date</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-end-date"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label>Cover Picture</Label>
               <div className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/20 hover-elevate cursor-pointer" data-testid="dropzone-cover">
                 <div className="text-center">
@@ -122,6 +176,33 @@ export default function CreateTrendPage() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Reference (Images/Videos)</Label>
+              <p className="text-sm text-muted-foreground">
+                Upload examples for participants to reference
+              </p>
+              <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center bg-muted/20 hover-elevate cursor-pointer" data-testid="dropzone-reference">
+                <div className="text-center">
+                  <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Upload reference media
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Images or Videos
+                  </p>
+                </div>
+              </div>
+              {referenceMedia.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {referenceMedia.map((media, index) => (
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-chart-2/20" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">
