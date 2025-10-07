@@ -42,6 +42,7 @@ export interface IStorage {
   getPost(id: string): Promise<Post | undefined>;
   getPostsByTrend(trendId: string): Promise<Post[]>;
   getPostsByUser(userId: string): Promise<Post[]>;
+  getRankedPostsForTrend(trendId: string): Promise<Array<Post & { user: User }>>;
   createPost(post: InsertPost): Promise<Post>;
   updatePost(id: string, data: Partial<Post>): Promise<Post | undefined>;
   
@@ -130,6 +131,22 @@ export class DbStorage implements IStorage {
 
   async getPostsByUser(userId: string): Promise<Post[]> {
     return await db.select().from(schema.posts).where(eq(schema.posts.userId, userId)).orderBy(desc(schema.posts.createdAt));
+  }
+
+  async getRankedPostsForTrend(trendId: string): Promise<Array<Post & { user: User }>> {
+    const posts = await db.select()
+      .from(schema.posts)
+      .where(and(eq(schema.posts.trendId, trendId), eq(schema.posts.isDisqualified, 0)))
+      .orderBy(desc(schema.posts.votes));
+    
+    const postsWithUsers = await Promise.all(
+      posts.map(async (post) => {
+        const user = await this.getUser(post.userId);
+        return { ...post, user: user! };
+      })
+    );
+    
+    return postsWithUsers;
   }
 
   async createPost(post: InsertPost): Promise<Post> {

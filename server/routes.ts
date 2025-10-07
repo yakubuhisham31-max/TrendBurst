@@ -196,6 +196,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/trends/:id/end - End trend and award points (protected, only trend creator)
+  app.post("/api/trends/:id/end", requireAuth, async (req, res) => {
+    try {
+      const trend = await storage.getTrend(req.params.id);
+
+      if (!trend) {
+        return res.status(404).json({ message: "Trend not found" });
+      }
+
+      if (trend.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden: Only the trend creator can end this trend" });
+      }
+
+      if (trend.endDate) {
+        return res.status(400).json({ message: "This trend has already ended" });
+      }
+
+      // Mark trend as ended
+      const endedTrend = await storage.updateTrend(req.params.id, {
+        endDate: new Date(),
+      });
+
+      // Get ranked posts (excluding disqualified)
+      const rankedPosts = await storage.getRankedPostsForTrend(req.params.id);
+
+      // Award bonus points to top 3
+      const bonusPoints = [150, 100, 50];
+      
+      for (let i = 0; i < Math.min(3, rankedPosts.length); i++) {
+        const post = rankedPosts[i];
+        const user = await storage.getUser(post.userId);
+        if (user) {
+          await storage.updateUser(post.userId, {
+            trendxPoints: (user.trendxPoints || 0) + bonusPoints[i],
+          });
+        }
+      }
+
+      // Return rankings with updated user info
+      const finalRankings = await storage.getRankedPostsForTrend(req.params.id);
+
+      res.json({
+        trend: endedTrend,
+        rankings: finalRankings.map((post, index) => ({
+          rank: index + 1,
+          post,
+          bonusPoints: index < 3 ? bonusPoints[index] : 0,
+        })),
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/rankings/:trendId - Get rankings for a trend
+  app.get("/api/rankings/:trendId", async (req, res) => {
+    try {
+      const trend = await storage.getTrend(req.params.trendId);
+
+      if (!trend) {
+        return res.status(404).json({ message: "Trend not found" });
+      }
+
+      const rankedPosts = await storage.getRankedPostsForTrend(req.params.trendId);
+
+      res.json({
+        trendId: req.params.trendId,
+        trendName: trend.name,
+        isEnded: !!trend.endDate,
+        rankings: rankedPosts.map((post, index) => ({
+          rank: index + 1,
+          post,
+        })),
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Posts routes
 
   // GET /api/posts/trend/:trendId - Get all posts for a trend
@@ -221,6 +300,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const post = await storage.createPost(result.data);
+      
+      // Award 50 TrendX points for creating a post
+      const user = await storage.getUser(req.session.userId!);
+      if (user) {
+        await storage.updateUser(req.session.userId!, {
+          trendxPoints: (user.trendxPoints || 0) + 50,
+        });
+      }
+      
       res.status(201).json(post);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
