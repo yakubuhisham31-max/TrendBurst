@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 interface CreatePostDialogProps {
   open: boolean;
@@ -24,6 +26,24 @@ export default function CreatePostDialog({
 }: CreatePostDialogProps) {
   const [caption, setCaption] = useState("");
   const [imageUrl, setImageUrl] = useState<string>();
+
+  const handleGetUploadParameters = async () => {
+    const response = await fetch("/api/objects/upload", {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      setImageUrl(result.successful[0].uploadURL);
+    }
+  };
 
   const handleSubmit = () => {
     if (onSubmit && imageUrl) {
@@ -47,17 +67,24 @@ export default function CreatePostDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Image</Label>
-            <div className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/20 hover-elevate cursor-pointer" data-testid="dropzone-image">
+            <ObjectUploader
+              maxNumberOfFiles={1}
+              maxFileSize={10485760}
+              onGetUploadParameters={handleGetUploadParameters}
+              onComplete={handleUploadComplete}
+              variant="outline"
+              buttonClassName="w-full h-48 border-2 border-dashed"
+            >
               <div className="text-center">
                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Click to upload or drag and drop
+                  {imageUrl ? "Image uploaded - click to change" : "Click to upload or drag and drop"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   PNG, JPG up to 10MB
                 </p>
               </div>
-            </div>
+            </ObjectUploader>
           </div>
 
           <div className="space-y-2">

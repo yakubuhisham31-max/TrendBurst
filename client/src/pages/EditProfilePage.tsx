@@ -13,6 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 export default function EditProfilePage() {
   const [, setLocation] = useLocation();
@@ -61,6 +63,44 @@ export default function EditProfilePage() {
     },
   });
 
+  const handleGetUploadParameters = async () => {
+    const response = await fetch("/api/objects/upload", {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadUrl = result.successful[0].uploadURL;
+      
+      try {
+        const response = await apiRequest("PUT", "/api/users/profile-picture", {
+          profilePictureUrl: uploadUrl,
+        });
+        const data = await response.json();
+        
+        await checkAuth();
+        
+        toast({
+          title: "Profile picture updated",
+          description: "Your profile picture has been updated successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update profile picture.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfileMutation.mutate({
@@ -105,10 +145,17 @@ export default function EditProfilePage() {
                   {user.username.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <Button variant="outline" className="gap-2" type="button" data-testid="button-upload-avatar">
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                variant="outline"
+                buttonClassName="gap-2"
+              >
                 <Upload className="w-4 h-4" />
                 Upload Photo
-              </Button>
+              </ObjectUploader>
             </CardContent>
           </Card>
 
