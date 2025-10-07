@@ -22,9 +22,10 @@ export default function FeedPage() {
       caption: "This is an amazing post about AI and technology! Really excited to share this with everyone.",
       username: "techguru",
       votes: 42,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30),
+      createdAt: new Date(Date.now() - 1000 * 60 * 90),
       userVoted: true,
       commentsCount: 12,
+      isTrendHost: true,
     },
     {
       id: "2",
@@ -43,10 +44,11 @@ export default function FeedPage() {
       caption: "Check out this amazing sunset view!",
       username: "naturelover",
       votes: 28,
-      createdAt: new Date(Date.now() - 1000 * 60 * 90),
+      createdAt: new Date(Date.now() - 1000 * 60 * 30),
       commentsCount: 5,
+      isDisqualified: true,
     },
-  ];
+  ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   const handleCreatePost = () => {
     setUserHasPosted(true);
