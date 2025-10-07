@@ -12,6 +12,7 @@ import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
 import FeedPage from "@/pages/FeedPage";
 import ProfilePage from "@/pages/ProfilePage";
+import EditProfilePage from "@/pages/EditProfilePage";
 import InstructionsPage from "@/pages/InstructionsPage";
 import RankingsPage from "@/pages/RankingsPage";
 import FeedChatPage from "@/pages/FeedChatPage";
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/feed/:id" component={FeedPage} />
       <Route path="/profile" component={ProfilePage} />
+      <Route path="/edit-profile" component={EditProfilePage} />
       <Route path="/instructions/:id" component={InstructionsPage} />
       <Route path="/rankings/:id" component={RankingsPage} />
       <Route path="/feed-chat/:id" component={FeedChatPage} />

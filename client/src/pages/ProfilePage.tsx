@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, Edit, Share2 } from "lucide-react";
+import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import ProfileStats from "@/components/ProfileStats";
 import TrendCard from "@/components/TrendCard";
 
@@ -19,6 +20,12 @@ export default function ProfilePage() {
     trendsCreated: 23,
     posts: 156,
     trendxPoints: 1250,
+    socialLinks: {
+      instagram: "https://instagram.com/johndoe",
+      tiktok: "https://tiktok.com/@johndoe",
+      twitter: "https://twitter.com/johndoe",
+      youtube: "https://youtube.com/@johndoe",
+    },
   };
 
   const mockTrends = [
@@ -82,10 +89,64 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground mt-1" data-testid="text-bio">
                   {mockUser.bio}
                 </p>
+                
+                {(mockUser.socialLinks.instagram || mockUser.socialLinks.tiktok || 
+                  mockUser.socialLinks.twitter || mockUser.socialLinks.youtube) && (
+                  <div className="flex items-center gap-3 mt-3">
+                    {mockUser.socialLinks.instagram && (
+                      <a 
+                        href={mockUser.socialLinks.instagram} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid="link-instagram"
+                      >
+                        <SiInstagram className="w-5 h-5" />
+                      </a>
+                    )}
+                    {mockUser.socialLinks.tiktok && (
+                      <a 
+                        href={mockUser.socialLinks.tiktok} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid="link-tiktok"
+                      >
+                        <SiTiktok className="w-5 h-5" />
+                      </a>
+                    )}
+                    {mockUser.socialLinks.twitter && (
+                      <a 
+                        href={mockUser.socialLinks.twitter} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid="link-twitter"
+                      >
+                        <SiX className="w-5 h-5" />
+                      </a>
+                    )}
+                    {mockUser.socialLinks.youtube && (
+                      <a 
+                        href={mockUser.socialLinks.youtube} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid="link-youtube"
+                      >
+                        <SiYoutube className="w-5 h-5" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
-                <Button className="flex-1 gap-2" data-testid="button-edit-profile">
+                <Button 
+                  className="flex-1 gap-2" 
+                  onClick={() => setLocation("/edit-profile")}
+                  data-testid="button-edit-profile"
+                >
                   <Edit className="w-4 h-4" />
                   Edit Profile
                 </Button>
