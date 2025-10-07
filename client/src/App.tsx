@@ -64,9 +64,12 @@ function Router() {
       <Route path="/register" component={(props) => <PublicOnlyRoute component={RegisterPage} {...props} />} />
       <Route path="/signup" component={(props) => <PublicOnlyRoute component={SignupPage} {...props} />} />
       
-      <Route path="/onboarding/categories" component={(props) => <ProtectedRoute component={CategorySelectionPage} {...props} />} />
+      {/* TEMPORARY: Start from categories without auth */}
+      <Route path="/" component={() => <Redirect to="/onboarding/categories" />} />
+      <Route path="/onboarding/categories" component={CategorySelectionPage} />
+      
       <Route path="/onboarding/role" component={(props) => <ProtectedRoute component={RoleSelectionPage} {...props} />} />
-      <Route path="/" component={(props) => <ProtectedRoute component={HomePage} {...props} />} />
+      <Route path="/home" component={(props) => <ProtectedRoute component={HomePage} {...props} />} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/feed/:id" component={(props) => <ProtectedRoute component={FeedPage} {...props} />} />
