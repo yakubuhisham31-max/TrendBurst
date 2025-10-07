@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
+import { useLocation } from "wouter";
 import FollowButton from "./FollowButton";
 
 interface TrendCardProps {
@@ -49,6 +50,7 @@ export default function TrendCard({
   onDelete,
 }: TrendCardProps) {
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("all");
+  const [, setLocation] = useLocation();
 
   const getTrendStatus = () => {
     if (!endDate) return null;
@@ -109,13 +111,27 @@ export default function TrendCard({
 
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-white/20" data-testid="avatar-user">
+            <Avatar 
+              className="w-10 h-10 flex-shrink-0 border-2 border-white/20 cursor-pointer hover-elevate" 
+              data-testid="avatar-user"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLocation(`/profile/${username}`);
+              }}
+            >
               <AvatarImage src={userAvatar} alt={username} />
               <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-sm font-medium truncate text-white" data-testid="text-username">
+                <span 
+                  className="text-sm font-medium truncate text-white cursor-pointer hover:underline" 
+                  data-testid="text-username"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLocation(`/profile/${username}`);
+                  }}
+                >
                   {username}
                 </span>
                 <FollowButton 

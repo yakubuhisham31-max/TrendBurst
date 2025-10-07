@@ -12,6 +12,7 @@ import {
 import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import FollowButton from "./FollowButton";
 
 interface PostCardProps {
@@ -65,39 +66,41 @@ export default function PostCard({
   onDisqualify,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
+  const [, setLocation] = useLocation();
 
   return (
     <Card className="overflow-hidden" data-testid="card-post">
-      <div className="relative">
-        <Badge
-          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
-          data-testid={`badge-rank-${rank}`}
-        >
-          {getRankBadge(rank)}
-        </Badge>
-
-        <div className="absolute top-3 right-3 left-16 flex items-start justify-between gap-2 z-10">
-          <div className="flex items-center gap-2 flex-1 min-w-0 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
-            <Avatar className="w-8 h-8 border-2 border-white/20" data-testid="avatar-user">
+      <div className="p-4 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar 
+              className="w-10 h-10 flex-shrink-0 cursor-pointer hover-elevate" 
+              data-testid="avatar-user"
+              onClick={() => setLocation(`/profile/${username}`)}
+            >
               <AvatarImage src={userAvatar} alt={username} />
               <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="flex items-center gap-1 min-w-0">
-                <span className="text-sm font-medium truncate text-white" data-testid="text-username">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span 
+                  className="font-semibold truncate cursor-pointer hover:underline" 
+                  data-testid="text-username"
+                  onClick={() => setLocation(`/profile/${username}`)}
+                >
                   {username}
                 </span>
                 {isTrendHost && (
-                  <Star className="w-4 h-4 fill-yellow-500 text-yellow-500 flex-shrink-0" data-testid="icon-host-star" />
+                  <Badge variant="secondary" className="text-xs px-2 py-0">
+                    Host
+                  </Badge>
                 )}
               </div>
-              <FollowButton 
-                username={username} 
-                size="sm" 
-                variant="ghost"
-                className="h-6 px-2 text-xs text-white hover:bg-white/20 border-white/40 flex-shrink-0"
-              />
+              <span className="text-sm text-muted-foreground" data-testid="text-time">
+                {formatDistanceToNow(createdAt, { addSuffix: true })}
+              </span>
             </div>
+            {!isCreator && <FollowButton username={username} size="sm" />}
           </div>
 
           <DropdownMenu>
@@ -105,7 +108,7 @@ export default function PostCard({
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 bg-black/40 backdrop-blur-sm text-white hover:bg-white/20 flex-shrink-0"
+                className="h-8 w-8 flex-shrink-0"
                 data-testid="button-post-menu"
               >
                 <MoreVertical className="w-4 h-4" />
@@ -144,6 +147,15 @@ export default function PostCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+
+      <div className="relative">
+        <Badge
+          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
+          data-testid={`badge-rank-${rank}`}
+        >
+          {getRankBadge(rank)}
+        </Badge>
 
         {isDisqualified && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
