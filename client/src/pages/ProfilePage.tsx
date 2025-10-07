@@ -208,7 +208,6 @@ export default function ProfilePage() {
                             id={trend.id}
                             coverImage={trend.coverPicture || undefined}
                             trendName={trend.name}
-                            instructions={trend.instructions || undefined}
                             username={profileUser.username}
                             userAvatar={profileUser.profilePicture || undefined}
                             category={trend.category}

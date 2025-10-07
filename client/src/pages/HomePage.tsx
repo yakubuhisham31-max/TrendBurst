@@ -147,7 +147,6 @@ export default function HomePage() {
                 id={trend.id}
                 coverImage={trend.coverPicture || undefined}
                 trendName={trend.name}
-                instructions={trend.instructions || undefined}
                 username={trend.creator?.username || "Unknown"}
                 userAvatar={trend.creator?.profilePicture || undefined}
                 category={trend.category}
