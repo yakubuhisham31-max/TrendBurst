@@ -313,6 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         trendId: req.params.trendId,
         trendName: trend.name,
+        trendHostId: trend.userId,
         isEnded: !!trend.endDate,
         rankings: rankedPosts.map((post, index) => ({
           rank: index + 1,

@@ -9,7 +9,8 @@ import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Comment, User } from "@shared/schema";
+import { Star, Reply } from "lucide-react";
+import type { Comment, User, Trend } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
 
@@ -27,8 +28,15 @@ export default function PostCommentsDialog({
   onOpenChange,
 }: PostCommentsDialogProps) {
   const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Fetch trend info to get host ID
+  const { data: trend } = useQuery<Trend>({
+    queryKey: [`/api/trends/${trendId}`],
+    enabled: open && !!trendId,
+  });
 
   // Fetch comments for this post
   const { data: comments = [], isLoading } = useQuery<CommentWithUser[]>({
@@ -43,6 +51,7 @@ export default function PostCommentsDialog({
         postId,
         trendId,
         text,
+        parentId: replyingTo?.id,
       });
       return response.json();
     },
@@ -50,6 +59,7 @@ export default function PostCommentsDialog({
       queryClient.invalidateQueries({ queryKey: [`/api/comments/post/${postId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       setNewComment("");
+      setReplyingTo(null);
     },
     onError: (error: Error) => {
       toast({
@@ -118,6 +128,9 @@ export default function PostCommentsDialog({
                     <span className="text-sm font-medium" data-testid="text-commenter">
                       {comment.user?.username || "Unknown"}
                     </span>
+                    {comment.user?.id === trend?.userId && (
+                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                    )}
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(comment.createdAt!), {
                         addSuffix: true,
@@ -127,33 +140,60 @@ export default function PostCommentsDialog({
                   <p className="text-sm" data-testid="text-comment">
                     {comment.text}
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 h-6 text-xs"
+                    onClick={() => setReplyingTo(comment)}
+                    data-testid={`button-reply-${comment.id}`}
+                  >
+                    <Reply className="w-3 h-3 mr-1" />
+                    Reply
+                  </Button>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        <div className="flex gap-2 pt-4 border-t">
-          <Textarea
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[60px]"
-            data-testid="input-comment"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-          <Button
-            onClick={handleSubmit}
-            disabled={!newComment.trim() || createCommentMutation.isPending}
-            data-testid="button-submit-comment"
-          >
-            Post
-          </Button>
+        <div className="pt-4 border-t space-y-2">
+          {replyingTo && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+              <Reply className="w-4 h-4" />
+              <span>Replying to <strong>{replyingTo.user?.username}</strong></span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto h-6"
+                onClick={() => setReplyingTo(null)}
+                data-testid="button-cancel-reply"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Textarea
+              placeholder={replyingTo ? `Reply to ${replyingTo.user?.username}...` : "Write a comment..."}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="min-h-[60px]"
+              data-testid="input-comment"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+            />
+            <Button
+              onClick={handleSubmit}
+              disabled={!newComment.trim() || createCommentMutation.isPending}
+              data-testid="button-submit-comment"
+            >
+              Post
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

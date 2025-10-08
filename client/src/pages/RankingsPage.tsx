@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Trophy, Loader2 } from "lucide-react";
+import { ChevronLeft, Trophy, Loader2, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Post, User } from "@shared/schema";
 
@@ -16,6 +16,7 @@ interface RankingEntry {
 interface RankingsResponse {
   trendId: string;
   trendName: string;
+  trendHostId: string;
   isEnded: boolean;
   rankings: RankingEntry[];
 }
@@ -139,7 +140,12 @@ export default function RankingsPage() {
                   } text-white font-bold`}>
                     {entry.rank}
                   </Badge>
-                  <p className="text-xs font-medium text-center">{entry.post.user?.username}</p>
+                  <div className="flex items-center gap-1 justify-center">
+                    <p className="text-xs font-medium text-center">{entry.post.user?.username}</p>
+                    {entry.post.user?.id === rankingsData?.trendHostId && (
+                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                    )}
+                  </div>
                   <p className="text-sm font-bold text-primary">{entry.post.votes} votes</p>
                   <div className={`w-full ${heights[index]} bg-gradient-to-t ${
                     entry.rank === 1 ? "from-primary/30 to-primary/10" :
@@ -176,9 +182,14 @@ export default function RankingsPage() {
                   />
                 )}
                 <div className="flex-1">
-                  <p className="font-medium" data-testid="text-username">
-                    {entry.post.user?.username}
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="font-medium" data-testid="text-username">
+                      {entry.post.user?.username}
+                    </p>
+                    {entry.post.user?.id === rankingsData?.trendHostId && (
+                      <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground line-clamp-1">
                     {entry.post.caption}
                   </p>

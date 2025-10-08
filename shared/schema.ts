@@ -60,6 +60,7 @@ export const comments = pgTable("comments", {
   postId: varchar("post_id").references(() => posts.id),
   trendId: varchar("trend_id").references(() => trends.id),
   userId: varchar("user_id").notNull().references(() => users.id),
+  parentId: varchar("parent_id"),
   text: text("text").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

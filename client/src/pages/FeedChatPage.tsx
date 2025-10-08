@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Users, Eye, Send } from "lucide-react";
+import { ChevronLeft, Users, Eye, Send, Star, Reply } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,13 +22,14 @@ export default function FeedChatPage() {
   const params = useParams();
   const trendId = params.id;
   const [message, setMessage] = useState("");
+  const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch trend info
   const { data: trend, isLoading: trendLoading } = useQuery<TrendWithCreator>({
-    queryKey: ["/api/trends", trendId],
+    queryKey: [`/api/trends/${trendId}`],
     enabled: !!trendId,
   });
 
@@ -45,13 +46,15 @@ export default function FeedChatPage() {
       const response = await apiRequest("POST", "/api/comments", {
         trendId,
         text,
+        parentId: replyingTo?.id,
       });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/comments/trend", trendId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trends", trendId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/trends/${trendId}`] });
       setMessage("");
+      setReplyingTo(null);
     },
     onError: (error: Error) => {
       toast({
@@ -157,34 +160,73 @@ export default function FeedChatPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedComments.map((comment) => (
-              <div key={comment.id} className="flex gap-3 hover-elevate p-3 rounded-lg" data-testid={`comment-${comment.id}`}>
-                <Avatar 
-                  className="w-10 h-10 flex-shrink-0 cursor-pointer"
-                  onClick={() => setLocation(`/profile/${comment.user?.username}`)}
-                >
-                  <AvatarImage src={comment.user?.profilePicture || undefined} alt={comment.user?.username} />
-                  <AvatarFallback>{comment.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span 
-                      className="font-semibold text-sm cursor-pointer hover:underline" 
-                      data-testid={`text-username-${comment.id}`}
-                      onClick={() => setLocation(`/profile/${comment.user?.username}`)}
-                    >
-                      {comment.user?.username || "Unknown"}
-                    </span>
-                    <span className="text-xs text-muted-foreground" data-testid={`text-time-${comment.id}`}>
-                      {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
-                    </span>
+            {sortedComments.map((comment) => {
+              const isCurrentUser = comment.userId === user?.id;
+              const isHost = comment.userId === trend?.userId;
+              
+              if (isCurrentUser) {
+                return (
+                  <div key={comment.id} className="flex justify-end" data-testid={`comment-${comment.id}`}>
+                    <div className="max-w-[70%] bg-primary text-primary-foreground rounded-lg p-3">
+                      {isHost && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" data-testid="icon-host" />
+                          <span className="text-xs opacity-80">Host</span>
+                        </div>
+                      )}
+                      <p className="text-sm" data-testid={`text-message-${comment.id}`}>
+                        {comment.text}
+                      </p>
+                      <span className="text-xs opacity-80 mt-1 block" data-testid={`text-time-${comment.id}`}>
+                        {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground" data-testid={`text-message-${comment.id}`}>
-                    {comment.text}
-                  </p>
+                );
+              }
+              
+              return (
+                <div key={comment.id} className="flex gap-3 hover-elevate p-3 rounded-lg" data-testid={`comment-${comment.id}`}>
+                  <Avatar 
+                    className="w-10 h-10 flex-shrink-0 cursor-pointer"
+                    onClick={() => setLocation(`/profile/${comment.user?.username}`)}
+                  >
+                    <AvatarImage src={comment.user?.profilePicture || undefined} alt={comment.user?.username} />
+                    <AvatarFallback>{comment.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span 
+                        className="font-semibold text-sm cursor-pointer hover:underline" 
+                        data-testid={`text-username-${comment.id}`}
+                        onClick={() => setLocation(`/profile/${comment.user?.username}`)}
+                      >
+                        {comment.user?.username || "Unknown"}
+                      </span>
+                      {isHost && (
+                        <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                      )}
+                      <span className="text-xs text-muted-foreground" data-testid={`text-time-${comment.id}`}>
+                        {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground" data-testid={`text-message-${comment.id}`}>
+                      {comment.text}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1 h-6 text-xs"
+                      onClick={() => setReplyingTo(comment)}
+                      data-testid={`button-reply-${comment.id}`}
+                    >
+                      <Reply className="w-3 h-3 mr-1" />
+                      Reply
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -192,9 +234,24 @@ export default function FeedChatPage() {
 
       <footer className="sticky bottom-0 bg-background border-t">
         <div className="max-w-4xl mx-auto px-4 py-3">
+          {replyingTo && (
+            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+              <Reply className="w-4 h-4" />
+              <span>Replying to <strong>{replyingTo.user?.username}</strong></span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto h-6"
+                onClick={() => setReplyingTo(null)}
+                data-testid="button-cancel-reply"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
           <div className="flex gap-2">
             <Input
-              placeholder="Type your message..."
+              placeholder={replyingTo ? `Reply to ${replyingTo.user?.username}...` : "Type your message..."}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}

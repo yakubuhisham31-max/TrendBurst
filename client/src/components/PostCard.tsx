@@ -91,9 +91,7 @@ export default function PostCard({
                   {username}
                 </span>
                 {isTrendHost && (
-                  <Badge variant="secondary" className="text-xs px-2 py-0">
-                    Host
-                  </Badge>
+                  <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                 )}
               </div>
               <span className="text-sm text-muted-foreground" data-testid="text-time">
