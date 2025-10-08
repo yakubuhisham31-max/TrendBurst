@@ -45,6 +45,7 @@ export default function FeedPage() {
 
   const votesRemaining = 10 - (voteCountData?.count || 0);
   const isTrendEnded = trend?.endDate ? new Date(trend.endDate) < new Date() : false;
+  const userHasPosted = posts.some(post => post.userId === user?.id);
 
   // Vote up mutation
   const voteUpMutation = useMutation({
@@ -111,6 +112,28 @@ export default function FeedPage() {
     },
   });
 
+  // Disqualify post mutation
+  const disqualifyMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const response = await apiRequest("PATCH", `/api/posts/${postId}/disqualify`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      toast({
+        title: "Post status updated",
+        description: "The post has been disqualified.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to disqualify post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleVoteUp = (postId: string) => {
     if (!user) {
       toast({
@@ -145,6 +168,10 @@ export default function FeedPage() {
 
   const handleCreatePost = (data: { imageUrl: string; caption: string }) => {
     createPostMutation.mutate(data);
+  };
+
+  const handleDisqualify = (postId: string) => {
+    disqualifyMutation.mutate(postId);
   };
 
   // Sort posts by createdAt (oldest first as per requirements)
@@ -232,21 +259,11 @@ export default function FeedPage() {
               onVoteUp={() => handleVoteUp(post.id)}
               onVoteDown={() => handleVoteDown(post.id)}
               onComment={() => setCommentsPostId(post.id)}
+              onDisqualify={() => handleDisqualify(post.id)}
             />
           ))
         )}
       </main>
-
-      {!isTrendEnded && user && (
-        <Button
-          size="icon"
-          className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg z-50"
-          onClick={() => setCreatePostOpen(true)}
-          data-testid="button-create-post"
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-      )}
 
       <Button
         size="icon"
@@ -256,6 +273,17 @@ export default function FeedPage() {
       >
         <MessageSquare className="w-6 h-6" />
       </Button>
+
+      {!isTrendEnded && user && !userHasPosted && (
+        <Button
+          size="icon"
+          className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-lg z-50"
+          onClick={() => setCreatePostOpen(true)}
+          data-testid="button-create-post"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      )}
 
       <CreatePostDialog
         open={createPostOpen}
