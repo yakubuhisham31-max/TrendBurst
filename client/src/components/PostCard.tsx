@@ -141,7 +141,7 @@ export default function PostCard({
                   data-testid="menu-item-disqualify"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2" />
-                  {isDisqualified ? "Requalify" : "Disqualify"}
+                  {isDisqualified ? "Undo Disqualify" : "Disqualify"}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

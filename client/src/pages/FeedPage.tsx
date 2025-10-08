@@ -118,16 +118,18 @@ export default function FeedPage() {
       const response = await apiRequest("PATCH", `/api/posts/${postId}/disqualify`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       toast({
         title: "Post status updated",
-        description: "The post has been disqualified.",
+        description: data.isDisqualified 
+          ? "The post has been disqualified." 
+          : "The post has been requalified.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to disqualify post",
+        title: "Failed to update post status",
         description: error.message,
         variant: "destructive",
       });

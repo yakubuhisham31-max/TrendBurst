@@ -381,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PATCH /api/posts/:id/disqualify - Disqualify post (protected, only trend creator)
+  // PATCH /api/posts/:id/disqualify - Toggle disqualify status (protected, only trend creator)
   app.patch("/api/posts/:id/disqualify", requireAuth, async (req, res) => {
     try {
       const post = await storage.getPost(req.params.id);
@@ -400,7 +400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can disqualify posts" });
       }
 
-      const updatedPost = await storage.updatePost(req.params.id, { isDisqualified: 1 });
+      // Toggle disqualification status
+      const newStatus = post.isDisqualified ? 0 : 1;
+      const updatedPost = await storage.updatePost(req.params.id, { isDisqualified: newStatus });
       res.json(updatedPost);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
