@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neonConfig, Pool } from "@neondatabase/serverless";
 import ws from "ws";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, isNull } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -197,7 +197,12 @@ export class DbStorage implements IStorage {
   }
 
   async getCommentsByTrend(trendId: string): Promise<Comment[]> {
-    return await db.select().from(schema.comments).where(eq(schema.comments.trendId, trendId)).orderBy(desc(schema.comments.createdAt));
+    return await db.select().from(schema.comments).where(
+      and(
+        eq(schema.comments.trendId, trendId),
+        isNull(schema.comments.postId)
+      )
+    ).orderBy(desc(schema.comments.createdAt));
   }
 
   async createComment(comment: InsertComment): Promise<Comment> {

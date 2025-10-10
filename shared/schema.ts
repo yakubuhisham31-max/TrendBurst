@@ -35,6 +35,7 @@ export const trends = pgTable("trends", {
   participants: integer("participants").default(0),
   chatCount: integer("chat_count").default(0),
   endDate: timestamp("end_date"),
+  pointsAwarded: integer("points_awarded").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "This trend has already ended" });
       }
 
-      // Mark trend as ended
+      // Mark trend as ended (don't set pointsAwarded yet)
       const endedTrend = await storage.updateTrend(req.params.id, {
         endDate: new Date(),
       });
@@ -299,6 +299,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
+
+      // NOW mark points as awarded after distribution
+      await storage.updateTrend(req.params.id, {
+        pointsAwarded: 1,
+      });
 
       // Return rankings with updated user info
       const finalRankings = await storage.getRankedPostsForTrend(req.params.id);
@@ -323,6 +328,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!trend) {
         return res.status(404).json({ message: "Trend not found" });
+      }
+
+      // Check if trend has ended and points haven't been awarded yet
+      const isTrendEnded = trend.endDate && new Date(trend.endDate) < new Date();
+      const shouldAwardPoints = isTrendEnded && !trend.pointsAwarded;
+
+      if (shouldAwardPoints) {
+        // Get ranked posts (excluding disqualified)
+        const rankedPosts = await storage.getRankedPostsForTrend(req.params.trendId);
+
+        // Award bonus points to top 3
+        const bonusPoints = [150, 100, 50];
+        
+        for (let i = 0; i < Math.min(3, rankedPosts.length); i++) {
+          const post = rankedPosts[i];
+          const user = await storage.getUser(post.userId);
+          if (user) {
+            await storage.updateUser(post.userId, {
+              trendxPoints: (user.trendxPoints || 0) + bonusPoints[i],
+            });
+          }
+        }
+
+        // Mark points as awarded
+        await storage.updateTrend(req.params.trendId, {
+          pointsAwarded: 1,
+        });
       }
 
       const rankedPosts = await storage.getRankedPostsForTrend(req.params.trendId);
