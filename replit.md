@@ -6,6 +6,16 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 
 ## Recent Changes
 
+**October 10, 2025:**
+- **Profile Page User Posts:** Implemented user posts display in Profile page
+  - Added `/api/posts/user/:userId` endpoint to fetch posts by user
+  - Posts displayed as clickable image thumbnails in grid layout
+  - Clicking post thumbnail navigates to trend feed page
+  - Shows proper loading skeleton and empty states
+- **Button Positioning Fix:** Corrected sticky button positions in FeedPage
+  - Chat button now positioned above create post button (bottom-24 vs bottom-6)
+  - Both buttons remain sticky in bottom-right corner
+
 **October 7, 2025:**
 - **Image Upload System:** Implemented complete image upload functionality using Replit object storage and Uppy file uploader
   - Added ObjectUploader component with modal interface for image uploads
