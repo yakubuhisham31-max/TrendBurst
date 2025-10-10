@@ -22,20 +22,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = insertUserSchema.safeParse(req.body);
       
       if (!result.success) {
-        return res.status(400).json({ message: "Invalid request data" });
+        return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
       }
 
-      const { username, password } = result.data;
+      const { username, email, fullName, password, profilePicture, categories, role } = result.data;
 
+      // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
+      // Check if email already exists
+      if (email) {
+        const existingEmail = await storage.getUserByEmail(email);
+        if (existingEmail) {
+          return res.status(400).json({ message: "Email already exists" });
+        }
+      }
+
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
         username,
+        email,
+        fullName,
         password: hashedPassword,
+        profilePicture,
+        categories,
+        role,
       });
 
       req.session.userId = user.id;
@@ -49,15 +63,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const result = insertUserSchema.safeParse(req.body);
-      
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid request data" });
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username/email and password are required" });
       }
 
-      const { username, password } = result.data;
-
-      const user = await storage.getUserByUsername(username);
+      // Check if login identifier is email or username
+      const isEmail = username.includes('@');
+      const user = isEmail 
+        ? await storage.getUserByEmail(username)
+        : await storage.getUserByUsername(username);
+        
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }

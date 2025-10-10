@@ -9,12 +9,23 @@ import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Upload, User } from "lucide-react";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 import { useEffect } from "react";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { apiRequest } from "@/lib/queryClient";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  fullName: z.string().min(1, "Full name is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Please confirm your password"),
+  profilePicture: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -28,7 +39,11 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
+      fullName: "",
       password: "",
+      confirmPassword: "",
+      profilePicture: "",
     },
   });
 
@@ -40,7 +55,13 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      await registerUser(data.username, data.password);
+      await registerUser({
+        username: data.username,
+        email: data.email,
+        fullName: data.fullName,
+        password: data.password,
+        profilePicture: data.profilePicture,
+      });
       toast({
         title: "Success",
         description: "Your account has been created successfully",
@@ -54,6 +75,32 @@ export default function RegisterPage() {
       });
     }
   };
+
+  const getUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/object-storage/upload-url", {
+      path: `profile-pictures/${Date.now()}.jpg`,
+      isPublic: true,
+    });
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadUrl,
+    };
+  };
+
+  const handleUploadComplete = (result: any) => {
+    if (result.successful && result.successful[0]) {
+      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+      form.setValue("profilePicture", uploadedUrl);
+      toast({
+        title: "Success",
+        description: "Profile picture uploaded successfully",
+      });
+    }
+  };
+
+  const profilePicture = form.watch("profilePicture");
+  const username = form.watch("username");
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -72,6 +119,62 @@ export default function RegisterPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="flex flex-col items-center gap-3">
+              <Avatar className="w-24 h-24" data-testid="avatar-preview">
+                <AvatarImage src={profilePicture} alt={username} />
+                <AvatarFallback>
+                  {username ? username.slice(0, 2).toUpperCase() : <User className="w-10 h-10" />}
+                </AvatarFallback>
+              </Avatar>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={5242880}
+                onGetUploadParameters={getUploadParameters}
+                onComplete={handleUploadComplete}
+                variant="outline"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Profile Picture
+              </ObjectUploader>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your full name"
+                      data-testid="input-fullname"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      data-testid="input-email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="username"
@@ -101,6 +204,25 @@ export default function RegisterPage() {
                       type="password"
                       placeholder="Create a password"
                       data-testid="input-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Confirm your password"
+                      data-testid="input-confirm-password"
                       {...field}
                     />
                   </FormControl>

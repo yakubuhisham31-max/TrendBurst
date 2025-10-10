@@ -30,8 +30,8 @@ export default function RoleSelectionPage() {
     onSuccess: async () => {
       await checkAuth();
       toast({
-        title: "Welcome to Trendz!",
-        description: "Your account has been set up successfully.",
+        title: "Welcome to Trendx! 🎉",
+        description: "Inspire creativity by starting exciting trends, inviting friends to join the fun, voting for your favorites, and sparking conversations in lively trend chats.",
       });
       setLocation("/");
     },

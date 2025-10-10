@@ -6,6 +6,8 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
+  email: text("email").unique(),
+  fullName: text("full_name"),
   password: text("password").notNull(),
   bio: text("bio"),
   profilePicture: text("profile_picture"),
@@ -74,7 +76,12 @@ export const follows = pgTable("follows", {
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
+  fullName: true,
   password: true,
+  profilePicture: true,
+  categories: true,
+  role: true,
 });
 
 export const insertTrendSchema = createInsertSchema(trends).omit({

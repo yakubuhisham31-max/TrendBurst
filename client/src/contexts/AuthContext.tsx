@@ -3,12 +3,22 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
+export interface RegisterData {
+  username: string;
+  email: string;
+  fullName: string;
+  password: string;
+  profilePicture?: string;
+  categories?: string[];
+  role?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   checkAuth: () => Promise<void>;
 }
 
@@ -45,11 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  const register = async (username: string, password: string) => {
-    const response = await apiRequest("POST", "/api/auth/register", {
-      username,
-      password,
-    });
+  const register = async (data: RegisterData) => {
+    const response = await apiRequest("POST", "/api/auth/register", data);
     const { user } = await response.json();
     setUser(user);
   };

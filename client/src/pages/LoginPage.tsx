@@ -13,7 +13,7 @@ import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_17597547450
 import { useEffect } from "react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  username: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -77,10 +77,10 @@ export default function LoginPage() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Username or Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your username"
+                      placeholder="Enter your username or email"
                       data-testid="input-username"
                       {...field}
                     />
