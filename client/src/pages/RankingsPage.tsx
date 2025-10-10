@@ -67,7 +67,7 @@ export default function RankingsPage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => setLocation(`/feed/${trendId}`)}
+            onClick={() => window.history.back()}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />

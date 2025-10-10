@@ -49,7 +49,7 @@ export default function InstructionsPage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => console.log("Navigate back")}
+            onClick={() => window.history.back()}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -71,9 +71,7 @@ export default function InstructionsPage() {
                   <span className="font-semibold" data-testid="text-host-username">
                     {trend.creator.username}
                   </span>
-                  {trend.creator.isVerified && (
-                    <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-verified" />
-                  )}
+                  <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                 </div>
                 <div className="flex items-center gap-3 mb-3">
                   {trend.creator.instagramUrl && (
@@ -98,9 +96,9 @@ export default function InstructionsPage() {
                       <SiTiktok className="w-4 h-4" />
                     </a>
                   )}
-                  {trend.creator.xUrl && (
+                  {trend.creator.twitterUrl && (
                     <a 
-                      href={trend.creator.xUrl} 
+                      href={trend.creator.twitterUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-foreground transition-colors"

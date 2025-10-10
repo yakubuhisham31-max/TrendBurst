@@ -97,7 +97,7 @@ export default function FeedChatPage() {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => setLocation(`/feed/${params.id}`)}
+              onClick={() => window.history.back()}
               data-testid="button-back"
             >
               <ChevronLeft className="w-6 h-6" />
