@@ -403,6 +403,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/posts/user/:userId - Get all posts by user
+  app.get("/api/posts/user/:userId", async (req, res) => {
+    try {
+      const posts = await storage.getPostsByUser(req.params.userId);
+      
+      // Include user info for each post
+      const postsWithUserInfo = await Promise.all(
+        posts.map(async (post) => {
+          const user = await storage.getUser(post.userId);
+          return {
+            ...post,
+            user: user ? sanitizeUser(user) : null,
+          };
+        })
+      );
+      
+      res.json(postsWithUserInfo);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // POST /api/posts - Create post (protected)
   app.post("/api/posts", requireAuth, async (req, res) => {
     try {

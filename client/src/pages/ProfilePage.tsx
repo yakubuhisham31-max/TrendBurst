@@ -35,6 +35,12 @@ export default function ProfilePage() {
     enabled: !!profileUser?.id,
   });
 
+  // Fetch user's posts
+  const { data: posts = [], isLoading: postsLoading } = useQuery<any[]>({
+    queryKey: ["/api/posts/user", profileUser?.id],
+    enabled: !!profileUser?.id,
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -173,7 +179,7 @@ export default function ProfilePage() {
                   followers={profileUser.followers || 0}
                   following={profileUser.following || 0}
                   trendsCreated={trends.length}
-                  posts={0}
+                  posts={posts.length}
                   trendxPoints={profileUser.trendxPoints || 0}
                 />
 
@@ -225,15 +231,35 @@ export default function ProfilePage() {
                   </TabsContent>
 
                   <TabsContent value="posts" className="mt-6">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div
-                          key={i}
-                          className="aspect-square bg-muted rounded-lg cursor-pointer hover-elevate"
-                          data-testid={`post-thumbnail-${i}`}
-                        />
-                      ))}
-                    </div>
+                    {postsLoading ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <Skeleton key={i} className="aspect-square" />
+                        ))}
+                      </div>
+                    ) : posts.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        No posts yet
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {posts.map((post) => (
+                          <div
+                            key={post.id}
+                            className="aspect-square bg-muted rounded-lg cursor-pointer hover-elevate overflow-hidden relative group"
+                            onClick={() => setLocation(`/feed/${post.trendId}`)}
+                            data-testid={`post-${post.id}`}
+                          >
+                            <img
+                              src={post.imageUrl}
+                              alt={post.caption || "Post"}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="saved" className="mt-6">
