@@ -75,6 +75,20 @@ export default function CreateTrendPage() {
       return;
     }
 
+    // Validate end date if provided
+    if (endDate) {
+      const todayString = new Date().toISOString().split('T')[0];
+      
+      if (endDate < todayString) {
+        toast({
+          title: "Invalid End Date",
+          description: "End date cannot be in the past.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const filteredRules = rules.filter(r => r.trim() !== "");
     
     const trendData: Omit<InsertTrend, "userId"> = {
@@ -191,7 +205,7 @@ export default function CreateTrendPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="end-date">End Date</Label>
+              <Label htmlFor="end-date">End Date (Optional)</Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -199,10 +213,14 @@ export default function CreateTrendPage() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
                   className="pl-9"
                   data-testid="input-end-date"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                Set an end date for this trend (optional)
+              </p>
             </div>
 
             <div className="space-y-2">

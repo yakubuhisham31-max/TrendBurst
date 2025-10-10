@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2 } from "lucide-react";
+import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
 import FollowButton from "./FollowButton";
@@ -27,6 +27,8 @@ interface TrendCardProps {
   chatCount: number;
   createdAt: Date;
   endDate?: Date;
+  description?: string;
+  isTrending?: boolean;
   isHost?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
@@ -45,6 +47,8 @@ export default function TrendCard({
   chatCount,
   createdAt,
   endDate,
+  description,
+  isTrending = false,
   isHost = false,
   onClick,
   onDelete,
@@ -92,7 +96,7 @@ export default function TrendCard({
 
   return (
     <Card
-      className="overflow-hidden transition-all duration-200 hover-elevate hover:shadow-md cursor-pointer"
+      className="overflow-hidden rounded-2xl shadow-lg transition-all duration-200 hover-elevate hover:shadow-xl cursor-pointer"
       onClick={onClick}
       data-testid="card-trend"
     >
@@ -107,12 +111,13 @@ export default function TrendCard({
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-chart-2/20" />
         )}
         
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
 
-        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Top Section */}
+        <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
             <Avatar 
-              className="w-10 h-10 flex-shrink-0 border-2 border-white/20 cursor-pointer hover-elevate" 
+              className="w-12 h-12 border-2 border-white/30 cursor-pointer hover-elevate" 
               data-testid="avatar-user"
               onClick={(e) => {
                 e.stopPropagation();
@@ -120,118 +125,134 @@ export default function TrendCard({
               }}
             >
               <AvatarImage src={userAvatar} alt={username} />
-              <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="bg-[#00C8FF] text-white">
+                {username.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-2 min-w-0">
-                <span 
-                  className="text-sm font-medium truncate text-white cursor-pointer hover:underline" 
-                  data-testid="text-username"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLocation(`/profile/${username}`);
-                  }}
-                >
-                  {username}
-                </span>
-                <FollowButton 
-                  username={username} 
-                  size="sm" 
-                  variant="ghost"
-                  className="h-6 px-2 text-xs text-white hover:bg-white/20 border-white/40"
-                />
-              </div>
-              <span className="text-xs text-white/80" data-testid="text-time">
+            <div className="flex flex-col">
+              <span 
+                className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline" 
+                data-testid="text-username"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLocation(`/profile/${username}`);
+                }}
+              >
+                {username}
+              </span>
+              <span className="text-xs text-white/90 drop-shadow" data-testid="text-time">
                 {formatDistanceToNow(createdAt, { addSuffix: true })}
               </span>
             </div>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 flex-shrink-0 text-white hover:bg-white/20"
-                data-testid="button-trend-menu"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" data-testid="menu-trend-options">
-              <DropdownMenuItem data-testid="menu-item-share">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </DropdownMenuItem>
-              <DropdownMenuItem data-testid="menu-item-save">
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={cycleNotifications} data-testid="menu-item-notifications">
-                {getNotificationIcon()}
-                <span className="ml-2">{getNotificationLabel()}</span>
-              </DropdownMenuItem>
-              {isHost && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleDelete} 
-                    className="text-destructive focus:text-destructive"
-                    data-testid="menu-item-delete"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Trend
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <FollowButton 
+              username={username} 
+              size="sm" 
+              variant="outline"
+              className="h-8 px-3 text-white border-white/40 hover:bg-white/20 hover:border-white/60 bg-black/20"
+            />
+            {isTrending && (
+              <Badge className="bg-yellow-500 text-yellow-950 px-2.5 py-1 gap-1 items-center border-0 rounded-full" data-testid="badge-trending">
+                <Flame className="w-3.5 h-3.5" />
+                Trending
+              </Badge>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-white hover:bg-white/20"
+                  data-testid="button-trend-menu"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" data-testid="menu-trend-options">
+                <DropdownMenuItem data-testid="menu-item-share">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem data-testid="menu-item-save">
+                  <Bookmark className="w-4 h-4 mr-2" />
+                  Save
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={cycleNotifications} data-testid="menu-item-notifications">
+                  {getNotificationIcon()}
+                  <span className="ml-2">{getNotificationLabel()}</span>
+                </DropdownMenuItem>
+                {isHost && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleDelete} 
+                      className="text-destructive focus:text-destructive"
+                      data-testid="menu-item-delete"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Trend
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
-        <div className="absolute bottom-3 left-3 right-3 text-white">
-          <h3 className="text-xl font-bold line-clamp-2 mb-3 drop-shadow-lg" data-testid="text-trend-name">
+        {/* Middle Section */}
+        <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 flex flex-col items-center text-center gap-2">
+          <Badge 
+            className="bg-black/60 text-white backdrop-blur-sm px-3 py-1 rounded-full border-0"
+            data-testid={`badge-category-${category.toLowerCase()}`}
+          >
+            {category}
+          </Badge>
+          <h3 className="text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
             {trendName}
           </h3>
+          {description && (
+            <p className="text-sm text-white/80 drop-shadow line-clamp-2 max-w-md" data-testid="text-description">
+              {description}
+            </p>
+          )}
+        </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1.5" data-testid="stat-views">
-                <Eye className="w-4 h-4" />
-                <span>{views}</span>
-              </div>
-              <div className="flex items-center gap-1.5" data-testid="stat-participants">
-                <Users className="w-4 h-4" />
-                <span>{participants}</span>
-              </div>
+        {/* Bottom Section */}
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+          <div className="flex items-center gap-4 text-white text-sm drop-shadow">
+            <div className="flex items-center gap-1.5" data-testid="stat-views">
+              <Eye className="w-4 h-4" />
+              <span>{views}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs"
-                data-testid={`badge-category-${category.toLowerCase()}`}
+            <div className="flex items-center gap-1.5" data-testid="stat-participants">
+              <Users className="w-4 h-4" />
+              <span>{participants}</span>
+            </div>
+            <div className="flex items-center gap-1.5" data-testid="stat-chat">
+              <MessageCircle className="w-4 h-4" />
+              <span>{chatCount}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {status === "ending-soon" && (
+              <Badge 
+                className="bg-yellow-500 text-yellow-950 px-2.5 py-1 rounded-full border-0"
+                data-testid="badge-ending-soon"
               >
-                {category}
+                Ending Soon
               </Badge>
-              {status === "ending-soon" && (
-                <Badge 
-                  className="bg-yellow-500/90 text-yellow-950 text-xs px-2 py-0 h-5"
-                  data-testid="badge-ending-soon"
-                >
-                  Ending Soon
-                </Badge>
-              )}
-              {status === "ended" && (
-                <Badge 
-                  className="bg-red-500/90 text-white text-xs px-2 py-0 h-5"
-                  data-testid="badge-ended"
-                >
-                  Ended
-                </Badge>
-              )}
-              <div className="flex items-center gap-1.5" data-testid="stat-chat">
-                <MessageCircle className="w-4 h-4" />
-                <span>{chatCount}</span>
-              </div>
-            </div>
+            )}
+            {status === "ended" && (
+              <Badge 
+                className="bg-red-500 text-white px-2.5 py-1 rounded-full border-0"
+                data-testid="badge-ended"
+              >
+                Ended
+              </Badge>
+            )}
           </div>
         </div>
       </div>

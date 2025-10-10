@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Trend, User } from "@shared/schema";
+import { differenceInDays, differenceInHours } from "date-fns";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
 
 type TrendWithCreator = Trend & {
@@ -17,7 +18,6 @@ type TrendWithCreator = Trend & {
 
 const categories = [
   "All",
-  "Trending",
   "Food",
   "Arts",
   "Sports",
@@ -30,16 +30,24 @@ const categories = [
   "Gaming",
 ];
 
+const subcategories = [
+  "New",
+  "Trending",
+  "Ending Soon",
+  "Ended",
+];
+
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
 
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   
-  const { data: trends = [], isLoading, error } = useQuery<TrendWithCreator[]>({
+  const { data: allTrends = [], isLoading, error } = useQuery<TrendWithCreator[]>({
     queryKey: ["/api/trends", categoryParam],
     queryFn: async () => {
       const url = categoryParam 
@@ -56,8 +64,61 @@ export default function HomePage() {
     },
   });
 
+  // Filter trends based on subcategory
+  const trends = useMemo(() => {
+    if (!selectedSubcategory) return allTrends;
+
+    const now = new Date();
+
+    switch (selectedSubcategory) {
+      case "New":
+        return allTrends.filter(trend => {
+          const hoursSinceCreation = differenceInHours(now, trend.createdAt || now);
+          return hoursSinceCreation <= 72; // Created within last 3 days (72 hours)
+        });
+      
+      case "Trending":
+        // Trending: Sort by engagement (views + participants * 2 + chatCount * 3)
+        return [...allTrends]
+          .map(trend => ({
+            ...trend,
+            engagement: (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3
+          }))
+          .sort((a, b) => b.engagement - a.engagement)
+          .slice(0, 20); // Top 20 trending
+      
+      case "Ending Soon":
+        return allTrends.filter(trend => {
+          if (!trend.endDate) return false;
+          const daysUntilEnd = differenceInDays(trend.endDate, now);
+          return daysUntilEnd <= 3 && daysUntilEnd >= 0;
+        });
+      
+      case "Ended":
+        return allTrends.filter(trend => {
+          if (!trend.endDate) return false;
+          return trend.endDate < now;
+        });
+      
+      default:
+        return allTrends;
+    }
+  }, [allTrends, selectedSubcategory]);
+
+  // Filter by search query
+  const filteredTrends = useMemo(() => {
+    if (!searchQuery.trim()) return trends;
+    
+    const query = searchQuery.toLowerCase();
+    return trends.filter(trend => 
+      trend.name.toLowerCase().includes(query) ||
+      trend.creator?.username.toLowerCase().includes(query) ||
+      trend.category.toLowerCase().includes(query)
+    );
+  }, [trends, searchQuery]);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 h-24 flex items-center justify-between gap-3">
           <Button
@@ -79,12 +140,12 @@ export default function HomePage() {
       </header>
 
       <div className="sticky top-24 z-40 bg-background/95 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 py-2 space-y-2">
+        <div className="max-w-7xl mx-auto px-4 py-2 space-y-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search trends or users..."
+              placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-11 rounded-full"
@@ -92,6 +153,27 @@ export default function HomePage() {
             />
           </div>
 
+          {/* Subcategories */}
+          <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+            <div className="flex gap-2 min-w-max pb-1">
+              {subcategories.map((subcategory) => (
+                <Button
+                  key={subcategory}
+                  variant={selectedSubcategory === subcategory ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedSubcategory(
+                    selectedSubcategory === subcategory ? null : subcategory
+                  )}
+                  className="whitespace-nowrap rounded-full"
+                  data-testid={`button-subcategory-${subcategory.toLowerCase().replace(' ', '-')}`}
+                >
+                  {subcategory}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Categories */}
           <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
             <div className="flex gap-2 min-w-max pb-1">
               {categories.map((category) => (
@@ -132,16 +214,18 @@ export default function HomePage() {
           </div>
         )}
 
-        {!isLoading && !error && trends.length === 0 && (
+        {!isLoading && !error && filteredTrends.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <p className="text-lg font-medium text-muted-foreground">No trends found</p>
-            <p className="text-sm text-muted-foreground">Be the first to create a trend!</p>
+            <p className="text-sm text-muted-foreground">
+              {searchQuery ? "Try a different search term" : "Be the first to create a trend!"}
+            </p>
           </div>
         )}
 
-        {!isLoading && !error && trends.length > 0 && (
+        {!isLoading && !error && filteredTrends.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {trends.map((trend) => (
+            {filteredTrends.map((trend) => (
               <TrendCard
                 key={trend.id}
                 id={trend.id}
@@ -155,6 +239,7 @@ export default function HomePage() {
                 chatCount={trend.chatCount || 0}
                 createdAt={trend.createdAt || new Date()}
                 endDate={trend.endDate || undefined}
+                isTrending={selectedSubcategory === "Trending"}
                 onClick={() => setLocation(`/feed/${trend.id}`)}
               />
             ))}
@@ -164,11 +249,11 @@ export default function HomePage() {
 
       <Link href="/create-trend">
         <Button
-          size="icon"
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg"
+          className="fixed bottom-6 right-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium"
           data-testid="button-create-trend"
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-5 h-5" />
+          Create New Trend
         </Button>
       </Link>
 
@@ -176,6 +261,7 @@ export default function HomePage() {
         open={menuOpen}
         onOpenChange={setMenuOpen}
         username={user?.username || "Guest"}
+        userAvatar={user?.profilePicture || undefined}
         onLogoutClick={async () => {
           await logout();
           setLocation("/login");
