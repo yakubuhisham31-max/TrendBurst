@@ -145,15 +145,25 @@ export default function FeedPage() {
       });
       return;
     }
-    if (votesRemaining <= 0) {
-      toast({
-        title: "No votes remaining",
-        description: "You have used all 10 votes for this trend.",
-        variant: "destructive",
-      });
-      return;
+    
+    // Check if user already voted on this post
+    const post = posts.find(p => p.id === postId);
+    if (post?.userVoted) {
+      // Toggle off - unvote
+      voteDownMutation.mutate(postId);
+    } else {
+      // Check vote limit
+      if (votesRemaining <= 0) {
+        toast({
+          title: "No votes remaining",
+          description: "You have used all 10 votes for this trend.",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Vote up
+      voteUpMutation.mutate(postId);
     }
-    voteUpMutation.mutate(postId);
   };
 
   const handleVoteDown = (postId: string) => {
