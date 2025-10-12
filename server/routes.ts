@@ -262,6 +262,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/dashboard/trends/:id/analytics - Get detailed analytics for a specific trend (protected, only trend creator)
+  app.get("/api/dashboard/trends/:id/analytics", requireAuth, async (req, res) => {
+    try {
+      const trend = await storage.getTrend(req.params.id);
+      
+      if (!trend) {
+        return res.status(404).json({ message: "Trend not found" });
+      }
+      
+      if (trend.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden: Only the trend creator can view analytics" });
+      }
+
+      const posts = await storage.getPostsByTrend(trend.id);
+      const rankedPosts = await storage.getRankedPostsForTrend(trend.id);
+      
+      // Calculate unique participants
+      const uniqueParticipants = new Set(posts.map(p => p.userId)).size;
+      
+      // Calculate total votes
+      const totalVotes = posts.reduce((sum, p) => sum + (p.votes || 0), 0);
+      
+      // Get top posts
+      const topPosts = rankedPosts.slice(0, 3).map((post, index) => ({
+        rank: index + 1,
+        username: post.user?.username || "Unknown",
+        votes: post.votes || 0,
+        imageUrl: post.imageUrl,
+      }));
+      
+      // Calculate engagement rate (votes per participant)
+      const engagementRate = uniqueParticipants > 0 
+        ? (totalVotes / uniqueParticipants).toFixed(1) 
+        : "0";
+      
+      // Get comments count
+      const comments = await storage.getCommentsByTrend(trend.id);
+      
+      res.json({
+        trendId: trend.id,
+        trendName: trend.name,
+        category: trend.category,
+        views: trend.views || 0,
+        participants: uniqueParticipants,
+        totalPosts: posts.length,
+        totalVotes,
+        chatMessages: comments.length,
+        engagementRate,
+        topPosts,
+        isActive: !trend.endDate,
+        createdAt: trend.createdAt,
+        endDate: trend.endDate,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // POST /api/trends/:id/end - End trend and award points (protected, only trend creator)
   app.post("/api/trends/:id/end", requireAuth, async (req, res) => {
     try {
@@ -475,6 +533,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Toggle disqualification status
       const newStatus = post.isDisqualified ? 0 : 1;
       const updatedPost = await storage.updatePost(req.params.id, { isDisqualified: newStatus });
+      
+      // Remove or restore 50 TrendX points based on disqualification status
+      const postOwner = await storage.getUser(post.userId);
+      if (postOwner) {
+        if (newStatus === 1) {
+          // Disqualifying - remove 50 points
+          await storage.updateUser(post.userId, {
+            trendxPoints: Math.max(0, (postOwner.trendxPoints || 0) - 50),
+          });
+        } else {
+          // Requalifying - restore 50 points
+          await storage.updateUser(post.userId, {
+            trendxPoints: (postOwner.trendxPoints || 0) + 50,
+          });
+        }
+      }
+      
       res.json(updatedPost);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });

@@ -2,9 +2,10 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2 } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Trend } from "@shared/schema";
+import { useState } from "react";
 
 interface DashboardStats {
   trendsCreated: number;
@@ -14,9 +15,31 @@ interface DashboardStats {
   trendxPoints: number;
 }
 
+interface TrendAnalytics {
+  trendId: string;
+  trendName: string;
+  category: string;
+  views: number;
+  participants: number;
+  totalPosts: number;
+  totalVotes: number;
+  chatMessages: number;
+  engagementRate: string;
+  topPosts: Array<{
+    rank: number;
+    username: string;
+    votes: number;
+    imageUrl: string;
+  }>;
+  isActive: boolean;
+  createdAt: string;
+  endDate: string | null;
+}
+
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const [selectedTrendId, setSelectedTrendId] = useState<string | null>(null);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -26,6 +49,11 @@ export default function DashboardPage() {
   const { data: recentTrends, isLoading: trendsLoading } = useQuery<Trend[]>({
     queryKey: ["/api/trends/user", user?.id],
     enabled: !!user,
+  });
+
+  const { data: trendAnalytics, isLoading: analyticsLoading } = useQuery<TrendAnalytics>({
+    queryKey: ["/api/dashboard/trends", selectedTrendId, "analytics"],
+    enabled: !!selectedTrendId,
   });
 
   return (
@@ -126,22 +154,21 @@ export default function DashboardPage() {
         ) : null}
 
         <div>
-          <h2 className="text-xl font-bold mb-4">Your Recent Trends</h2>
+          <h2 className="text-xl font-bold mb-4">Your Trends Analytics</h2>
           {trendsLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : recentTrends && recentTrends.length > 0 ? (
-            <div className="space-y-3">
-              {recentTrends.slice(0, 5).map((trend) => (
+            <div className="space-y-6">
+              {recentTrends.map((trend) => (
                 <Card
                   key={trend.id}
-                  className="hover-elevate cursor-pointer transition-all"
-                  onClick={() => setLocation(`/feed/${trend.id}`)}
+                  className="overflow-hidden"
                   data-testid={`trend-${trend.id}`}
                 >
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-4 mb-4">
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg mb-2">{trend.name}</h3>
                         <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -151,16 +178,113 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      <div
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          !trend.endDate
-                            ? "bg-primary/10 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {!trend.endDate ? "active" : "ended"}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`px-4 py-2 rounded-full text-sm font-medium ${
+                            !trend.endDate
+                              ? "bg-primary/10 text-primary"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {!trend.endDate ? "active" : "ended"}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={selectedTrendId === trend.id ? "default" : "outline"}
+                          onClick={() => setSelectedTrendId(selectedTrendId === trend.id ? null : trend.id)}
+                          data-testid={`button-analytics-${trend.id}`}
+                        >
+                          <BarChart3 className="w-4 h-4 mr-2" />
+                          {selectedTrendId === trend.id ? "Hide" : "Analytics"}
+                        </Button>
                       </div>
                     </div>
+
+                    {selectedTrendId === trend.id && (
+                      analyticsLoading ? (
+                        <div className="flex items-center justify-center py-8 border-t mt-4 pt-4">
+                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : trendAnalytics ? (
+                        <div className="border-t mt-4 pt-4 space-y-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Eye className="w-4 h-4" />
+                                <span>Views</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.views}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Users className="w-4 h-4" />
+                                <span>Participants</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.participants}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Activity className="w-4 h-4" />
+                                <span>Posts</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.totalPosts}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <ThumbsUp className="w-4 h-4" />
+                                <span>Total Votes</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.totalVotes}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <MessageSquare className="w-4 h-4" />
+                                <span>Chat Messages</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.chatMessages}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <TrendingUp className="w-4 h-4" />
+                                <span>Engagement Rate</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.engagementRate}</p>
+                              <p className="text-xs text-muted-foreground">votes per participant</p>
+                            </div>
+                          </div>
+
+                          {trendAnalytics.topPosts.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-3">Top Performing Posts</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {trendAnalytics.topPosts.map((post) => (
+                                  <div key={post.rank} className="bg-muted rounded-lg p-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        #{post.rank}
+                                      </span>
+                                      <div className="flex items-center gap-1 text-sm font-medium">
+                                        <ThumbsUp className="w-3 h-3" />
+                                        <span>{post.votes}</span>
+                                      </div>
+                                    </div>
+                                    <img
+                                      src={post.imageUrl}
+                                      alt={`Top post by ${post.username}`}
+                                      className="w-full aspect-square object-cover rounded"
+                                    />
+                                    <p className="text-sm font-medium">@{post.username}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : null
+                    )}
                   </CardContent>
                 </Card>
               ))}
