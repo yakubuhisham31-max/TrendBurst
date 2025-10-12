@@ -483,48 +483,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Votes routes
 
-  // POST /api/votes - Add vote to post (protected, check 10-vote limit per trend)
-  app.post("/api/votes", requireAuth, async (req, res) => {
+  // POST /api/votes/increment - Increment vote on post (protected, check 10-vote limit per trend)
+  app.post("/api/votes/increment", requireAuth, async (req, res) => {
     try {
-      const result = insertVoteSchema.safeParse({
-        ...req.body,
-        userId: req.session.userId,
-      });
+      const { postId, trendId } = req.body;
 
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
+      if (!postId || !trendId) {
+        return res.status(400).json({ message: "postId and trendId are required" });
       }
 
-      // Check if user already voted on this post
-      const existingVote = await storage.getVote(result.data.postId, req.session.userId!);
-      if (existingVote) {
-        return res.status(400).json({ message: "You have already voted on this post" });
-      }
-
-      // Check 10-vote limit per trend
-      const userVotes = await storage.getVotesByUser(req.session.userId!, result.data.trendId);
-      if (userVotes.length >= 10) {
+      // Check 10-vote limit per trend (sum of all vote counts)
+      const userVotes = await storage.getVotesByUser(req.session.userId!, trendId);
+      const totalVotes = userVotes.reduce((sum, vote) => sum + (vote.count || 0), 0);
+      
+      if (totalVotes >= 10) {
         return res.status(400).json({ message: "You have reached the maximum of 10 votes for this trend" });
       }
 
-      const vote = await storage.createVote(result.data);
+      const vote = await storage.incrementVote(postId, req.session.userId!, trendId);
       res.status(201).json(vote);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  // DELETE /api/votes/:postId - Remove vote from post (protected)
-  app.delete("/api/votes/:postId", requireAuth, async (req, res) => {
+  // POST /api/votes/decrement - Decrement vote on post (protected)
+  app.post("/api/votes/decrement", requireAuth, async (req, res) => {
     try {
-      const vote = await storage.getVote(req.params.postId, req.session.userId!);
+      const { postId } = req.body;
 
-      if (!vote) {
-        return res.status(404).json({ message: "Vote not found" });
+      if (!postId) {
+        return res.status(400).json({ message: "postId is required" });
       }
 
-      await storage.deleteVote(req.params.postId, req.session.userId!);
-      res.json({ message: "Vote removed successfully" });
+      const vote = await storage.decrementVote(postId, req.session.userId!);
+      
+      if (vote === null) {
+        return res.json({ message: "Vote removed or decreased to zero" });
+      }
+
+      res.json(vote);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -534,7 +532,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/votes/trend/:trendId/count", requireAuth, async (req, res) => {
     try {
       const votes = await storage.getVotesByUser(req.session.userId!, req.params.trendId);
-      res.json({ count: votes.length });
+      const totalVotes = votes.reduce((sum, vote) => sum + (vote.count || 0), 0);
+      res.json({ count: totalVotes });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

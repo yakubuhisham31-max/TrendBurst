@@ -56,6 +56,7 @@ export const votes = pgTable("votes", {
   postId: varchar("post_id").notNull().references(() => posts.id),
   userId: varchar("user_id").notNull().references(() => users.id),
   trendId: varchar("trend_id").notNull().references(() => trends.id),
+  count: integer("count").default(1).notNull(),
 });
 
 export const comments = pgTable("comments", {

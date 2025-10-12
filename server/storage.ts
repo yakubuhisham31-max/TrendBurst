@@ -52,6 +52,8 @@ export interface IStorage {
   getVotesByUser(userId: string, trendId: string): Promise<Vote[]>;
   createVote(vote: InsertVote): Promise<Vote>;
   deleteVote(postId: string, userId: string): Promise<void>;
+  incrementVote(postId: string, userId: string, trendId: string): Promise<Vote>;
+  decrementVote(postId: string, userId: string): Promise<Vote | null>;
   
   // Comments
   getComment(id: string): Promise<Comment | undefined>;
@@ -184,6 +186,46 @@ export class DbStorage implements IStorage {
   async deleteVote(postId: string, userId: string): Promise<void> {
     await db.delete(schema.votes).where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)));
     await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} - 1` }).where(eq(schema.posts.id, postId));
+  }
+
+  async incrementVote(postId: string, userId: string, trendId: string): Promise<Vote> {
+    const existingVote = await this.getVote(postId, userId);
+    
+    if (existingVote) {
+      const result = await db
+        .update(schema.votes)
+        .set({ count: sql`${schema.votes.count} + 1` })
+        .where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)))
+        .returning();
+      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} + 1` }).where(eq(schema.posts.id, postId));
+      return result[0];
+    } else {
+      const result = await db.insert(schema.votes).values({ postId, userId, trendId, count: 1 }).returning();
+      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} + 1` }).where(eq(schema.posts.id, postId));
+      return result[0];
+    }
+  }
+
+  async decrementVote(postId: string, userId: string): Promise<Vote | null> {
+    const existingVote = await this.getVote(postId, userId);
+    
+    if (!existingVote) {
+      return null;
+    }
+    
+    if (existingVote.count <= 1) {
+      await db.delete(schema.votes).where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)));
+      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} - 1` }).where(eq(schema.posts.id, postId));
+      return null;
+    } else {
+      const result = await db
+        .update(schema.votes)
+        .set({ count: sql`${schema.votes.count} - 1` })
+        .where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)))
+        .returning();
+      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} - 1` }).where(eq(schema.posts.id, postId));
+      return result[0];
+    }
   }
 
   // Comments

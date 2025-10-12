@@ -47,11 +47,11 @@ export default function FeedPage() {
   const isTrendEnded = trend?.endDate ? new Date(trend.endDate) < new Date() : false;
   const userHasPosted = posts.some(post => post.userId === user?.id);
 
-  // Vote up mutation
+  // Vote increment mutation
   const voteUpMutation = useMutation({
     mutationFn: async (postId: string) => {
       if (!trendId) throw new Error("Trend ID is required");
-      const response = await apiRequest("POST", "/api/votes", { postId, trendId });
+      const response = await apiRequest("POST", "/api/votes/increment", { postId, trendId });
       return response.json();
     },
     onSuccess: () => {
@@ -67,10 +67,10 @@ export default function FeedPage() {
     },
   });
 
-  // Vote down mutation
+  // Vote decrement mutation
   const voteDownMutation = useMutation({
     mutationFn: async (postId: string) => {
-      await apiRequest("DELETE", `/api/votes/${postId}`);
+      await apiRequest("POST", "/api/votes/decrement", { postId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
@@ -146,24 +146,18 @@ export default function FeedPage() {
       return;
     }
     
-    // Check if user already voted on this post
-    const post = posts.find(p => p.id === postId);
-    if (post?.userVoted) {
-      // Toggle off - unvote
-      voteDownMutation.mutate(postId);
-    } else {
-      // Check vote limit
-      if (votesRemaining <= 0) {
-        toast({
-          title: "No votes remaining",
-          description: "You have used all 10 votes for this trend.",
-          variant: "destructive",
-        });
-        return;
-      }
-      // Vote up
-      voteUpMutation.mutate(postId);
+    // Check vote limit
+    if (votesRemaining <= 0) {
+      toast({
+        title: "No votes remaining",
+        description: "You have used all 10 votes for this trend.",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    // Increment vote
+    voteUpMutation.mutate(postId);
   };
 
   const handleVoteDown = (postId: string) => {
@@ -175,6 +169,8 @@ export default function FeedPage() {
       });
       return;
     }
+    
+    // Decrement vote
     voteDownMutation.mutate(postId);
   };
 
