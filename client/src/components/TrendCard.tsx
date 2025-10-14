@@ -53,7 +53,7 @@ export default function TrendCard({
   onClick,
   onDelete,
 }: TrendCardProps) {
-  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("all");
+  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("muted");
   const [, setLocation] = useLocation();
 
   const getTrendStatus = () => {
