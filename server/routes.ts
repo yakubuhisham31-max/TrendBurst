@@ -239,7 +239,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userTrends = await storage.getTrendsByUser(userId);
       const trendsCreated = userTrends.length;
-      const activeTrends = userTrends.filter(t => !t.endDate).length;
+      const now = new Date();
+      const activeTrends = userTrends.filter(t => t.endDate && t.endDate > now).length;
 
       let totalPosts = 0;
       let uniqueParticipants = new Set<string>();
