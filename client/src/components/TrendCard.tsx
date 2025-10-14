@@ -202,7 +202,7 @@ export default function TrendCard({
         </div>
 
         {/* Middle Section */}
-        <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 flex flex-col items-center text-center gap-2">
+        <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 flex flex-col items-center text-center gap-3">
           <Badge 
             className="bg-black/60 text-white backdrop-blur-sm px-3 py-1 rounded-full border-0"
             data-testid={`badge-category-${category.toLowerCase()}`}
@@ -213,7 +213,7 @@ export default function TrendCard({
             {trendName}
           </h3>
           {description && (
-            <p className="text-sm text-white/80 drop-shadow line-clamp-2 max-w-md" data-testid="text-description">
+            <p className="text-base text-white/90 drop-shadow-md line-clamp-2 max-w-lg px-4" data-testid="text-description">
               {description}
             </p>
           )}
