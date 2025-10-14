@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,13 @@ export default function FeedPage() {
     queryKey: ["/api/trends", trendId],
     enabled: !!trendId,
   });
+
+  // Track trend view when page loads
+  useEffect(() => {
+    if (trendId && user) {
+      apiRequest("POST", `/api/trends/${trendId}/view`).catch(console.error);
+    }
+  }, [trendId, user]);
 
   // Fetch posts for this trend
   const { data: posts = [], isLoading: postsLoading } = useQuery<PostWithUser[]>({
