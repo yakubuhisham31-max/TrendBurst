@@ -280,8 +280,18 @@ export default function FeedPage() {
 
   const isTrendCreator = user?.id === trend?.userId;
 
-  // Sort posts by votes (descending) to show rankings properly
-  const sortedPosts = [...posts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  // Calculate rank based on votes
+  const postRankings = [...posts]
+    .sort((a, b) => (b.votes || 0) - (a.votes || 0))
+    .reduce((acc, post, index) => {
+      acc[post.id] = index + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  // Sort posts by time posted (newest first) for display
+  const sortedPosts = [...posts].sort((a, b) => 
+    new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+  );
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -342,11 +352,11 @@ export default function FeedPage() {
             No posts yet. Be the first to post!
           </div>
         ) : (
-          sortedPosts.map((post, index) => (
+          sortedPosts.map((post) => (
             <PostCard
               key={post.id}
               id={post.id}
-              rank={index + 1}
+              rank={postRankings[post.id]}
               imageUrl={post.imageUrl}
               caption={post.caption || ""}
               username={post.user?.username || "Unknown"}

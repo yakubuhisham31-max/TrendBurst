@@ -55,7 +55,7 @@ export default function RoleSelectionPage() {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Choose Your Role</h1>
           <p className="text-muted-foreground">
-            Select how you'll be using Trendz
+            Select how you'll be using Trendx
           </p>
         </div>
 

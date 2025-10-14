@@ -67,24 +67,50 @@ export default function CreatePostDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Image</Label>
-            <ObjectUploader
-              maxNumberOfFiles={1}
-              maxFileSize={10485760}
-              onGetUploadParameters={handleGetUploadParameters}
-              onComplete={handleUploadComplete}
-              variant="outline"
-              buttonClassName="w-full h-48 border-2 border-dashed"
-            >
-              <div className="text-center">
-                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  {imageUrl ? "Image uploaded - click to change" : "Click to upload or drag and drop"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG up to 10MB
-                </p>
+            {imageUrl ? (
+              <div className="space-y-2">
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden border">
+                  <img
+                    src={imageUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={handleGetUploadParameters}
+                  onComplete={handleUploadComplete}
+                  variant="outline"
+                  buttonClassName="w-full"
+                >
+                  <div className="text-center py-2">
+                    <p className="text-sm text-muted-foreground">
+                      Click to change image
+                    </p>
+                  </div>
+                </ObjectUploader>
               </div>
-            </ObjectUploader>
+            ) : (
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                variant="outline"
+                buttonClassName="w-full h-48 border-2 border-dashed"
+              >
+                <div className="text-center">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG up to 10MB
+                  </p>
+                </div>
+              </ObjectUploader>
+            )}
           </div>
 
           <div className="space-y-2">

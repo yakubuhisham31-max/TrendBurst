@@ -277,6 +277,7 @@ export default function HomePage() {
                 chatCount={trend.chatCount || 0}
                 createdAt={trend.createdAt || new Date()}
                 endDate={trend.endDate || undefined}
+                description={trend.description || undefined}
                 isTrending={selectedSubcategory === "Trending"}
                 onClick={() => setLocation(`/feed/${trend.id}`)}
               />
