@@ -2,10 +2,12 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Trend } from "@shared/schema";
 import { useState } from "react";
+import { differenceInDays } from "date-fns";
 
 interface DashboardStats {
   trendsCreated: number;
@@ -49,12 +51,32 @@ export default function DashboardPage() {
   const { data: recentTrends, isLoading: trendsLoading } = useQuery<Trend[]>({
     queryKey: ["/api/trends/user", user?.id],
     enabled: !!user,
+    queryFn: async () => {
+      const res = await fetch(`/api/trends/user/${user?.id}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch trends");
+      const data = await res.json();
+      return data.map((trend: any) => ({
+        ...trend,
+        createdAt: new Date(trend.createdAt),
+        endDate: trend.endDate ? new Date(trend.endDate) : null,
+      }));
+    },
   });
 
   const { data: trendAnalytics, isLoading: analyticsLoading } = useQuery<TrendAnalytics>({
     queryKey: ["/api/dashboard/trends", selectedTrendId, "analytics"],
     enabled: !!selectedTrendId,
   });
+
+  const getTrendStatus = (endDate: Date | null | undefined): "active" | "ending-soon" | "ended" => {
+    if (!endDate) return "active";
+    const now = new Date();
+    const daysUntilEnd = differenceInDays(endDate, now);
+    
+    if (endDate < now) return "ended";
+    if (daysUntilEnd <= 3) return "ending-soon";
+    return "active";
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -179,15 +201,28 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div
-                          className={`px-4 py-2 rounded-full text-sm font-medium ${
-                            !trend.endDate
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {!trend.endDate ? "active" : "ended"}
-                        </div>
+                        {(() => {
+                          const status = getTrendStatus(trend.endDate);
+                          if (status === "active") {
+                            return (
+                              <Badge className="bg-primary/10 text-primary px-3 py-1 rounded-full border-0" data-testid={`badge-status-${trend.id}`}>
+                                Active
+                              </Badge>
+                            );
+                          } else if (status === "ending-soon") {
+                            return (
+                              <Badge className="bg-yellow-500 text-yellow-950 px-3 py-1 rounded-full border-0" data-testid={`badge-status-${trend.id}`}>
+                                Ending Soon
+                              </Badge>
+                            );
+                          } else {
+                            return (
+                              <Badge className="bg-red-500 text-white px-3 py-1 rounded-full border-0" data-testid={`badge-status-${trend.id}`}>
+                                Ended
+                              </Badge>
+                            );
+                          }
+                        })()}
                         <Button
                           size="sm"
                           variant={selectedTrendId === trend.id ? "default" : "outline"}
