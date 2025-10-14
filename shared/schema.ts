@@ -26,6 +26,7 @@ export const trends = pgTable("trends", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
+  description: text("description"),
   instructions: text("instructions").notNull(),
   rules: text("rules").array().notNull(),
   category: text("category").notNull(),
