@@ -181,6 +181,7 @@ export class DbStorage implements IStorage {
 
   async createPost(post: InsertPost): Promise<Post> {
     const result = await db.insert(schema.posts).values(post).returning();
+    await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} + 1` }).where(eq(schema.trends.id, post.trendId));
     return result[0];
   }
 
@@ -454,7 +455,11 @@ export class DbStorage implements IStorage {
   }
 
   async deletePost(id: string): Promise<void> {
-    await db.delete(schema.posts).where(eq(schema.posts.id, id));
+    const post = await this.getPost(id);
+    if (post) {
+      await db.delete(schema.posts).where(eq(schema.posts.id, id));
+      await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} - 1` }).where(eq(schema.trends.id, post.trendId));
+    }
   }
 }
 
