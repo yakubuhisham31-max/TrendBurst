@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Users, Eye, Send, Star, Reply } from "lucide-react";
+import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +59,29 @@ export default function FeedChatPage() {
     onError: (error: Error) => {
       toast({
         title: "Failed to send message",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      const response = await apiRequest("DELETE", `/api/comments/${commentId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/comments/trend", trendId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/trends/${trendId}`] });
+      toast({
+        title: "Message deleted",
+        description: "Your message has been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete message",
         description: error.message,
         variant: "destructive",
       });
@@ -166,8 +189,8 @@ export default function FeedChatPage() {
               
               if (isCurrentUser) {
                 return (
-                  <div key={comment.id} className="flex justify-end" data-testid={`comment-${comment.id}`}>
-                    <div className="max-w-[70%] bg-primary text-primary-foreground rounded-lg p-3">
+                  <div key={comment.id} className="flex justify-end group" data-testid={`comment-${comment.id}`}>
+                    <div className="max-w-[70%] bg-primary text-primary-foreground rounded-lg p-3 relative">
                       {isHost && (
                         <div className="flex items-center gap-1 mb-1">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" data-testid="icon-host" />
@@ -177,9 +200,21 @@ export default function FeedChatPage() {
                       <p className="text-sm" data-testid={`text-message-${comment.id}`}>
                         {comment.text}
                       </p>
-                      <span className="text-xs opacity-80 mt-1 block" data-testid={`text-time-${comment.id}`}>
-                        {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
-                      </span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs opacity-80" data-testid={`text-time-${comment.id}`}>
+                          {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary-foreground hover:bg-primary-foreground/20"
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
+                          data-testid={`button-delete-${comment.id}`}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );

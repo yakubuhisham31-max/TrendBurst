@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Star, Reply } from "lucide-react";
+import { Star, Reply, Trash2 } from "lucide-react";
 import type { Comment, User, Trend } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
@@ -70,6 +70,29 @@ export default function PostCommentsDialog({
     },
   });
 
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      const response = await apiRequest("DELETE", `/api/comments/${commentId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/comments/post/${postId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      toast({
+        title: "Comment deleted",
+        description: "Your comment has been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete comment",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = () => {
     if (!user) {
       toast({
@@ -108,51 +131,69 @@ export default function PostCommentsDialog({
               No comments yet. Be the first to comment!
             </div>
           ) : (
-            sortedComments.map((comment) => (
-              <div
-                key={comment.id}
-                className="flex gap-3"
-                data-testid={`comment-${comment.id}`}
-              >
-                <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarImage
-                    src={comment.user?.profilePicture || undefined}
-                    alt={comment.user?.username || "User"}
-                  />
-                  <AvatarFallback>
-                    {(comment.user?.username || "U").slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-medium" data-testid="text-commenter">
-                      {comment.user?.username || "Unknown"}
-                    </span>
-                    {comment.user?.id === trend?.userId && (
-                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(comment.createdAt!), {
-                        addSuffix: true,
-                      })}
-                    </span>
+            sortedComments.map((comment) => {
+              const isOwnComment = comment.userId === user?.id;
+              return (
+                <div
+                  key={comment.id}
+                  className="flex gap-3 group"
+                  data-testid={`comment-${comment.id}`}
+                >
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    <AvatarImage
+                      src={comment.user?.profilePicture || undefined}
+                      alt={comment.user?.username || "User"}
+                    />
+                    <AvatarFallback>
+                      {(comment.user?.username || "U").slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-medium" data-testid="text-commenter">
+                        {comment.user?.username || "Unknown"}
+                      </span>
+                      {comment.user?.id === trend?.userId && (
+                        <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(comment.createdAt!), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-sm" data-testid="text-comment">
+                      {comment.text}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-1 h-6 text-xs"
+                        onClick={() => setReplyingTo(comment)}
+                        data-testid={`button-reply-${comment.id}`}
+                      >
+                        <Reply className="w-3 h-3 mr-1" />
+                        Reply
+                      </Button>
+                      {isOwnComment && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
+                          data-testid={`button-delete-${comment.id}`}
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Delete
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm" data-testid="text-comment">
-                    {comment.text}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-1 h-6 text-xs"
-                    onClick={() => setReplyingTo(comment)}
-                    data-testid={`button-reply-${comment.id}`}
-                  >
-                    <Reply className="w-3 h-3 mr-1" />
-                    Reply
-                  </Button>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
