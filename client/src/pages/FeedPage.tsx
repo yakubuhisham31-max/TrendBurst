@@ -288,9 +288,9 @@ export default function FeedPage() {
       return acc;
     }, {} as Record<string, number>);
 
-  // Sort posts by time posted (newest first) for display
+  // Sort posts by time posted (oldest first) for display
   const sortedPosts = [...posts].sort((a, b) => 
-    new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
   );
 
   return (
@@ -371,6 +371,7 @@ export default function FeedPage() {
               isDisqualified={!!post.isDisqualified}
               isTrendEnded={isTrendEnded}
               isSaved={post.isSaved}
+              trendId={trendId}
               onVoteUp={() => handleVoteUp(post.id)}
               onVoteDown={() => handleVoteDown(post.id)}
               onComment={() => setCommentsPostId(post.id)}

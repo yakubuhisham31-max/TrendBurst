@@ -13,6 +13,7 @@ import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Tr
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import FollowButton from "./FollowButton";
 
 interface PostCardProps {
@@ -32,6 +33,7 @@ interface PostCardProps {
   isDisqualified?: boolean;
   isTrendEnded?: boolean;
   isSaved?: boolean;
+  trendId?: string;
   onVoteUp?: () => void;
   onVoteDown?: () => void;
   onComment?: () => void;
@@ -62,6 +64,7 @@ export default function PostCard({
   isDisqualified = false,
   isTrendEnded = false,
   isSaved = false,
+  trendId,
   onVoteUp,
   onVoteDown,
   onComment,
@@ -71,6 +74,38 @@ export default function PostCard({
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    const shareUrl = trendId ? `${window.location.origin}/feed/${trendId}` : window.location.href;
+    const shareText = `Check out this post by ${username}${caption ? `: "${caption}"` : ''}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        // User cancelled or error occurred
+        if ((err as Error).name !== 'AbortError') {
+          // Fallback to clipboard
+          await navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: "Link copied!",
+            description: "Post link copied to clipboard",
+          });
+        }
+      }
+    } else {
+      // Fallback to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied!",
+        description: "Post link copied to clipboard",
+      });
+    }
+  };
 
   return (
     <Card className="overflow-hidden" data-testid="card-post">
@@ -117,7 +152,7 @@ export default function PostCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" data-testid="menu-post-options">
-              <DropdownMenuItem data-testid="menu-item-share">
+              <DropdownMenuItem onClick={handleShare} data-testid="menu-item-share">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </DropdownMenuItem>

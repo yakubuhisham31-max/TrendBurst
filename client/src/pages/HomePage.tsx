@@ -288,7 +288,7 @@ export default function HomePage() {
 
       <Link href="/create-trend">
         <Button
-          className="fixed bottom-6 right-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium"
+          className="fixed bottom-6 left-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium z-50"
           data-testid="button-create-trend"
         >
           <Plus className="w-5 h-5" />

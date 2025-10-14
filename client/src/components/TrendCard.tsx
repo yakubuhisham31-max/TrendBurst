@@ -125,6 +125,38 @@ export default function TrendCard({
     if (onDelete) onDelete();
   };
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/feed/${id}`;
+    const shareText = `Check out this trend: ${trendName} by ${username}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        // User cancelled or error occurred
+        if ((err as Error).name !== 'AbortError') {
+          // Fallback to clipboard
+          await navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: "Link copied!",
+            description: "Trend link copied to clipboard",
+          });
+        }
+      }
+    } else {
+      // Fallback to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied!",
+        description: "Trend link copied to clipboard",
+      });
+    }
+  };
+
   const getNotificationIcon = () => {
     if (notificationStatus === "muted") return <BellOff className="w-4 h-4" />;
     if (notificationStatus === "posts") return <Bell className="w-4 h-4" />;
@@ -214,7 +246,7 @@ export default function TrendCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" data-testid="menu-trend-options">
-                <DropdownMenuItem data-testid="menu-item-share">
+                <DropdownMenuItem onClick={handleShare} data-testid="menu-item-share">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </DropdownMenuItem>
