@@ -902,6 +902,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // View Tracking routes
+
+  // POST /api/view-tracking - Update view tracking (protected)
+  app.post("/api/view-tracking", requireAuth, async (req, res) => {
+    try {
+      const { type, identifier } = req.body;
+
+      if (!type || !identifier) {
+        return res.status(400).json({ message: "type and identifier are required" });
+      }
+
+      const tracking = await storage.updateViewTracking(req.session.userId!, type, identifier);
+      res.json(tracking);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/notifications/counts - Get new content counts (protected)
+  app.get("/api/notifications/counts", requireAuth, async (req, res) => {
+    try {
+      const counts = await storage.getNewContentCounts(req.session.userId!);
+      res.json(counts);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

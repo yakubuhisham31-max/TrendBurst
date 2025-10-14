@@ -76,6 +76,14 @@ export const follows = pgTable("follows", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const viewTracking = pgTable("view_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // 'category' or 'chat'
+  identifier: text("identifier").notNull(), // category name or trend ID
+  lastViewedAt: timestamp("last_viewed_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -116,6 +124,11 @@ export const insertFollowSchema = createInsertSchema(follows).omit({
   createdAt: true,
 });
 
+export const insertViewTrackingSchema = createInsertSchema(viewTracking).omit({
+  id: true,
+  lastViewedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTrend = z.infer<typeof insertTrendSchema>;
@@ -128,3 +141,5 @@ export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type Follow = typeof follows.$inferSelect;
+export type InsertViewTracking = z.infer<typeof insertViewTrackingSchema>;
+export type ViewTracking = typeof viewTracking.$inferSelect;

@@ -16,6 +16,8 @@ import type {
   InsertComment,
   Follow,
   InsertFollow,
+  ViewTracking,
+  InsertViewTracking,
 } from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
@@ -68,6 +70,11 @@ export interface IStorage {
   getFollowing(userId: string): Promise<Follow[]>;
   createFollow(follow: InsertFollow): Promise<Follow>;
   deleteFollow(followerId: string, followingId: string): Promise<void>;
+  
+  // View Tracking
+  getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined>;
+  updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking>;
+  getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number> }>;
 }
 
 export class DbStorage implements IStorage {
@@ -297,6 +304,74 @@ export class DbStorage implements IStorage {
     await db.delete(schema.follows).where(and(eq(schema.follows.followerId, followerId), eq(schema.follows.followingId, followingId)));
     await db.update(schema.users).set({ followers: sql`${schema.users.followers} - 1` }).where(eq(schema.users.id, followingId));
     await db.update(schema.users).set({ following: sql`${schema.users.following} - 1` }).where(eq(schema.users.id, followerId));
+  }
+
+  // View Tracking
+  async getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined> {
+    const result = await db.select().from(schema.viewTracking).where(
+      and(
+        eq(schema.viewTracking.userId, userId),
+        eq(schema.viewTracking.type, type),
+        eq(schema.viewTracking.identifier, identifier)
+      )
+    );
+    return result[0];
+  }
+
+  async updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking> {
+    const existing = await this.getViewTracking(userId, type, identifier);
+    
+    if (existing) {
+      const result = await db
+        .update(schema.viewTracking)
+        .set({ lastViewedAt: new Date() })
+        .where(eq(schema.viewTracking.id, existing.id))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db.insert(schema.viewTracking).values({ userId, type, identifier }).returning();
+      return result[0];
+    }
+  }
+
+  async getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number> }> {
+    const categoryCounts: Record<string, number> = {};
+    const chatCounts: Record<string, number> = {};
+    
+    // Get all view tracking records for this user
+    const viewRecords = await db.select().from(schema.viewTracking).where(eq(schema.viewTracking.userId, userId));
+    
+    // Count new trends per category
+    const categoryRecords = viewRecords.filter(r => r.type === 'category');
+    const categories = ['Music', 'Dance', 'Art', 'Fashion', 'Comedy', 'Food', 'Sports', 'Tech', 'Other'];
+    
+    for (const category of categories) {
+      const record = categoryRecords.find(r => r.identifier === category);
+      const lastViewed = record?.lastViewedAt || new Date(0);
+      const newTrends = await db.select().from(schema.trends).where(
+        and(
+          eq(schema.trends.category, category),
+          sql`${schema.trends.createdAt} > ${lastViewed}`
+        )
+      );
+      categoryCounts[category] = newTrends.length;
+    }
+    
+    // Count new chat messages per trend
+    const chatRecords = viewRecords.filter(r => r.type === 'chat');
+    for (const record of chatRecords) {
+      const lastViewed = record.lastViewedAt || new Date(0);
+      const newMessages = await db.select().from(schema.comments).where(
+        and(
+          eq(schema.comments.trendId, record.identifier),
+          isNull(schema.comments.postId),
+          sql`${schema.comments.createdAt} > ${lastViewed}`
+        )
+      );
+      chatCounts[record.identifier] = newMessages.length;
+    }
+    
+    return { category: categoryCounts, chat: chatCounts };
   }
 }
 
