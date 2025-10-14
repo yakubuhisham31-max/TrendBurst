@@ -1,13 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Menu, Plus, Search, AlertCircle } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";
 import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
@@ -63,6 +65,31 @@ export default function HomePage() {
       }));
     },
   });
+
+  // Fetch notification counts
+  const { data: notificationCounts } = useQuery<{ category: Record<string, number>, chat: Record<string, number> }>({
+    queryKey: ["/api/notifications/counts"],
+    enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  // Update view tracking mutation
+  const updateViewMutation = useMutation({
+    mutationFn: async ({ type, identifier }: { type: string; identifier: string }) => {
+      const response = await apiRequest("POST", "/api/view-tracking", { type, identifier });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/counts"] });
+    },
+  });
+
+  // Mark category as viewed when selected
+  useEffect(() => {
+    if (user && selectedCategory && selectedCategory !== "All") {
+      updateViewMutation.mutate({ type: "category", identifier: selectedCategory });
+    }
+  }, [selectedCategory, user]);
 
   // Filter trends based on subcategory
   const trends = useMemo(() => {
@@ -176,18 +203,29 @@ export default function HomePage() {
           {/* Main Categories */}
           <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
             <div className="flex gap-2 min-w-max pb-1">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className="whitespace-nowrap rounded-full"
-                  data-testid={`button-category-${category.toLowerCase()}`}
-                >
-                  {category}
-                </Button>
-              ))}
+              {categories.map((category) => {
+                const newCount = category !== "All" && notificationCounts?.category?.[category] || 0;
+                return (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category)}
+                    className="whitespace-nowrap rounded-full relative"
+                    data-testid={`button-category-${category.toLowerCase()}`}
+                  >
+                    {category}
+                    {newCount > 0 && (
+                      <Badge 
+                        className="ml-1.5 h-5 min-w-5 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs"
+                        data-testid={`badge-notification-${category.toLowerCase()}`}
+                      >
+                        {newCount > 99 ? "99+" : newCount}
+                      </Badge>
+                    )}
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </div>
