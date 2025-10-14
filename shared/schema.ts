@@ -85,6 +85,20 @@ export const viewTracking = pgTable("view_tracking", {
   lastViewedAt: timestamp("last_viewed_at").defaultNow(),
 });
 
+export const savedTrends = pgTable("saved_trends", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  trendId: varchar("trend_id").notNull().references(() => trends.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const savedPosts = pgTable("saved_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  postId: varchar("post_id").notNull().references(() => posts.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -138,6 +152,16 @@ export const insertViewTrackingSchema = createInsertSchema(viewTracking).omit({
   lastViewedAt: true,
 });
 
+export const insertSavedTrendSchema = createInsertSchema(savedTrends).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTrend = z.input<typeof insertTrendSchema>;
@@ -152,3 +176,7 @@ export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type Follow = typeof follows.$inferSelect;
 export type InsertViewTracking = z.infer<typeof insertViewTrackingSchema>;
 export type ViewTracking = typeof viewTracking.$inferSelect;
+export type InsertSavedTrend = z.infer<typeof insertSavedTrendSchema>;
+export type SavedTrend = typeof savedTrends.$inferSelect;
+export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
+export type SavedPost = typeof savedPosts.$inferSelect;
