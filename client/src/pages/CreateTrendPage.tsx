@@ -10,6 +10,7 @@ import { Upload, ArrowLeft, Plus, X, Calendar, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { InsertTrend } from "@shared/schema";
 
 const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Music", "Food", "Fashion", "Photography"];
@@ -64,6 +65,52 @@ export default function CreateTrendPage() {
     }
   };
 
+  const getCoverUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/object-storage/upload-url", {
+      path: `trend-covers/${Date.now()}.jpg`,
+      isPublic: true,
+    });
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadUrl,
+    };
+  };
+
+  const handleCoverUploadComplete = (result: any) => {
+    if (result.successful && result.successful[0]) {
+      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+      setCoverImage(uploadedUrl);
+      toast({
+        title: "Success",
+        description: "Cover picture uploaded successfully",
+      });
+    }
+  };
+
+  const getReferenceUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/object-storage/upload-url", {
+      path: `trend-references/${Date.now()}.jpg`,
+      isPublic: true,
+    });
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadUrl,
+    };
+  };
+
+  const handleReferenceUploadComplete = (result: any) => {
+    if (result.successful && result.successful[0]) {
+      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+      setReferenceMedia([...referenceMedia, uploadedUrl]);
+      toast({
+        title: "Success",
+        description: "Reference media uploaded successfully",
+      });
+    }
+  };
+
   const handleSubmit = () => {
     if (!user) {
       toast({
@@ -75,18 +122,25 @@ export default function CreateTrendPage() {
       return;
     }
 
-    // Validate end date if provided
-    if (endDate) {
-      const todayString = new Date().toISOString().split('T')[0];
-      
-      if (endDate < todayString) {
-        toast({
-          title: "Invalid End Date",
-          description: "End date cannot be in the past.",
-          variant: "destructive",
-        });
-        return;
-      }
+    // Validate end date is provided
+    if (!endDate) {
+      toast({
+        title: "Missing End Date",
+        description: "End date is required for creating a trend.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const todayString = new Date().toISOString().split('T')[0];
+    
+    if (endDate < todayString) {
+      toast({
+        title: "Invalid End Date",
+        description: "End date cannot be in the past.",
+        variant: "destructive",
+      });
+      return;
     }
 
     const filteredRules = rules.filter(r => r.trim() !== "");
@@ -98,7 +152,7 @@ export default function CreateTrendPage() {
       category: selectedCategory,
       coverPicture: coverImage || null,
       referenceMedia: referenceMedia.length > 0 ? referenceMedia : null,
-      endDate: endDate ? new Date(endDate) : null,
+      endDate: new Date(endDate),
     };
 
     createTrendMutation.mutate(trendData);
@@ -205,7 +259,7 @@ export default function CreateTrendPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="end-date">End Date (Optional)</Label>
+              <Label htmlFor="end-date">End Date *</Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -216,26 +270,54 @@ export default function CreateTrendPage() {
                   min={new Date().toISOString().split('T')[0]}
                   className="pl-9"
                   data-testid="input-end-date"
+                  required
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Set an end date for this trend (optional)
+                Set an end date for this trend (required)
               </p>
             </div>
 
             <div className="space-y-2">
               <Label>Cover Picture</Label>
-              <div className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/20 hover-elevate cursor-pointer" data-testid="dropzone-cover">
-                <div className="text-center">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PNG, JPG up to 10MB
-                  </p>
+              {coverImage ? (
+                <div className="relative h-48 rounded-lg overflow-hidden">
+                  <img 
+                    src={coverImage} 
+                    alt="Cover" 
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="absolute top-2 right-2"
+                    onClick={() => setCoverImage(undefined)}
+                    data-testid="button-remove-cover"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-              </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/20">
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-3">
+                      PNG, JPG up to 10MB
+                    </p>
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760}
+                      onGetUploadParameters={getCoverUploadParameters}
+                      onComplete={handleCoverUploadComplete}
+                      variant="outline"
+                      buttonClassName="data-testid-dropzone-cover"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Cover Picture
+                    </ObjectUploader>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -243,22 +325,36 @@ export default function CreateTrendPage() {
               <p className="text-sm text-muted-foreground">
                 Upload examples for participants to reference
               </p>
-              <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center bg-muted/20 hover-elevate cursor-pointer" data-testid="dropzone-reference">
+              <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center bg-muted/20">
                 <div className="text-center">
                   <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Upload reference media
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Images or Videos
-                  </p>
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={10485760}
+                    onGetUploadParameters={getReferenceUploadParameters}
+                    onComplete={handleReferenceUploadComplete}
+                    variant="outline"
+                    buttonClassName="data-testid-dropzone-reference"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Reference Media
+                  </ObjectUploader>
                 </div>
               </div>
               {referenceMedia.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 mt-2">
                   {referenceMedia.map((media, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-chart-2/20" />
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
+                      <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={() => setReferenceMedia(referenceMedia.filter((_, i) => i !== index))}
+                        data-testid={`button-remove-reference-${index}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -276,7 +372,7 @@ export default function CreateTrendPage() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!name || !instructions || !selectedCategory || createTrendMutation.isPending}
+                disabled={!name || !instructions || !selectedCategory || !endDate || createTrendMutation.isPending}
                 data-testid="button-create-trend"
               >
                 {createTrendMutation.isPending && (

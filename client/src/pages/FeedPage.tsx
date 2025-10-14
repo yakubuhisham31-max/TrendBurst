@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Info, Trophy, MessageSquare, Plus } from "lucide-react";
+import { ChevronLeft, Info, Trophy, MessageSquare, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
@@ -145,6 +145,30 @@ export default function FeedPage() {
     },
   });
 
+  // Delete trend mutation
+  const deleteTrendMutation = useMutation({
+    mutationFn: async () => {
+      if (!trendId) throw new Error("Trend ID is required");
+      const response = await apiRequest("DELETE", `/api/trends/${trendId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
+      toast({
+        title: "Trend deleted",
+        description: "Your trend has been deleted successfully.",
+      });
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete trend",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleVoteUp = (postId: string) => {
     if (!user) {
       toast({
@@ -191,6 +215,14 @@ export default function FeedPage() {
     disqualifyMutation.mutate(postId);
   };
 
+  const handleDeleteTrend = () => {
+    if (confirm("Are you sure you want to delete this trend? This action cannot be undone.")) {
+      deleteTrendMutation.mutate();
+    }
+  };
+
+  const isTrendCreator = user?.id === trend?.userId;
+
   // Sort posts by createdAt (oldest first as per requirements)
   const sortedPosts = [...posts].sort((a, b) => 
     new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
@@ -216,7 +248,19 @@ export default function FeedPage() {
             data-testid="img-logo"
           />
 
-          <div className="w-10" />
+          {isTrendCreator ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleDeleteTrend}
+              disabled={deleteTrendMutation.isPending}
+              data-testid="button-delete-trend"
+            >
+              <Trash2 className="w-5 h-5 text-destructive" />
+            </Button>
+          ) : (
+            <div className="w-10" />
+          )}
         </div>
 
         <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-3">
