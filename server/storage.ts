@@ -60,6 +60,7 @@ export interface IStorage {
   getCommentsByPost(postId: string): Promise<Comment[]>;
   getCommentsByTrend(trendId: string): Promise<Comment[]>;
   createComment(comment: InsertComment): Promise<Comment>;
+  deleteComment(id: string): Promise<void>;
   
   // Follows
   getFollow(followerId: string, followingId: string): Promise<Follow | undefined>;
@@ -256,6 +257,19 @@ export class DbStorage implements IStorage {
       await db.update(schema.posts).set({ commentCount: sql`${schema.posts.commentCount} + 1` }).where(eq(schema.posts.id, comment.postId));
     }
     return result[0];
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    const comment = await this.getComment(id);
+    if (comment) {
+      await db.delete(schema.comments).where(eq(schema.comments.id, id));
+      if (comment.trendId) {
+        await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} - 1` }).where(eq(schema.trends.id, comment.trendId));
+      }
+      if (comment.postId) {
+        await db.update(schema.posts).set({ commentCount: sql`${schema.posts.commentCount} - 1` }).where(eq(schema.posts.id, comment.postId));
+      }
+    }
   }
 
   // Follows

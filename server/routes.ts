@@ -679,6 +679,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DELETE /api/comments/:id - Delete comment (protected, only comment owner)
+  app.delete("/api/comments/:id", requireAuth, async (req, res) => {
+    try {
+      const comment = await storage.getComment(req.params.id);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      if (comment.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
+      }
+
+      await storage.deleteComment(req.params.id);
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Follows routes
 
   // POST /api/follows - Follow user (protected)
