@@ -100,6 +100,14 @@ export const insertTrendSchema = createInsertSchema(trends).omit({
   participants: true,
   chatCount: true,
   createdAt: true,
+}).extend({
+  endDate: z.union([z.date(), z.string()]).transform((val) => {
+    if (typeof val === 'string') {
+      return new Date(val);
+    }
+    return val;
+  }),
+  referenceMedia: z.array(z.string()).nullable().optional(),
 });
 
 export const insertPostSchema = createInsertSchema(posts).omit({
@@ -131,7 +139,7 @@ export const insertViewTrackingSchema = createInsertSchema(viewTracking).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type InsertTrend = z.infer<typeof insertTrendSchema>;
+export type InsertTrend = z.input<typeof insertTrendSchema>;
 export type Trend = typeof trends.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof posts.$inferSelect;

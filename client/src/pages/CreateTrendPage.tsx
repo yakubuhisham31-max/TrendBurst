@@ -151,8 +151,8 @@ export default function CreateTrendPage() {
       rules: filteredRules,
       category: selectedCategory,
       coverPicture: coverImage || null,
-      referenceMedia: referenceMedia.length > 0 ? referenceMedia : null,
-      endDate: new Date(endDate),
+      referenceMedia: referenceMedia.length > 0 ? referenceMedia : undefined,
+      endDate: endDate, // Send as string, schema will transform to Date
     };
 
     createTrendMutation.mutate(trendData);
