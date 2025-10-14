@@ -76,6 +76,7 @@ export interface IStorage {
   // View Tracking
   getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined>;
   updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking>;
+  trackTrendView(userId: string, trendId: string): Promise<void>;
   getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number> }>;
   
   // Saved Items
@@ -344,6 +345,20 @@ export class DbStorage implements IStorage {
     } else {
       const result = await db.insert(schema.viewTracking).values({ userId, type, identifier }).returning();
       return result[0];
+    }
+  }
+
+  async trackTrendView(userId: string, trendId: string): Promise<void> {
+    const existing = await this.getViewTracking(userId, 'trend', trendId);
+    
+    if (!existing) {
+      await db.insert(schema.viewTracking).values({ userId, type: 'trend', identifier: trendId });
+      await db.update(schema.trends).set({ views: sql`${schema.trends.views} + 1` }).where(eq(schema.trends.id, trendId));
+    } else {
+      await db
+        .update(schema.viewTracking)
+        .set({ lastViewedAt: new Date() })
+        .where(eq(schema.viewTracking.id, existing.id));
     }
   }
 

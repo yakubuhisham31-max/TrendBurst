@@ -938,6 +938,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/trends/:id/view - Track trend view (protected)
+  app.post("/api/trends/:id/view", requireAuth, async (req, res) => {
+    try {
+      await storage.trackTrendView(req.session.userId!, req.params.id);
+      res.json({ message: "View tracked successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // GET /api/notifications/counts - Get new content counts (protected)
   app.get("/api/notifications/counts", requireAuth, async (req, res) => {
     try {
