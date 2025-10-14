@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neonConfig, Pool } from "@neondatabase/serverless";
 import ws from "ws";
-import { eq, and, desc, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, isNull, inArray } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -146,6 +146,43 @@ export class DbStorage implements IStorage {
   }
 
   async deleteTrend(id: string): Promise<void> {
+    // Delete all related records first (cascading delete)
+    
+    // Get all post IDs for this trend first
+    const trendPosts = await db.select({ id: schema.posts.id })
+      .from(schema.posts)
+      .where(eq(schema.posts.trendId, id));
+    const postIds = trendPosts.map(p => p.id);
+    
+    // Delete saved posts for this trend's posts
+    if (postIds.length > 0) {
+      await db.delete(schema.savedPosts).where(inArray(schema.savedPosts.postId, postIds));
+    }
+    
+    // Delete saved trends
+    await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
+    
+    // Delete view tracking
+    await db.delete(schema.viewTracking).where(
+      and(
+        eq(schema.viewTracking.type, 'trend'),
+        eq(schema.viewTracking.trendId, id)
+      )
+    );
+    
+    // Delete notifications
+    await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
+    
+    // Delete comments (both post and trend comments)
+    await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
+    
+    // Delete votes
+    await db.delete(schema.votes).where(eq(schema.votes.trendId, id));
+    
+    // Delete posts
+    await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
+    
+    // Finally delete the trend itself
     await db.delete(schema.trends).where(eq(schema.trends.id, id));
   }
 
