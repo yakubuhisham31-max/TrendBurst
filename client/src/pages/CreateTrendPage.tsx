@@ -20,6 +20,7 @@ export default function CreateTrendPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
   const [rules, setRules] = useState([""]);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -147,6 +148,7 @@ export default function CreateTrendPage() {
     
     const trendData: Omit<InsertTrend, "userId"> = {
       name,
+      description: description || null,
       instructions,
       rules: filteredRules,
       category: selectedCategory,
@@ -186,6 +188,19 @@ export default function CreateTrendPage() {
                 onChange={(e) => setName(e.target.value)}
                 data-testid="input-trend-name"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Short Description</Label>
+              <Input
+                id="description"
+                placeholder="A few words describing this trend (optional)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={100}
+                data-testid="input-description"
+              />
+              <p className="text-xs text-muted-foreground">{description.length}/100 characters</p>
             </div>
 
             <div className="space-y-2">
