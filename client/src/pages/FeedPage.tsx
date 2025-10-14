@@ -14,7 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Post, Trend, User } from "@shared/schema";
 
-type PostWithUser = Post & { user: User | null; userVoted: boolean };
+type PostWithUser = Post & { user: User | null; userVoted: boolean; isSaved?: boolean };
 type TrendWithCreator = Trend & { creator: User | null };
 
 export default function FeedPage() {
@@ -159,6 +159,7 @@ export default function FeedPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
       toast({
         title: "Post deleted",
         description: "Your post has been deleted successfully",
@@ -180,6 +181,7 @@ export default function FeedPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       toast({
         title: "Post saved",
         description: "Post saved to your collection",
@@ -201,6 +203,7 @@ export default function FeedPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       toast({
         title: "Post unsaved",
         description: "Post removed from your collection",
@@ -357,12 +360,13 @@ export default function FeedPage() {
               isCreator={user?.id === post.userId}
               isDisqualified={!!post.isDisqualified}
               isTrendEnded={isTrendEnded}
+              isSaved={post.isSaved}
               onVoteUp={() => handleVoteUp(post.id)}
               onVoteDown={() => handleVoteDown(post.id)}
               onComment={() => setCommentsPostId(post.id)}
               onDisqualify={() => handleDisqualify(post.id)}
               onDelete={() => handleDeletePost(post.id)}
-              onSave={() => handleSavePost(post.id, false)}
+              onSave={() => handleSavePost(post.id, post.isSaved || false)}
             />
           ))
         )}
