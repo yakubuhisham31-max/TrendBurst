@@ -140,6 +140,33 @@ export class ObjectStorageService {
     });
   }
 
+  async getCustomUploadURL(path: string, isPublic: boolean = true): Promise<string> {
+    // Determine the base directory
+    const baseDir = isPublic 
+      ? this.getPublicObjectSearchPaths()[0] 
+      : this.getPrivateObjectDir();
+    
+    if (!baseDir) {
+      throw new Error(
+        isPublic 
+          ? "PUBLIC_OBJECT_SEARCH_PATHS not set. Create a bucket in 'Object Storage' tool."
+          : "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' tool."
+      );
+    }
+
+    // Combine base directory with custom path
+    const fullPath = `${baseDir}/${path}`;
+
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+
+    return signObjectURL({
+      bucketName,
+      objectName,
+      method: "PUT",
+      ttlSec: 900,
+    });
+  }
+
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/objects/")) {
       throw new ObjectNotFoundError();

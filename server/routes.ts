@@ -789,6 +789,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ uploadURL });
   });
 
+  // POST /api/object-storage/upload-url - Get presigned URL for custom path upload
+  app.post("/api/object-storage/upload-url", requireAuth, async (req, res) => {
+    try {
+      const { path, isPublic } = req.body;
+      
+      if (!path) {
+        return res.status(400).json({ error: "path is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const uploadUrl = await objectStorageService.getCustomUploadURL(path, isPublic ?? true);
+      res.json({ uploadUrl });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
   // PUT /api/posts/:id/image - Update post image and set ACL
   app.put("/api/posts/:id/image", requireAuth, async (req, res) => {
     if (!req.body.imageUrl) {
