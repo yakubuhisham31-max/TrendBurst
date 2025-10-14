@@ -197,10 +197,10 @@ export default function CreateTrendPage() {
                 placeholder="A few words describing this trend (optional)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                maxLength={100}
+                maxLength={51}
                 data-testid="input-description"
               />
-              <p className="text-xs text-muted-foreground">{description.length}/100 characters</p>
+              <p className="text-xs text-muted-foreground">{description.length}/51 characters</p>
             </div>
 
             <div className="space-y-2">
