@@ -152,6 +152,69 @@ export default function FeedPage() {
     },
   });
 
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await apiRequest("DELETE", `/api/posts/${postId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      toast({
+        title: "Post deleted",
+        description: "Your post has been deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Save post mutation
+  const savePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await apiRequest("POST", `/api/saved/posts/${postId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
+      toast({
+        title: "Post saved",
+        description: "Post saved to your collection",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to save post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unsave post mutation
+  const unsavePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await apiRequest("DELETE", `/api/saved/posts/${postId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
+      toast({
+        title: "Post unsaved",
+        description: "Post removed from your collection",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to unsave post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
 
   const handleVoteUp = (postId: string) => {
     if (!user) {
@@ -199,13 +262,23 @@ export default function FeedPage() {
     disqualifyMutation.mutate(postId);
   };
 
+  const handleDeletePost = (postId: string) => {
+    deletePostMutation.mutate(postId);
+  };
+
+  const handleSavePost = (postId: string, isSaved: boolean) => {
+    if (isSaved) {
+      unsavePostMutation.mutate(postId);
+    } else {
+      savePostMutation.mutate(postId);
+    }
+  };
+
 
   const isTrendCreator = user?.id === trend?.userId;
 
-  // Sort posts by createdAt (oldest first as per requirements)
-  const sortedPosts = [...posts].sort((a, b) => 
-    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
-  );
+  // Sort posts by votes (descending) to show rankings properly
+  const sortedPosts = [...posts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -288,6 +361,8 @@ export default function FeedPage() {
               onVoteDown={() => handleVoteDown(post.id)}
               onComment={() => setCommentsPostId(post.id)}
               onDisqualify={() => handleDisqualify(post.id)}
+              onDelete={() => handleDeletePost(post.id)}
+              onSave={() => handleSavePost(post.id, false)}
             />
           ))
         )}

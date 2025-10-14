@@ -31,11 +31,13 @@ interface PostCardProps {
   isUserTrendHost?: boolean;
   isDisqualified?: boolean;
   isTrendEnded?: boolean;
+  isSaved?: boolean;
   onVoteUp?: () => void;
   onVoteDown?: () => void;
   onComment?: () => void;
   onDelete?: () => void;
   onDisqualify?: () => void;
+  onSave?: () => void;
 }
 
 const getRankBadge = (rank: number) => {
@@ -59,11 +61,13 @@ export default function PostCard({
   isUserTrendHost = false,
   isDisqualified = false,
   isTrendEnded = false,
+  isSaved = false,
   onVoteUp,
   onVoteDown,
   onComment,
   onDelete,
   onDisqualify,
+  onSave,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [, setLocation] = useLocation();
@@ -117,9 +121,9 @@ export default function PostCard({
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </DropdownMenuItem>
-              <DropdownMenuItem data-testid="menu-item-save">
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save
+              <DropdownMenuItem onClick={onSave} data-testid="menu-item-save">
+                <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                {isSaved ? "Unsave" : "Save"}
               </DropdownMenuItem>
               {(isCreator || isUserTrendHost) && <DropdownMenuSeparator />}
               {isCreator && (
