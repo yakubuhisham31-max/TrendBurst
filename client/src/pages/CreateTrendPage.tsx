@@ -148,7 +148,7 @@ export default function CreateTrendPage() {
     
     const trendData: Omit<InsertTrend, "userId"> = {
       name,
-      description: description || null,
+      description: description.trim() || undefined,
       instructions,
       rules: filteredRules,
       category: selectedCategory,
