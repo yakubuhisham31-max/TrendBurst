@@ -202,7 +202,7 @@ export default function TrendCard({
         </div>
 
         {/* Middle Section */}
-        <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 flex flex-col items-start gap-1">
+        <div className="absolute top-[58%] left-4 right-4 -translate-y-1/2 flex flex-col items-start gap-1">
           <Badge 
             className="bg-black/50 text-white backdrop-blur-sm px-2 py-0.5 text-xs rounded-full border-0"
             data-testid={`badge-category-${category.toLowerCase()}`}
