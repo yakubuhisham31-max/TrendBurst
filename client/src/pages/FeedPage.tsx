@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Info, Trophy, MessageSquare, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
@@ -43,9 +44,17 @@ export default function FeedPage() {
     enabled: !!trendId && !!user,
   });
 
+  // Fetch notification counts
+  const { data: notificationCounts } = useQuery<{ category: Record<string, number>, chat: Record<string, number> }>({
+    queryKey: ["/api/notifications/counts"],
+    enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
   const votesRemaining = 10 - (voteCountData?.count || 0);
   const isTrendEnded = trend?.endDate ? new Date(trend.endDate) < new Date() : false;
   const userHasPosted = posts.some(post => post.userId === user?.id);
+  const unreadChatCount = trendId && notificationCounts?.chat?.[trendId] || 0;
 
   // Vote increment mutation
   const voteUpMutation = useMutation({
@@ -286,11 +295,19 @@ export default function FeedPage() {
 
       <Button
         size="icon"
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-lg bg-chart-2 z-50"
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-lg bg-chart-2 z-50 relative"
         onClick={() => setLocation(`/feed-chat/${trendId}`)}
         data-testid="button-feed-chat"
       >
         <MessageSquare className="w-6 h-6" />
+        {unreadChatCount > 0 && (
+          <Badge 
+            className="absolute -top-1 -right-1 h-6 min-w-6 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center"
+            data-testid="badge-chat-notification"
+          >
+            {unreadChatCount > 99 ? "99+" : unreadChatCount}
+          </Badge>
+        )}
       </Button>
 
       <CreatePostDialog

@@ -39,6 +39,24 @@ export default function FeedChatPage() {
     enabled: !!trendId,
   });
 
+  // Update view tracking mutation
+  const updateViewMutation = useMutation({
+    mutationFn: async ({ type, identifier }: { type: string; identifier: string }) => {
+      const response = await apiRequest("POST", "/api/view-tracking", { type, identifier });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/counts"] });
+    },
+  });
+
+  // Mark chat as viewed when entering
+  useEffect(() => {
+    if (user && trendId) {
+      updateViewMutation.mutate({ type: "chat", identifier: trendId });
+    }
+  }, [trendId, user]);
+
   // Create comment mutation
   const createCommentMutation = useMutation({
     mutationFn: async (text: string) => {
