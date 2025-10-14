@@ -23,7 +23,7 @@ export default function NavigationMenu({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-72" data-testid="sheet-navigation">
         <SheetHeader>
-          <SheetTitle>Trendz</SheetTitle>
+          <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
 
         <div className="mt-6 space-y-2">

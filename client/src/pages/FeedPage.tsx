@@ -113,10 +113,13 @@ export default function FeedPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      if (user?.username) {
+        queryClient.invalidateQueries({ queryKey: ["/api/users", user.username] });
+      }
       setCreatePostOpen(false);
       toast({
         title: "Post created!",
-        description: "Your post has been added to the trend.",
+        description: "Your post has been added to the trend. You earned 50 TrendX points!",
       });
     },
     onError: (error: Error) => {

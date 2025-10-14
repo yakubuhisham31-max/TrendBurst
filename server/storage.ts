@@ -166,12 +166,9 @@ export class DbStorage implements IStorage {
     await db.delete(schema.viewTracking).where(
       and(
         eq(schema.viewTracking.type, 'trend'),
-        eq(schema.viewTracking.trendId, id)
+        eq(schema.viewTracking.identifier, id)
       )
     );
-    
-    // Delete notifications
-    await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
     
     // Delete comments (both post and trend comments)
     await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
@@ -460,10 +457,16 @@ export class DbStorage implements IStorage {
     const trends = await Promise.all(
       savedRecords.map(async (record) => {
         const trend = await this.getTrend(record.trendId);
-        return trend!;
+        if (!trend) return null;
+        
+        const creator = await this.getUser(trend.userId);
+        return {
+          ...trend,
+          creator: creator ? { username: creator.username, profilePicture: creator.profilePicture } : null
+        };
       })
     );
-    return trends.filter(t => t !== undefined);
+    return trends.filter(t => t !== null) as any;
   }
 
   async savePost(userId: string, postId: string): Promise<SavedPost> {

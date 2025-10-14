@@ -15,6 +15,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { User, Trend, Post } from "@shared/schema";
 
+type TrendWithCreator = Trend & { creator?: Pick<User, "username" | "profilePicture"> | null };
+
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
   const params = useParams();
@@ -44,6 +46,17 @@ export default function ProfilePage() {
     enabled: !!profileUser?.id,
   });
 
+  // Fetch saved trends (only for own profile)
+  const { data: savedTrends = [], isLoading: savedTrendsLoading } = useQuery<TrendWithCreator[]>({
+    queryKey: ["/api/saved/trends"],
+    enabled: !!isOwnProfile && !!currentUser,
+  });
+
+  // Fetch saved posts (only for own profile)
+  const { data: savedPosts = [], isLoading: savedPostsLoading } = useQuery<Post[]>({
+    queryKey: ["/api/saved/posts"],
+    enabled: !!isOwnProfile && !!currentUser,
+  });
 
   // Delete trend mutation
   const deleteTrendMutation = useMutation({
@@ -237,6 +250,11 @@ export default function ProfilePage() {
                     <TabsTrigger value="posts" className="flex-1" data-testid="tab-posts">
                       Posts
                     </TabsTrigger>
+                    {isOwnProfile && (
+                      <TabsTrigger value="saved" className="flex-1" data-testid="tab-saved">
+                        Saved
+                      </TabsTrigger>
+                    )}
                   </TabsList>
 
                   <TabsContent value="trends" className="mt-6">
@@ -320,6 +338,71 @@ export default function ProfilePage() {
                       </div>
                     )}
                   </TabsContent>
+
+                  {isOwnProfile && (
+                    <TabsContent value="saved" className="mt-6">
+                      {savedTrendsLoading || savedPostsLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Skeleton className="h-64" />
+                          <Skeleton className="h-64" />
+                        </div>
+                      ) : savedTrends.length === 0 && savedPosts.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          No saved items yet
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {savedTrends.length > 0 && (
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground mb-3">Saved Trends</h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {savedTrends.map((trend) => (
+                                  <TrendCard
+                                    key={trend.id}
+                                    id={trend.id}
+                                    coverImage={trend.coverPicture || undefined}
+                                    trendName={trend.name}
+                                    username={trend.creator?.username || "Unknown"}
+                                    userAvatar={trend.creator?.profilePicture || undefined}
+                                    category={trend.category}
+                                    views={trend.views || 0}
+                                    participants={trend.participants || 0}
+                                    chatCount={trend.chatCount || 0}
+                                    createdAt={new Date(trend.createdAt!)}
+                                    endDate={trend.endDate ? new Date(trend.endDate) : undefined}
+                                    description={trend.description || undefined}
+                                    onClick={() => setLocation(`/feed/${trend.id}`)}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {savedPosts.length > 0 && (
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground mb-3">Saved Posts</h3>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {savedPosts.map((post) => (
+                                  <div
+                                    key={post.id}
+                                    className="aspect-square bg-muted rounded-lg cursor-pointer hover-elevate overflow-hidden"
+                                    data-testid={`saved-post-${post.id}`}
+                                  >
+                                    <img
+                                      src={post.imageUrl}
+                                      alt={post.caption || "Post"}
+                                      className="w-full h-full object-cover"
+                                      onClick={() => setLocation(`/feed/${post.trendId}`)}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TabsContent>
+                  )}
                 </Tabs>
               </div>
             </div>

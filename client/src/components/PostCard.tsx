@@ -187,12 +187,14 @@ export default function PostCard({
       </div>
 
       <div className="relative">
-        <Badge
-          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
-          data-testid={`badge-rank-${rank}`}
-        >
-          {getRankBadge(rank)}
-        </Badge>
+        {!isDisqualified && (
+          <Badge
+            className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
+            data-testid={`badge-rank-${rank}`}
+          >
+            {getRankBadge(rank)}
+          </Badge>
+        )}
 
         {isDisqualified && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
