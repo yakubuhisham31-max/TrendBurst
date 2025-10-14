@@ -948,6 +948,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Saved Items routes
+
+  // POST /api/saved/trends/:trendId - Save a trend (protected)
+  app.post("/api/saved/trends/:trendId", requireAuth, async (req, res) => {
+    try {
+      const isSaved = await storage.isTrendSaved(req.session.userId!, req.params.trendId);
+      if (isSaved) {
+        return res.status(400).json({ message: "Trend already saved" });
+      }
+      const saved = await storage.saveTrend(req.session.userId!, req.params.trendId);
+      res.status(201).json(saved);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // DELETE /api/saved/trends/:trendId - Unsave a trend (protected)
+  app.delete("/api/saved/trends/:trendId", requireAuth, async (req, res) => {
+    try {
+      await storage.unsaveTrend(req.session.userId!, req.params.trendId);
+      res.json({ message: "Trend unsaved successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/saved/trends/:trendId/status - Check if trend is saved (protected)
+  app.get("/api/saved/trends/:trendId/status", requireAuth, async (req, res) => {
+    try {
+      const isSaved = await storage.isTrendSaved(req.session.userId!, req.params.trendId);
+      res.json({ isSaved });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/saved/trends - Get user's saved trends (protected)
+  app.get("/api/saved/trends", requireAuth, async (req, res) => {
+    try {
+      const trends = await storage.getSavedTrends(req.session.userId!);
+      res.json(trends);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // POST /api/saved/posts/:postId - Save a post (protected)
+  app.post("/api/saved/posts/:postId", requireAuth, async (req, res) => {
+    try {
+      const isSaved = await storage.isPostSaved(req.session.userId!, req.params.postId);
+      if (isSaved) {
+        return res.status(400).json({ message: "Post already saved" });
+      }
+      const saved = await storage.savePost(req.session.userId!, req.params.postId);
+      res.status(201).json(saved);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // DELETE /api/saved/posts/:postId - Unsave a post (protected)
+  app.delete("/api/saved/posts/:postId", requireAuth, async (req, res) => {
+    try {
+      await storage.unsavePost(req.session.userId!, req.params.postId);
+      res.json({ message: "Post unsaved successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/saved/posts/:postId/status - Check if post is saved (protected)
+  app.get("/api/saved/posts/:postId/status", requireAuth, async (req, res) => {
+    try {
+      const isSaved = await storage.isPostSaved(req.session.userId!, req.params.postId);
+      res.json({ isSaved });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/saved/posts - Get user's saved posts (protected)
+  app.get("/api/saved/posts", requireAuth, async (req, res) => {
+    try {
+      const posts = await storage.getSavedPosts(req.session.userId!);
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // DELETE /api/posts/:id - Delete post (protected, only post owner)
+  app.delete("/api/posts/:id", requireAuth, async (req, res) => {
+    try {
+      const post = await storage.getPost(req.params.id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      if (post.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden: You can only delete your own posts" });
+      }
+      await storage.deletePost(req.params.id);
+      res.json({ message: "Post deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

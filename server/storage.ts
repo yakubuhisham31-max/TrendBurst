@@ -18,6 +18,8 @@ import type {
   InsertFollow,
   ViewTracking,
   InsertViewTracking,
+  SavedTrend,
+  SavedPost,
 } from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
@@ -75,6 +77,17 @@ export interface IStorage {
   getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined>;
   updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking>;
   getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number> }>;
+  
+  // Saved Items
+  saveTrend(userId: string, trendId: string): Promise<SavedTrend>;
+  unsaveTrend(userId: string, trendId: string): Promise<void>;
+  isTrendSaved(userId: string, trendId: string): Promise<boolean>;
+  getSavedTrends(userId: string): Promise<Trend[]>;
+  savePost(userId: string, postId: string): Promise<SavedPost>;
+  unsavePost(userId: string, postId: string): Promise<void>;
+  isPostSaved(userId: string, postId: string): Promise<boolean>;
+  getSavedPosts(userId: string): Promise<Post[]>;
+  deletePost(id: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -372,6 +385,61 @@ export class DbStorage implements IStorage {
     }
     
     return { category: categoryCounts, chat: chatCounts };
+  }
+
+  // Saved Items
+  async saveTrend(userId: string, trendId: string): Promise<SavedTrend> {
+    const result = await db.insert(schema.savedTrends).values({ userId, trendId }).returning();
+    return result[0];
+  }
+
+  async unsaveTrend(userId: string, trendId: string): Promise<void> {
+    await db.delete(schema.savedTrends).where(and(eq(schema.savedTrends.userId, userId), eq(schema.savedTrends.trendId, trendId)));
+  }
+
+  async isTrendSaved(userId: string, trendId: string): Promise<boolean> {
+    const result = await db.select().from(schema.savedTrends).where(and(eq(schema.savedTrends.userId, userId), eq(schema.savedTrends.trendId, trendId)));
+    return result.length > 0;
+  }
+
+  async getSavedTrends(userId: string): Promise<Trend[]> {
+    const savedRecords = await db.select().from(schema.savedTrends).where(eq(schema.savedTrends.userId, userId)).orderBy(desc(schema.savedTrends.createdAt));
+    const trends = await Promise.all(
+      savedRecords.map(async (record) => {
+        const trend = await this.getTrend(record.trendId);
+        return trend!;
+      })
+    );
+    return trends.filter(t => t !== undefined);
+  }
+
+  async savePost(userId: string, postId: string): Promise<SavedPost> {
+    const result = await db.insert(schema.savedPosts).values({ userId, postId }).returning();
+    return result[0];
+  }
+
+  async unsavePost(userId: string, postId: string): Promise<void> {
+    await db.delete(schema.savedPosts).where(and(eq(schema.savedPosts.userId, userId), eq(schema.savedPosts.postId, postId)));
+  }
+
+  async isPostSaved(userId: string, postId: string): Promise<boolean> {
+    const result = await db.select().from(schema.savedPosts).where(and(eq(schema.savedPosts.userId, userId), eq(schema.savedPosts.postId, postId)));
+    return result.length > 0;
+  }
+
+  async getSavedPosts(userId: string): Promise<Post[]> {
+    const savedRecords = await db.select().from(schema.savedPosts).where(eq(schema.savedPosts.userId, userId)).orderBy(desc(schema.savedPosts.createdAt));
+    const posts = await Promise.all(
+      savedRecords.map(async (record) => {
+        const post = await this.getPost(record.postId);
+        return post!;
+      })
+    );
+    return posts.filter(p => p !== undefined);
+  }
+
+  async deletePost(id: string): Promise<void> {
+    await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 }
 
