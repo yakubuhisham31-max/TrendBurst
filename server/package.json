@@ -3,11 +3,25 @@
   "version": "1.0.0",
   "scripts": {
     "postinstall": "prisma generate",
-    "start": "node index.js"
+    "dev": "ts-node index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@prisma/client": "^5.x.x",
-    "prisma": "^5.x.x",
-    "express": "^4.x.x"
+    "express": "^4.x.x",
+    "express-session": "^1.17.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.x.x",
+    "bcrypt": "^5.x.x"
+  },
+  "devDependencies": {
+    "typescript": "^5.x.x",
+    "ts-node": "^10.x.x",
+    "@types/node": "^20.x.x",
+    "@types/express": "^4.x.x",
+    "@types/express-session": "^1.x.x",
+    "nodemon": "^2.x.x",
+    "prisma": "^5.x.x"
   }
 }
