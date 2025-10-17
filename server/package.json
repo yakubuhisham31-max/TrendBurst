@@ -1,0 +1,13 @@
+{
+  "name": "trendburst-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "prisma generate",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.x.x",
+    "prisma": "^5.x.x",
+    "express": "^4.x.x"
+  }
+}
