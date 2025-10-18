@@ -83,3 +83,31 @@ router.post("/logout", (req: Request, res: Response) => {
 });
 
 export default router;
+
+/**
+ * Alias signup route
+ * Keeps same behavior as POST /register so clients calling /signup still work.
+ * (Duplicate of /register handler)
+ */
+router.post("/signup", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password required" });
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
+
+    const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+    const newUser = await prisma.user.create({
+      data: { email, password: hashed },
+    });
+
+    req.session.userId = newUser.id;
+    res.json({ user: { id: newUser.id, email: newUser.email } });
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
