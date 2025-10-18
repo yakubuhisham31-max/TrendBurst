@@ -12,7 +12,6 @@ export default function NavigationMenuExample() {
         open={open}
         onOpenChange={setOpen}
         username="johndoe"
-        onProfileClick={() => console.log('Profile clicked')}
         onLogoutClick={() => console.log('Logout clicked')}
       />
     </div>

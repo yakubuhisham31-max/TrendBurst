@@ -144,6 +144,17 @@ export default function CreateTrendPage() {
       return;
     }
 
+    // Validate and convert endDate to Date object
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      toast({
+        title: "Invalid End Date",
+        description: "Please provide a valid end date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const filteredRules = rules.filter(r => r.trim() !== "");
     
     const trendData: Omit<InsertTrend, "userId"> = {
@@ -154,7 +165,7 @@ export default function CreateTrendPage() {
       category: selectedCategory,
       coverPicture: coverImage || null,
       referenceMedia: referenceMedia.length > 0 ? referenceMedia : undefined,
-      endDate: endDate, // Send as string, schema will transform to Date
+      endDate: endDateObj,
     };
 
     createTrendMutation.mutate(trendData);
