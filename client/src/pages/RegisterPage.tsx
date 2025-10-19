@@ -49,7 +49,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (user) {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [user, setLocation]);
 
