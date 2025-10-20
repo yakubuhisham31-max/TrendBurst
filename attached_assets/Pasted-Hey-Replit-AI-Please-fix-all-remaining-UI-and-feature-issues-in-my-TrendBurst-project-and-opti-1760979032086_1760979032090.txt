@@ -1,0 +1,42 @@
+Hey Replit AI 👋
+
+Please fix all remaining UI and feature issues in my TrendBurst project and optimize the entire layout for a cleaner, modern, and consistent look.
+
+Here’s the full list of fixes and improvements to apply:
+
+1️⃣ UI / Layout Fixes
+- Make the “Create Trend” button and the “Post” and “Chat” buttons in the trend feed sticky on the right side of the screen at all times.
+- Ensure all logo sizes are consistent and visually balanced across every page.
+- Make the back button on the category selection screen responsive and functional on both desktop and mobile.
+- Review all page layouts and spacing — adjust paddings, margins, and element alignments for a neat and professional look.
+- Improve sticky positioning and responsiveness without breaking existing design structure.
+
+2️⃣ Functional Fixes
+- Add “Education” as an option in the Categories section.
+- Enable profile picture upload during both Sign-Up and Edit Profile.
+- In Edit Profile, include fields for Full Name, Email, and allow users to Change or Update Password.
+- Allow users to post both images and videos in the post feed.
+- Display replies in chat as “Replied” below the message.
+- Ensure the number of chats on each trend card excludes personal post comments.
+- Make the “Share Profile” button fully functional and share the correct user profile link.
+
+3️⃣ Dashboard & Analytics
+- Add “Participation Rate” to each trend’s analytics in the dashboard to provide better insight into engagement metrics.
+
+4️⃣ Content and Labels
+- On the Create Trend page, replace the label “Reference Example” with simply “Reference”.
+
+5️⃣ Authentication & Navigation
+- Fix the issue where, after signing in, the user is not redirected to the dashboard/home screen.
+- Make sure login, signup, and redirect flows work smoothly without refresh issues.
+
+6️⃣ Final Polish & Optimization
+- Verify all features above are functional after deployment.
+- Ensure UI looks consistent on both light/dark themes (if any).
+- Optimize component spacing, layout flow, and sticky elements for a clean and modern experience.
+
+After finishing all of this, please test the app visually in preview mode to ensure that:
+✅ Everything works as intended (frontend + backend)
+✅ Layouts are clean and responsive
+✅ Navigation, posting, and dashboard analytics function perfectly
+
