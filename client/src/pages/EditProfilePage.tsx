@@ -22,6 +22,8 @@ export default function EditProfilePage() {
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
     bio: "",
     instagram: "",
     tiktok: "",
@@ -29,9 +31,17 @@ export default function EditProfilePage() {
     youtube: "",
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   useEffect(() => {
     if (user) {
       setFormData({
+        fullName: user.fullName || "",
+        email: user.email || "",
         bio: user.bio || "",
         instagram: user.instagramUrl || "",
         tiktok: user.tiktokUrl || "",
@@ -101,14 +111,64 @@ export default function EditProfilePage() {
     }
   };
 
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const response = await apiRequest("POST", "/api/auth/change-password", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password changed",
+        description: "Your password has been changed successfully.",
+      });
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfileMutation.mutate({
+      fullName: formData.fullName,
+      email: formData.email,
       bio: formData.bio,
       instagramUrl: formData.instagram,
       tiktokUrl: formData.tiktok,
       twitterUrl: formData.twitter,
       youtubeUrl: formData.youtube,
+    });
+  };
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "New password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    changePasswordMutation.mutate({
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
     });
   };
 
@@ -172,6 +232,33 @@ export default function EditProfilePage() {
                   disabled
                   placeholder="Enter username"
                   data-testid="input-username"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
+                  placeholder="Enter your full name"
+                  data-testid="input-fullname"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder="Enter your email"
+                  data-testid="input-email"
                 />
               </div>
 
@@ -281,6 +368,71 @@ export default function EditProfilePage() {
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
+        </form>
+
+        <form onSubmit={handlePasswordChange} className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                  }
+                  placeholder="Enter current password"
+                  data-testid="input-current-password"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                  }
+                  placeholder="Enter new password (min 6 characters)"
+                  data-testid="input-new-password"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                  }
+                  placeholder="Confirm new password"
+                  data-testid="input-confirm-password"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                data-testid="button-change-password"
+                disabled={
+                  !passwordData.currentPassword || 
+                  !passwordData.newPassword || 
+                  !passwordData.confirmPassword ||
+                  changePasswordMutation.isPending
+                }
+              >
+                {changePasswordMutation.isPending ? "Changing Password..." : "Change Password"}
+              </Button>
+            </CardContent>
+          </Card>
         </form>
       </main>
     </div>
