@@ -22,7 +22,8 @@ const categories = [
   "Technology",
   "Gaming",
   "Travel",
-  "Fitness"
+  "Fitness",
+  "Education"
 ];
 
 export default function CategorySelectionPage() {
