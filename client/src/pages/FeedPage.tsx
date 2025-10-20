@@ -312,7 +312,7 @@ export default function FeedPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-10 object-contain"
+            className="h-12 object-contain"
             data-testid="img-logo"
           />
 

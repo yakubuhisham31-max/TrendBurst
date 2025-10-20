@@ -159,7 +159,7 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-20 object-contain"
+            className="h-12 object-contain"
             data-testid="img-logo"
           />
           <div className="w-10" />
