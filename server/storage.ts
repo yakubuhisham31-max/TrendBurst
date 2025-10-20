@@ -406,7 +406,7 @@ export class DbStorage implements IStorage {
     
     // Count new trends per category
     const categoryRecords = viewRecords.filter(r => r.type === 'category');
-    const categories = ['Music', 'Dance', 'Art', 'Fashion', 'Comedy', 'Food', 'Sports', 'Tech', 'Other'];
+    const categories = ['AI', 'Arts', 'Education', 'Entertainment', 'Fashion', 'Food', 'Gaming', 'Music', 'Photography', 'Sports', 'Technology'];
     
     for (const category of categories) {
       const record = categoryRecords.find(r => r.identifier === category);

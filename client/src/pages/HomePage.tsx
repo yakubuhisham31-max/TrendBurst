@@ -20,16 +20,17 @@ type TrendWithCreator = Trend & {
 
 const categories = [
   "All",
-  "Food",
-  "Arts",
-  "Sports",
-  "Fashion",
-  "Photography",
   "AI",
+  "Arts",
+  "Education",
   "Entertainment",
-  "Music",
-  "Technology",
+  "Fashion",
+  "Food",
   "Gaming",
+  "Music",
+  "Photography",
+  "Sports",
+  "Technology",
 ];
 
 const subcategories = [
@@ -105,14 +106,15 @@ export default function HomePage() {
         });
       
       case "Trending":
-        // Trending: Sort by engagement (views + participants * 2 + chatCount * 3)
+        // Trending: Sort by participation rate (participants / views)
         return [...allTrends]
+          .filter(trend => (trend.views || 0) > 0) // Only trends with views
           .map(trend => ({
             ...trend,
-            engagement: (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3
+            participationRate: (trend.participants || 0) / (trend.views || 1) * 100
           }))
-          .sort((a, b) => b.engagement - a.engagement)
-          .slice(0, 20); // Top 20 trending
+          .sort((a, b) => b.participationRate - a.participationRate)
+          .slice(0, 10); // Top 10 with highest participation
       
       case "Ending Soon":
         return allTrends.filter(trend => {

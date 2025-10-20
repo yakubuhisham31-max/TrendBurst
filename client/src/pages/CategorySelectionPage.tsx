@@ -11,19 +11,17 @@ import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
 const categories = [
-  "Food",
-  "Arts", 
-  "Sports",
-  "Fashion",
-  "Photography",
   "AI",
+  "Arts",
+  "Education",
   "Entertainment",
-  "Music",
-  "Technology",
+  "Fashion",
+  "Food",
   "Gaming",
-  "Travel",
-  "Fitness",
-  "Education"
+  "Music",
+  "Photography",
+  "Sports",
+  "Technology",
 ];
 
 export default function CategorySelectionPage() {
