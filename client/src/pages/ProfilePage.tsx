@@ -58,6 +58,34 @@ export default function ProfilePage() {
     enabled: !!isOwnProfile && !!currentUser,
   });
 
+  // Share profile handler
+  const handleShareProfile = async () => {
+    const profileUrl = `${window.location.origin}/profile/${viewingUsername}`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${viewingUsername}'s Profile on Trendz`,
+          url: profileUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(profileUrl);
+        toast({
+          title: "Profile link copied!",
+          description: "The profile link has been copied to your clipboard.",
+        });
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        toast({
+          title: "Error",
+          description: "Failed to share profile.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   // Delete trend mutation
   const deleteTrendMutation = useMutation({
     mutationFn: async (trendId: string) => {
@@ -218,7 +246,7 @@ export default function ProfilePage() {
                         <Edit className="w-4 h-4" />
                         Edit Profile
                       </Button>
-                      <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
+                      <Button variant="outline" className="flex-1 gap-2" onClick={handleShareProfile} data-testid="button-share-profile">
                         <Share2 className="w-4 h-4" />
                         Share Profile
                       </Button>
@@ -226,7 +254,7 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <FollowButton username={viewingUsername!} className="flex-1" />
-                      <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
+                      <Button variant="outline" className="flex-1 gap-2" onClick={handleShareProfile} data-testid="button-share-profile">
                         <Share2 className="w-4 h-4" />
                         Share Profile
                       </Button>
