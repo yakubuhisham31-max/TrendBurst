@@ -306,7 +306,7 @@ export class DbStorage implements IStorage {
 
   async createComment(comment: InsertComment): Promise<Comment> {
     const result = await db.insert(schema.comments).values(comment).returning();
-    if (comment.trendId) {
+    if (comment.trendId && !comment.postId) {
       await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} + 1` }).where(eq(schema.trends.id, comment.trendId));
     }
     if (comment.postId) {
@@ -319,7 +319,7 @@ export class DbStorage implements IStorage {
     const comment = await this.getComment(id);
     if (comment) {
       await db.delete(schema.comments).where(eq(schema.comments.id, id));
-      if (comment.trendId) {
+      if (comment.trendId && !comment.postId) {
         await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} - 1` }).where(eq(schema.trends.id, comment.trendId));
       }
       if (comment.postId) {
