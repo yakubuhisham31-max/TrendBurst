@@ -27,6 +27,7 @@ interface TrendAnalytics {
   totalVotes: number;
   chatMessages: number;
   engagementRate: string;
+  participationRate: string;
   topPosts: Array<{
     rank: number;
     username: string;
@@ -273,13 +274,21 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <MessageSquare className="w-4 h-4" />
                                 <span>Chat Messages</span>
                               </div>
                               <p className="text-2xl font-bold">{trendAnalytics.chatMessages}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <BarChart3 className="w-4 h-4" />
+                                <span>Participation Rate</span>
+                              </div>
+                              <p className="text-2xl font-bold">{trendAnalytics.participationRate}%</p>
+                              <p className="text-xs text-muted-foreground">of viewers participated</p>
                             </div>
                             <div className="space-y-1">
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">

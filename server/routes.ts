@@ -333,6 +333,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? (totalVotes / uniqueParticipants).toFixed(1) 
         : "0";
       
+      // Calculate participation rate (participants / views)
+      const participationRate = (trend.views || 0) > 0
+        ? ((uniqueParticipants / (trend.views || 1)) * 100).toFixed(1)
+        : "0";
+      
       // Get comments count
       const comments = await storage.getCommentsByTrend(trend.id);
       
@@ -346,6 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalVotes,
         chatMessages: comments.length,
         engagementRate,
+        participationRate,
         topPosts,
         isActive: !trend.endDate,
         createdAt: trend.createdAt,
