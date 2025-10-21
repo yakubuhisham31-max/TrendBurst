@@ -26,7 +26,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const PgStore = connectPgSimple(session);
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+
+// Fix malformed DATABASE_URL (remove 'psql ' prefix and trailing quotes if present)
+let databaseUrl = process.env.DATABASE_URL!;
+if (databaseUrl.startsWith("psql '")) {
+  log("⚠️  Fixing malformed DATABASE_URL - removing 'psql ' prefix");
+  databaseUrl = databaseUrl.replace(/^psql '/, '').replace(/'$/, '');
+}
+
+const pool = new Pool({ connectionString: databaseUrl });
+
+// Test database connection
+pool.query('SELECT NOW()').then(() => {
+  log('✅ Database connected successfully');
+}).catch((error) => {
+  console.error('❌ Database connection failed:', error);
+  console.error('DATABASE_URL format:', databaseUrl?.substring(0, 30) + '...');
+});
 
 app.use(
   session({
@@ -91,7 +107,9 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
+    log('Setting up Vite development server...');
     await setupVite(app, server);
+    log('✅ Vite setup complete');
   } else {
     serveStatic(app);
   }
@@ -108,4 +126,24 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
-})();
+
+  // Error handling
+  server.on('error', (error: any) => {
+    console.error('Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+    }
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+  });
+})().catch((error) => {
+  console.error('Fatal error during startup:', error);
+  process.exit(1);
+});
