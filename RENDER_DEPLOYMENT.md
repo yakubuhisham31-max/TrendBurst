@@ -44,7 +44,8 @@ This is a full-stack application using:
 - **Branch**: `main` (or your default branch)
 - **Root Directory**: Leave empty (uses root)
 - **Runtime**: Node
-- **Build Command**: `npm install && npm run build`
+- **Build Command**: `npm install && npm run build && npm run db:push`
+  - _Alternative_: You can use the helper script: `bash render-build.sh`
 - **Start Command**: `npm start`
 
 ### Environment Variables
@@ -74,16 +75,19 @@ Click "Advanced" and add these environment variables:
 1. Click "Create Web Service"
 2. Render will automatically:
    - Clone your repository
-   - Run `npm install`
-   - Run `npm run build` (builds frontend + backend + pushes DB schema)
+   - Run `npm install` (installs all dependencies)
+   - Run `npm run build` (builds frontend with Vite + backend with esbuild)
+   - Run `npm run db:push` (creates database tables from Drizzle schema)
    - Start your application with `npm start`
 
 ## Step 5: Database Schema Setup
 
-The build script automatically runs `npm run db:push` which will:
-- Connect to your PostgreSQL database
-- Create all necessary tables based on your Drizzle schema
-- Set up the database structure
+The build command includes `npm run db:push` which will:
+- Connect to your PostgreSQL database using the DATABASE_URL
+- Create all necessary tables based on your Drizzle schema (shared/schema.ts)
+- Set up the complete database structure (users, trends, posts, votes, comments)
+
+**Important**: The `db:push` step requires DATABASE_URL to be set in environment variables. If this step fails during build, the deployment will fail. Make sure your PostgreSQL database is created and DATABASE_URL is correctly configured before deploying.
 
 ## Step 6: Verify Deployment
 

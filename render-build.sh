@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "Building frontend..."
-npm run build:client
+echo "📦 Installing dependencies..."
+npm install
 
-echo "Building backend..."
-npm run build:server
+echo "🏗️  Building application..."
+npm run build
 
-echo "Pushing database schema..."
-npm run db:push || echo "Warning: Database push failed. Make sure DATABASE_URL is set in Render environment variables."
+echo "🗄️  Pushing database schema..."
+npm run db:push
 
-echo "Build completed successfully!"
+echo "✅ Build completed successfully!"
