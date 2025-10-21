@@ -2,12 +2,21 @@
   "name": "trendburst-backend",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "build": "npx prisma generate && echo '✅ Build complete'",
+    "postinstall": "npx prisma generate",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
+    "@prisma/client": "^5.20.0",
     "express": "^4.21.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0",
+    "nodemon": "^3.1.7"
   }
 }
