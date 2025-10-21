@@ -35,21 +35,15 @@ Follow the instructions in [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md) to dep
 
 You'll get a Render URL like: `https://trendz-app.onrender.com`
 
-### Step 2: Update Frontend API Configuration
+### Step 2: Configure API URL
 
-Create a file `client/src/config.ts`:
+The frontend is already configured to support external API URLs! 
 
-```typescript
-export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-```
+The `client/src/config.ts` file provides `buildApiUrl()` which automatically:
+- Uses `VITE_API_URL` environment variable when set (for Vercel)
+- Falls back to relative URLs when not set (for Replit/Render)
 
-Update `client/src/lib/queryClient.ts` to use this:
-
-```typescript
-import { API_BASE_URL } from '@/config';
-
-// Update apiRequest and getQueryFn to prepend API_BASE_URL
-```
+No code changes needed - just set the environment variable in Vercel.
 
 ### Step 3: Configure Vercel
 
