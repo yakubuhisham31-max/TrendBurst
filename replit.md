@@ -6,6 +6,28 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 
 ## Recent Changes
 
+**October 21, 2025:**
+- **Reference Media Enhancement:** Extended reference media support in Create Trend
+  - Increased limit from 1 to 3 reference media uploads per trend
+  - Added support for both images and videos in reference media
+  - Implemented proper file extension detection based on MIME type and filename
+  - Updated ObjectUploader to pass file metadata (name, type, size) to upload handlers
+  - All upload handlers now generate filenames with correct extensions (.jpg, .png, .mp4, .webm, .mov)
+  - Fixed video rendering across CreateTrendPage, InstructionsPage, and CreatePostDialog
+- **Instructions Page Improvements:** Enhanced trend creator information display
+  - Added creator bio display below username on Instructions page
+  - Bio shows conditionally only if the creator has filled it in
+  - Improved reference media grid layout (responsive 1-3 columns based on count)
+  - Videos display with controls, images use object-cover for consistent presentation
+- **Category System Update:** Expanded and organized category list
+  - Added "Education" category across all pages (HomePage, CategorySelection, CreateTrend, storage)
+  - Alphabetically sorted all categories with "All" always first on HomePage
+  - Consistent category list across frontend and backend (11 categories total)
+- **Trending Algorithm Refinement:** Improved trending trend selection
+  - Changed from engagement-based to participation rate-based sorting
+  - Now shows top 10 trends with highest participation rates (participants/views * 100)
+  - Filters out trends with zero views to prevent division errors
+
 **October 10, 2025:**
 - **Profile Page User Posts:** Implemented user posts display in Profile page
   - Added `/api/posts/user/:userId` endpoint to fetch posts by user
