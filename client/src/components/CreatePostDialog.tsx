@@ -28,10 +28,41 @@ export default function CreatePostDialog({
   const [imageUrl, setImageUrl] = useState<string>();
   const [isVideo, setIsVideo] = useState(false);
 
-  const handleGetUploadParameters = async () => {
+  const getFileExtension = (filename?: string, mimeType?: string): string => {
+    if (filename) {
+      const ext = filename.split('.').pop();
+      if (ext && ext.length <= 4) return ext;
+    }
+    if (mimeType) {
+      const typeMap: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'video/mp4': 'mp4',
+        'video/webm': 'webm',
+        'video/quicktime': 'mov',
+      };
+      return typeMap[mimeType] || 'jpg';
+    }
+    return 'jpg';
+  };
+
+  const handleGetUploadParameters = async (file: { name?: string; type?: string }) => {
+    const ext = getFileExtension(file.name, file.type);
+    const isVideoFile = file.type?.startsWith('video/');
+    setIsVideo(isVideoFile || false);
+    
     const response = await fetch("/api/objects/upload", {
       method: "POST",
       credentials: "include",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filename: `post-${Date.now()}.${ext}`,
+      }),
     });
     const data = await response.json();
     return {

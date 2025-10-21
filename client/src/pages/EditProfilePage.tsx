@@ -73,15 +73,34 @@ export default function EditProfilePage() {
     },
   });
 
-  const handleGetUploadParameters = async () => {
-    const response = await fetch("/api/objects/upload", {
-      method: "POST",
-      credentials: "include",
+  const getFileExtension = (filename?: string, mimeType?: string): string => {
+    if (filename) {
+      const ext = filename.split('.').pop();
+      if (ext && ext.length <= 4) return ext;
+    }
+    if (mimeType) {
+      const typeMap: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+      };
+      return typeMap[mimeType] || 'jpg';
+    }
+    return 'jpg';
+  };
+
+  const handleGetUploadParameters = async (file: { name?: string; type?: string }) => {
+    const ext = getFileExtension(file.name, file.type);
+    const response = await apiRequest("POST", "/api/object-storage/upload-url", {
+      path: `profile-pictures/${user?.id}-${Date.now()}.${ext}`,
+      isPublic: true,
     });
     const data = await response.json();
     return {
       method: "PUT" as const,
-      url: data.uploadURL,
+      url: data.uploadUrl,
     };
   };
 

@@ -6,11 +6,17 @@ import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
 
+interface UppyFileInfo {
+  name?: string;
+  type?: string;
+  size?: number | null;
+}
+
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
   allowedFileTypes?: string[];
-  onGetUploadParameters: () => Promise<{
+  onGetUploadParameters: (file: UppyFileInfo) => Promise<{
     method: "PUT";
     url: string;
   }>;

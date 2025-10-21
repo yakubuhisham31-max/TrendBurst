@@ -73,6 +73,11 @@ export default function InstructionsPage() {
                   </span>
                   <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                 </div>
+                {trend.creator.bio && (
+                  <p className="text-sm text-muted-foreground mb-3" data-testid="text-host-bio">
+                    {trend.creator.bio}
+                  </p>
+                )}
                 <div className="flex items-center gap-3 mb-3">
                   {trend.creator.instagramUrl && (
                     <a 
@@ -173,10 +178,14 @@ export default function InstructionsPage() {
           {trend.referenceMedia && trend.referenceMedia.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-3">Reference</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid gap-3 ${trend.referenceMedia.length === 1 ? 'grid-cols-1' : trend.referenceMedia.length === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                 {trend.referenceMedia.map((media, index) => (
-                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
+                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted" data-testid={`reference-media-${index}`}>
+                    {media.match(/\.(mp4|webm|mov)$/i) ? (
+                      <video src={media} className="w-full h-full object-cover" controls />
+                    ) : (
+                      <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
+                    )}
                   </div>
                 ))}
               </div>
