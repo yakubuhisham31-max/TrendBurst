@@ -39,7 +39,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const url = buildApiUrl(queryKey.join("/") as string);
+    // If queryKey is a single string, use it directly
+    // If it's an array, pass it to buildApiUrl which will handle joining
+    const url = buildApiUrl(queryKey.length === 1 ? queryKey[0] as string : queryKey as (string | number)[]);
     const res = await fetch(url, {
       credentials: "include",
     });
