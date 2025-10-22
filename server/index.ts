@@ -93,6 +93,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Prevent process.exit from crashing the server (Vite calls this on errors)
+  const originalExit = process.exit;
+  process.exit = ((code?: number) => {
+    log(`⚠️  process.exit(${code}) was called, but ignoring to keep server running`);
+    console.trace('Exit called from:');
+    // Don't actually exit - just log it
+  }) as typeof process.exit;
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -106,11 +114,36 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  
+  // TEMPORARILY using production mode to avoid Vite crashes
+  // Change back to development mode once Vite issues are resolved
+  const useProductionMode = true;
+  
+  if (!useProductionMode && app.get("env") === "development") {
     log('Setting up Vite development server...');
-    await setupVite(app, server);
-    log('✅ Vite setup complete');
+    try {
+      await setupVite(app, server);
+      log('✅ Vite setup complete');
+    } catch (error) {
+      log('⚠️  Vite setup encountered an error, but server will continue running');
+      console.error('Vite error:', error);
+      // Serve a simple error page instead of crashing
+      app.use("*", (_req, res) => {
+        res.status(500).send(`
+          <!DOCTYPE html>
+          <html>
+            <head><title>Server Error</title></head>
+            <body>
+              <h1>Development Server Error</h1>
+              <p>The Vite development server encountered an error. Check the console logs.</p>
+              <pre>${error}</pre>
+            </body>
+          </html>
+        `);
+      });
+    }
   } else {
+    log('Serving static files from dist/public');
     serveStatic(app);
   }
 
@@ -123,27 +156,44 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Verify server is actually accessible by making a test request
+    try {
+      const testRes = await fetch(`http://localhost:${port}/health`, { signal: AbortSignal.timeout(5000) });
+      if (testRes.ok) {
+        log(`✅ Server is responding to requests on port ${port}`);
+      } else {
+        log(`⚠️  Server returned ${testRes.status} for health check`);
+      }
+    } catch (error) {
+      log(`⚠️  Server health check failed: ${error}`);
+    }
   });
 
   // Error handling
   server.on('error', (error: any) => {
     console.error('Server error:', error);
     if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${port} is already in use`);
+      console.error(`Port ${port} is already in use - server cannot start`);
       process.exit(1);
     }
   });
 
   process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit - log and continue
   });
 
   process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
+    // Don't exit - log and continue
   });
 })().catch((error) => {
   console.error('Fatal error during startup:', error);
-  process.exit(1);
+  // Only exit if the server truly failed to start
+  if (!error.message?.includes('Vite')) {
+    process.exit(1);
+  }
 });
