@@ -103,34 +103,33 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // Start listening IMMEDIATELY for faster port detection by Replit
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen(port, "0.0.0.0", async () => {
-    log(`✅ Server listening on 0.0.0.0:${port}`);
-    console.log(`Server is ready and listening on port ${port}`); // Extra log for Replit detection
-    
-    // NOW set up Vite after port is open (for faster Replit port detection)
-    if (app.get("env") === "development") {
-      try {
-        log('Setting up Vite development server...');
-        await setupVite(app, server);
-        log('✅ Vite setup complete');
-      } catch (error) {
-        log('⚠️  Vite setup failed, falling back to static serving');
-        console.error('Vite error:', error);
-        serveStatic(app);
-      }
-    } else {
-      log('Serving static files from dist/public');
+  // Setup Vite or static serving before listening
+  if (app.get("env") === "development") {
+    try {
+      log('Setting up Vite development server...');
+      await setupVite(app, server);
+      log('✅ Vite setup complete');
+    } catch (error) {
+      log('⚠️  Vite setup failed, falling back to static serving');
+      console.error('Vite error:', error);
       serveStatic(app);
     }
+  } else {
+    log('Serving static files from dist/public');
+    serveStatic(app);
+  }
+
+  // ALWAYS serve the app on the port specified in the environment variable PORT
+  // Use Replit-provided PORT or default to 5000
+  const PORT = parseInt(process.env.PORT || '5000', 10);
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server listening on port ${PORT}`);
+    log(`✅ Server ready at http://0.0.0.0:${PORT}`);
     
-    // Schedule health check after Vite setup completes
+    // Health check after startup
     setTimeout(async () => {
       try {
-        const testRes = await fetch(`http://localhost:${port}/health`);
+        const testRes = await fetch(`http://localhost:${PORT}/health`);
         if (testRes.ok) {
           log(`✅ Health check passed`);
         }
@@ -144,7 +143,7 @@ app.use((req, res, next) => {
   server.on('error', (error: any) => {
     console.error('Server error:', error);
     if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${port} is already in use - server cannot start`);
+      console.error(`Port ${PORT} is already in use - server cannot start`);
       process.exit(1);
     }
   });
