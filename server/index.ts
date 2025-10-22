@@ -93,14 +93,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Prevent process.exit from crashing the server (Vite calls this on errors)
-  const originalExit = process.exit;
-  process.exit = ((code?: number) => {
-    log(`⚠️  process.exit(${code}) was called, but ignoring to keep server running`);
-    console.trace('Exit called from:');
-    // Don't actually exit - just log it
-  }) as typeof process.exit;
-
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -156,20 +148,20 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, async () => {
-    log(`serving on port ${port}`);
+  }, () => {
+    log(`✅ Server listening on port ${port}`);
     
-    // Verify server is actually accessible by making a test request
-    try {
-      const testRes = await fetch(`http://localhost:${port}/health`, { signal: AbortSignal.timeout(5000) });
-      if (testRes.ok) {
-        log(`✅ Server is responding to requests on port ${port}`);
-      } else {
-        log(`⚠️  Server returned ${testRes.status} for health check`);
+    // Schedule health check for after listen callback completes
+    setTimeout(async () => {
+      try {
+        const testRes = await fetch(`http://localhost:${port}/health`);
+        if (testRes.ok) {
+          log(`✅ Health check passed`);
+        }
+      } catch (error) {
+        log(`⚠️  Health check failed: ${error}`);
       }
-    } catch (error) {
-      log(`⚠️  Server health check failed: ${error}`);
-    }
+    }, 100);
   });
 
   // Error handling
@@ -182,18 +174,36 @@ app.use((req, res, next) => {
   });
 
   process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Don't exit - log and continue
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    console.error('Stack:', reason);
   });
 
   process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    // Don't exit - log and continue
+    console.error('❌ Uncaught Exception:', error);
+    console.error('Stack:', error.stack);
   });
+
+  // Keep the process alive with heartbeat logging
+  let heartbeat = 0;
+  setInterval(() => {
+    heartbeat++;
+    if (heartbeat % 10 === 0) { // Log every 5 minutes
+      log(`Heartbeat ${heartbeat} - server still running`);
+    }
+  }, 30000);
+
+  log('✅ Server initialization complete - entering event loop');
+  
+  // Log to confirm we're past initialization
+  setTimeout(() => {
+    log('✅ Still running after 5 seconds');
+  }, 5000);
+  
+  setTimeout(() => {
+    log('✅ Still running after 30 seconds');
+  }, 30000);
 })().catch((error) => {
-  console.error('Fatal error during startup:', error);
-  // Only exit if the server truly failed to start
-  if (!error.message?.includes('Vite')) {
-    process.exit(1);
-  }
+  console.error('❌ Fatal error during startup:', error);
+  console.error('Stack:', error.stack);
+  process.exit(1);
 });
