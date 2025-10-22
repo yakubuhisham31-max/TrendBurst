@@ -103,55 +103,31 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  
-  // TEMPORARILY using production mode to avoid Vite crashes
-  // Change back to development mode once Vite issues are resolved
-  const useProductionMode = true;
-  
-  if (!useProductionMode && app.get("env") === "development") {
-    log('Setting up Vite development server...');
-    try {
-      await setupVite(app, server);
-      log('✅ Vite setup complete');
-    } catch (error) {
-      log('⚠️  Vite setup encountered an error, but server will continue running');
-      console.error('Vite error:', error);
-      // Serve a simple error page instead of crashing
-      app.use("*", (_req, res) => {
-        res.status(500).send(`
-          <!DOCTYPE html>
-          <html>
-            <head><title>Server Error</title></head>
-            <body>
-              <h1>Development Server Error</h1>
-              <p>The Vite development server encountered an error. Check the console logs.</p>
-              <pre>${error}</pre>
-            </body>
-          </html>
-        `);
-      });
-    }
-  } else {
-    log('Serving static files from dist/public');
-    serveStatic(app);
-  }
-
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // Start listening IMMEDIATELY for faster port detection by Replit
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`✅ Server listening on port ${port}`);
+  server.listen(port, "0.0.0.0", async () => {
+    log(`✅ Server listening on 0.0.0.0:${port}`);
+    console.log(`Server is ready and listening on port ${port}`); // Extra log for Replit detection
     
-    // Schedule health check for after listen callback completes
+    // NOW set up Vite after port is open (for faster Replit port detection)
+    if (app.get("env") === "development") {
+      try {
+        log('Setting up Vite development server...');
+        await setupVite(app, server);
+        log('✅ Vite setup complete');
+      } catch (error) {
+        log('⚠️  Vite setup failed, falling back to static serving');
+        console.error('Vite error:', error);
+        serveStatic(app);
+      }
+    } else {
+      log('Serving static files from dist/public');
+      serveStatic(app);
+    }
+    
+    // Schedule health check after Vite setup completes
     setTimeout(async () => {
       try {
         const testRes = await fetch(`http://localhost:${port}/health`);
