@@ -213,7 +213,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteTrend(req.params.id);
       res.json({ message: "Trend deleted successfully" });
     } catch (error) {
-      console.error("Error deleting trend:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -240,8 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userTrends = await storage.getTrendsByUser(userId);
       const trendsCreated = userTrends.length;
-      const now = new Date();
-      const activeTrends = userTrends.filter(t => t.endDate && t.endDate > now).length;
+      const activeTrends = userTrends.filter(t => !t.endDate).length;
 
       let totalPosts = 0;
       let uniqueParticipants = new Set<string>();
@@ -441,22 +439,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const posts = await storage.getPostsByTrend(req.params.trendId);
       
-      // Include user info, vote status, and saved status for each post
+      // Include user info and vote status for each post
       const postsWithUserInfo = await Promise.all(
         posts.map(async (post) => {
           const user = await storage.getUser(post.userId);
           const userVoted = req.session.userId 
             ? !!(await storage.getVote(post.id, req.session.userId))
             : false;
-          const isSaved = req.session.userId
-            ? await storage.isPostSaved(req.session.userId, post.id)
-            : false;
           
           return {
             ...post,
             user: user ? sanitizeUser(user) : null,
             userVoted,
-            isSaved,
           };
         })
       );

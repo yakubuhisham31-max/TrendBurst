@@ -1,28 +1,23 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, Edit, Share2, Trash2 } from "lucide-react";
+import { ChevronLeft, Edit, Share2 } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProfileStats from "@/components/ProfileStats";
 import TrendCard from "@/components/TrendCard";
 import FollowButton from "@/components/FollowButton";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import type { User, Trend, Post } from "@shared/schema";
-
-type TrendWithCreator = Trend & { creator?: Pick<User, "username" | "profilePicture"> | null };
+import type { User, Trend } from "@shared/schema";
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
   const params = useParams();
   const [activeTab, setActiveTab] = useState("trends");
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
 
   // Get username from URL params or use current user
   const viewingUsername = params.username || currentUser?.username;
@@ -41,63 +36,9 @@ export default function ProfilePage() {
   });
 
   // Fetch user's posts
-  const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
+  const { data: posts = [], isLoading: postsLoading } = useQuery<any[]>({
     queryKey: ["/api/posts/user", profileUser?.id],
     enabled: !!profileUser?.id,
-  });
-
-  // Fetch saved trends (only for own profile)
-  const { data: savedTrends = [], isLoading: savedTrendsLoading } = useQuery<TrendWithCreator[]>({
-    queryKey: ["/api/saved/trends"],
-    enabled: !!isOwnProfile && !!currentUser,
-  });
-
-  // Fetch saved posts (only for own profile)
-  const { data: savedPosts = [], isLoading: savedPostsLoading } = useQuery<Post[]>({
-    queryKey: ["/api/saved/posts"],
-    enabled: !!isOwnProfile && !!currentUser,
-  });
-
-  // Delete trend mutation
-  const deleteTrendMutation = useMutation({
-    mutationFn: async (trendId: string) => {
-      await apiRequest("DELETE", `/api/trends/${trendId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trends/user", profileUser?.id] });
-      toast({
-        title: "Trend deleted",
-        description: "Your trend has been deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete trend",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete post mutation
-  const deletePostMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      await apiRequest("DELETE", `/api/posts/${postId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/user", profileUser?.id] });
-      toast({
-        title: "Post deleted",
-        description: "Your post has been deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete post",
-        variant: "destructive",
-      });
-    },
   });
 
   return (
@@ -250,11 +191,9 @@ export default function ProfilePage() {
                     <TabsTrigger value="posts" className="flex-1" data-testid="tab-posts">
                       Posts
                     </TabsTrigger>
-                    {isOwnProfile && (
-                      <TabsTrigger value="saved" className="flex-1" data-testid="tab-saved">
-                        Saved
-                      </TabsTrigger>
-                    )}
+                    <TabsTrigger value="saved" className="flex-1" data-testid="tab-saved">
+                      Saved
+                    </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="trends" className="mt-6">
@@ -283,10 +222,8 @@ export default function ProfilePage() {
                             chatCount={trend.chatCount || 0}
                             createdAt={new Date(trend.createdAt!)}
                             endDate={trend.endDate ? new Date(trend.endDate) : undefined}
-                            description={trend.description || undefined}
                             isHost={isOwnProfile}
                             onClick={() => setLocation(`/feed/${trend.id}`)}
-                            onDelete={() => deleteTrendMutation.mutate(trend.id)}
                           />
                         ))}
                       </div>
@@ -310,99 +247,26 @@ export default function ProfilePage() {
                           <div
                             key={post.id}
                             className="aspect-square bg-muted rounded-lg cursor-pointer hover-elevate overflow-hidden relative group"
+                            onClick={() => setLocation(`/feed/${post.trendId}`)}
                             data-testid={`post-${post.id}`}
                           >
                             <img
                               src={post.imageUrl}
                               alt={post.caption || "Post"}
                               className="w-full h-full object-cover"
-                              onClick={() => setLocation(`/feed/${post.trendId}`)}
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none" />
-                            {isOwnProfile && (
-                              <Button
-                                size="icon"
-                                variant="destructive"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deletePostMutation.mutate(post.id);
-                                }}
-                                data-testid={`button-delete-post-${post.id}`}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            )}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                           </div>
                         ))}
                       </div>
                     )}
                   </TabsContent>
 
-                  {isOwnProfile && (
-                    <TabsContent value="saved" className="mt-6">
-                      {savedTrendsLoading || savedPostsLoading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Skeleton className="h-64" />
-                          <Skeleton className="h-64" />
-                        </div>
-                      ) : savedTrends.length === 0 && savedPosts.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">
-                          No saved items yet
-                        </div>
-                      ) : (
-                        <div className="space-y-6">
-                          {savedTrends.length > 0 && (
-                            <div>
-                              <h3 className="text-sm font-medium text-muted-foreground mb-3">Saved Trends</h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {savedTrends.map((trend) => (
-                                  <TrendCard
-                                    key={trend.id}
-                                    id={trend.id}
-                                    coverImage={trend.coverPicture || undefined}
-                                    trendName={trend.name}
-                                    username={trend.creator?.username || "Unknown"}
-                                    userAvatar={trend.creator?.profilePicture || undefined}
-                                    category={trend.category}
-                                    views={trend.views || 0}
-                                    participants={trend.participants || 0}
-                                    chatCount={trend.chatCount || 0}
-                                    createdAt={new Date(trend.createdAt!)}
-                                    endDate={trend.endDate ? new Date(trend.endDate) : undefined}
-                                    description={trend.description || undefined}
-                                    onClick={() => setLocation(`/feed/${trend.id}`)}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {savedPosts.length > 0 && (
-                            <div>
-                              <h3 className="text-sm font-medium text-muted-foreground mb-3">Saved Posts</h3>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {savedPosts.map((post) => (
-                                  <div
-                                    key={post.id}
-                                    className="aspect-square bg-muted rounded-lg cursor-pointer hover-elevate overflow-hidden"
-                                    data-testid={`saved-post-${post.id}`}
-                                  >
-                                    <img
-                                      src={post.imageUrl}
-                                      alt={post.caption || "Post"}
-                                      className="w-full h-full object-cover"
-                                      onClick={() => setLocation(`/feed/${post.trendId}`)}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </TabsContent>
-                  )}
+                  <TabsContent value="saved" className="mt-6">
+                    <div className="text-center py-12 text-muted-foreground">
+                      No saved items yet
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </div>
             </div>

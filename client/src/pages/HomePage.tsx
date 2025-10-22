@@ -277,7 +277,6 @@ export default function HomePage() {
                 chatCount={trend.chatCount || 0}
                 createdAt={trend.createdAt || new Date()}
                 endDate={trend.endDate || undefined}
-                description={trend.description || undefined}
                 isTrending={selectedSubcategory === "Trending"}
                 onClick={() => setLocation(`/feed/${trend.id}`)}
               />
@@ -288,7 +287,7 @@ export default function HomePage() {
 
       <Link href="/create-trend">
         <Button
-          className="fixed bottom-6 left-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium z-50"
+          className="fixed bottom-6 right-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium"
           data-testid="button-create-trend"
         >
           <Plus className="w-5 h-5" />

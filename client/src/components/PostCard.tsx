@@ -13,7 +13,6 @@ import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Tr
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
 import FollowButton from "./FollowButton";
 
 interface PostCardProps {
@@ -32,14 +31,11 @@ interface PostCardProps {
   isUserTrendHost?: boolean;
   isDisqualified?: boolean;
   isTrendEnded?: boolean;
-  isSaved?: boolean;
-  trendId?: string;
   onVoteUp?: () => void;
   onVoteDown?: () => void;
   onComment?: () => void;
   onDelete?: () => void;
   onDisqualify?: () => void;
-  onSave?: () => void;
 }
 
 const getRankBadge = (rank: number) => {
@@ -63,49 +59,14 @@ export default function PostCard({
   isUserTrendHost = false,
   isDisqualified = false,
   isTrendEnded = false,
-  isSaved = false,
-  trendId,
   onVoteUp,
   onVoteDown,
   onComment,
   onDelete,
   onDisqualify,
-  onSave,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-
-  const handleShare = async () => {
-    const shareUrl = trendId ? `${window.location.origin}/feed/${trendId}` : window.location.href;
-    const shareText = `Check out this post by ${username}${caption ? `: "${caption}"` : ''}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareText,
-          url: shareUrl,
-        });
-      } catch (err) {
-        // User cancelled or error occurred
-        if ((err as Error).name !== 'AbortError') {
-          // Fallback to clipboard
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied!",
-            description: "Post link copied to clipboard",
-          });
-        }
-      }
-    } else {
-      // Fallback to clipboard
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Post link copied to clipboard",
-      });
-    }
-  };
 
   return (
     <Card className="overflow-hidden" data-testid="card-post">
@@ -152,13 +113,13 @@ export default function PostCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" data-testid="menu-post-options">
-              <DropdownMenuItem onClick={handleShare} data-testid="menu-item-share">
+              <DropdownMenuItem data-testid="menu-item-share">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSave} data-testid="menu-item-save">
-                <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                {isSaved ? "Unsave" : "Save"}
+              <DropdownMenuItem data-testid="menu-item-save">
+                <Bookmark className="w-4 h-4 mr-2" />
+                Save
               </DropdownMenuItem>
               {(isCreator || isUserTrendHost) && <DropdownMenuSeparator />}
               {isCreator && (
@@ -187,14 +148,12 @@ export default function PostCard({
       </div>
 
       <div className="relative">
-        {!isDisqualified && (
-          <Badge
-            className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
-            data-testid={`badge-rank-${rank}`}
-          >
-            {getRankBadge(rank)}
-          </Badge>
-        )}
+        <Badge
+          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
+          data-testid={`badge-rank-${rank}`}
+        >
+          {getRankBadge(rank)}
+        </Badge>
 
         {isDisqualified && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
