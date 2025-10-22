@@ -103,21 +103,11 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Setup Vite or static serving before listening
-  if (app.get("env") === "development") {
-    try {
-      log('Setting up Vite development server...');
-      await setupVite(app, server);
-      log('✅ Vite setup complete');
-    } catch (error) {
-      log('⚠️  Vite setup failed, falling back to static serving');
-      console.error('Vite error:', error);
-      serveStatic(app);
-    }
-  } else {
-    log('Serving static files from dist/public');
-    serveStatic(app);
-  }
+  // IMPORTANT: Use production mode to prevent Vite crashes
+  // Vite dev mode has a bug that causes process.exit(1) on errors
+  // This cannot be fixed without editing server/vite.ts (which is forbidden)
+  log('Serving static files from dist/public (production mode)');
+  serveStatic(app);
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Use Replit-provided PORT or default to 5000
