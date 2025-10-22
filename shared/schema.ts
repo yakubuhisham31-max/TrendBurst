@@ -164,7 +164,7 @@ export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type InsertTrend = z.input<typeof insertTrendSchema>;
+export type InsertTrend = z.output<typeof insertTrendSchema>;
 export type Trend = typeof trends.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof posts.$inferSelect;
