@@ -36,25 +36,6 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
     return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
   }
 
-  // Check if user has completed onboarding
-  const needsCategorySelection = !user.categories || user.categories.length === 0;
-  const needsRoleSelection = !user.role;
-  
-  // Allow access to onboarding pages without restrictions
-  if (location.startsWith('/onboarding/')) {
-    return <Component {...rest} />;
-  }
-
-  // Redirect to category selection if not completed
-  if (needsCategorySelection) {
-    return <Redirect to="/onboarding/categories" />;
-  }
-
-  // Redirect to role selection if not completed
-  if (needsRoleSelection) {
-    return <Redirect to="/onboarding/role" />;
-  }
-
   return <Component {...rest} />;
 }
 

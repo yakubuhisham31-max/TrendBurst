@@ -14,16 +14,6 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint for Replit workflow verification
-  app.get("/health", (_req, res) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-  });
-
-  // Root API health check
-  app.get("/api/health", (_req, res) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-  });
-
   // Auth routes
   
   // Register endpoint
@@ -127,40 +117,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Change password endpoint
-  app.post("/api/auth/change-password", requireAuth, async (req, res) => {
-    try {
-      const { currentPassword, newPassword } = req.body;
-
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({ message: "Current password and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: "New password must be at least 6 characters long" });
-      }
-
-      const user = await storage.getUser(req.session.userId!);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Verify current password
-      const isValidPassword = await comparePassword(currentPassword, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({ message: "Current password is incorrect" });
-      }
-
-      // Hash new password and update
-      const hashedPassword = await hashPassword(newPassword);
-      await storage.updateUser(user.id, { password: hashedPassword });
-
-      res.json({ message: "Password changed successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
   // Trends routes
 
   // GET /api/trends - Get all trends (optional category query param)
@@ -257,7 +213,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteTrend(req.params.id);
       res.json({ message: "Trend deleted successfully" });
     } catch (error) {
-      console.error("Error deleting trend:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -284,8 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userTrends = await storage.getTrendsByUser(userId);
       const trendsCreated = userTrends.length;
-      const now = new Date();
-      const activeTrends = userTrends.filter(t => t.endDate && t.endDate > now).length;
+      const activeTrends = userTrends.filter(t => !t.endDate).length;
 
       let totalPosts = 0;
       let uniqueParticipants = new Set<string>();
@@ -343,11 +297,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? (totalVotes / uniqueParticipants).toFixed(1) 
         : "0";
       
-      // Calculate participation rate (participants / views)
-      const participationRate = (trend.views || 0) > 0
-        ? ((uniqueParticipants / (trend.views || 1)) * 100).toFixed(1)
-        : "0";
-      
       // Get comments count
       const comments = await storage.getCommentsByTrend(trend.id);
       
@@ -361,7 +310,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalVotes,
         chatMessages: comments.length,
         engagementRate,
-        participationRate,
         topPosts,
         isActive: !trend.endDate,
         createdAt: trend.createdAt,
@@ -491,22 +439,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const posts = await storage.getPostsByTrend(req.params.trendId);
       
-      // Include user info, vote status, and saved status for each post
+      // Include user info and vote status for each post
       const postsWithUserInfo = await Promise.all(
         posts.map(async (post) => {
           const user = await storage.getUser(post.userId);
           const userVoted = req.session.userId 
             ? !!(await storage.getVote(post.id, req.session.userId))
             : false;
-          const isSaved = req.session.userId
-            ? await storage.isPostSaved(req.session.userId, post.id)
-            : false;
           
           return {
             ...post,
             user: user ? sanitizeUser(user) : null,
             userVoted,
-            isSaved,
           };
         })
       );

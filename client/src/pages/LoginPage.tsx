@@ -34,7 +34,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      setLocation("/dashboard");
+      setLocation("/");
     }
   }, [user, setLocation]);
 
@@ -45,7 +45,7 @@ export default function LoginPage() {
         title: "Success",
         description: "You have been logged in successfully",
       });
-      setLocation("/dashboard");
+      setLocation("/");
     } catch (error: any) {
       toast({
         title: "Error",

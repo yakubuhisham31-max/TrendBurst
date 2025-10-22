@@ -1,6 +1,4 @@
-import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
-import cors from "cors";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
@@ -8,41 +6,11 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-
-// Trust proxy for Replit deployment (needed for secure cookies behind reverse proxy)
-app.set("trust proxy", 1);
-
-// CORS configuration - MUST come before session middleware
-app.use(
-  cors({
-    origin: true, // Allow all origins in Replit (same domain)
-    credentials: true, // Allow cookies to be sent
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const PgStore = connectPgSimple(session);
-
-// Fix malformed DATABASE_URL (remove 'psql ' prefix and trailing quotes if present)
-let databaseUrl = process.env.DATABASE_URL!;
-if (databaseUrl.startsWith("psql '")) {
-  log("⚠️  Fixing malformed DATABASE_URL - removing 'psql ' prefix");
-  databaseUrl = databaseUrl.replace(/^psql '/, '').replace(/'$/, '');
-}
-
-const pool = new Pool({ connectionString: databaseUrl });
-
-// Test database connection
-pool.query('SELECT NOW()').then(() => {
-  log('✅ Database connected successfully');
-}).catch((error) => {
-  console.error('❌ Database connection failed:', error);
-  console.error('DATABASE_URL format:', databaseUrl?.substring(0, 30) + '...');
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
 
 app.use(
   session({
@@ -57,7 +25,6 @@ app.use(
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   })
 );
@@ -103,72 +70,25 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // IMPORTANT: Use production mode to prevent Vite crashes
-  // Vite dev mode has a bug that causes process.exit(1) on errors
-  // This cannot be fixed without editing server/vite.ts (which is forbidden)
-  log('Serving static files from dist/public (production mode)');
-  serveStatic(app);
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Use Replit-provided PORT or default to 5000
-  const PORT = parseInt(process.env.PORT || '5000', 10);
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server listening on port ${PORT}`);
-    log(`✅ Server ready at http://0.0.0.0:${PORT}`);
-    
-    // Health check after startup
-    setTimeout(async () => {
-      try {
-        const testRes = await fetch(`http://localhost:${PORT}/health`);
-        if (testRes.ok) {
-          log(`✅ Health check passed`);
-        }
-      } catch (error) {
-        log(`⚠️  Health check failed: ${error}`);
-      }
-    }, 100);
+  // Other ports are firewalled. Default to 5000 if not specified.
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = parseInt(process.env.PORT || '5000', 10);
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
   });
-
-  // Error handling
-  server.on('error', (error: any) => {
-    console.error('Server error:', error);
-    if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use - server cannot start`);
-      process.exit(1);
-    }
-  });
-
-  process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-    console.error('Stack:', reason);
-  });
-
-  process.on('uncaughtException', (error) => {
-    console.error('❌ Uncaught Exception:', error);
-    console.error('Stack:', error.stack);
-  });
-
-  // Keep the process alive with heartbeat logging
-  let heartbeat = 0;
-  setInterval(() => {
-    heartbeat++;
-    if (heartbeat % 10 === 0) { // Log every 5 minutes
-      log(`Heartbeat ${heartbeat} - server still running`);
-    }
-  }, 30000);
-
-  log('✅ Server initialization complete - entering event loop');
-  
-  // Log to confirm we're past initialization
-  setTimeout(() => {
-    log('✅ Still running after 5 seconds');
-  }, 5000);
-  
-  setTimeout(() => {
-    log('✅ Still running after 30 seconds');
-  }, 30000);
-})().catch((error) => {
-  console.error('❌ Fatal error during startup:', error);
-  console.error('Stack:', error.stack);
-  process.exit(1);
-});
+})();

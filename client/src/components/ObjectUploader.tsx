@@ -6,17 +6,10 @@ import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
 
-interface UppyFileInfo {
-  name?: string;
-  type?: string;
-  size?: number | null;
-}
-
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
-  allowedFileTypes?: string[];
-  onGetUploadParameters: (file: UppyFileInfo) => Promise<{
+  onGetUploadParameters: () => Promise<{
     method: "PUT";
     url: string;
   }>;
@@ -31,7 +24,6 @@ interface ObjectUploaderProps {
 export function ObjectUploader({
   maxNumberOfFiles = 1,
   maxFileSize = 10485760,
-  allowedFileTypes,
   onGetUploadParameters,
   onComplete,
   buttonClassName,
@@ -44,19 +36,12 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
-        allowedFileTypes: allowedFileTypes,
       },
       autoProceed: false,
     })
       .use(AwsS3, {
         shouldUseMultipart: false,
-        getUploadParameters: async (file) => {
-          return onGetUploadParameters({
-            name: file.name,
-            type: file.type,
-            size: file.size,
-          });
-        },
+        getUploadParameters: onGetUploadParameters,
       })
       .on("complete", (result) => {
         onComplete?.(result);

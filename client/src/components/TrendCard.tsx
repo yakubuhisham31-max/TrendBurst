@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,6 @@ import {
 import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import FollowButton from "./FollowButton";
 
 interface TrendCardProps {
@@ -40,7 +37,6 @@ interface TrendCardProps {
 type NotificationStatus = "all" | "posts" | "muted";
 
 export default function TrendCard({
-  id,
   coverImage,
   trendName,
   username,
@@ -59,45 +55,6 @@ export default function TrendCard({
 }: TrendCardProps) {
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("muted");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-
-  // Check if trend is saved
-  const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
-    queryKey: ["/api/saved/trends", id, "status"],
-  });
-
-  const isSaved = savedStatus?.isSaved || false;
-
-  // Save/unsave mutation
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (isSaved) {
-        await apiRequest("DELETE", `/api/saved/trends/${id}`);
-      } else {
-        await apiRequest("POST", `/api/saved/trends/${id}`);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved/trends", id, "status"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/saved/trends"] });
-      toast({
-        title: isSaved ? "Trend unsaved" : "Trend saved",
-        description: isSaved ? "Removed from your saved trends" : "Added to your saved trends",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: isSaved ? "Failed to unsave trend" : "Failed to save trend",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSave = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    saveMutation.mutate();
-  };
 
   const getTrendStatus = () => {
     if (!endDate) return null;
@@ -123,38 +80,6 @@ export default function TrendCard({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDelete) onDelete();
-  };
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const shareUrl = `${window.location.origin}/feed/${id}`;
-    const shareText = `Check out this trend: ${trendName} by ${username}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareText,
-          url: shareUrl,
-        });
-      } catch (err) {
-        // User cancelled or error occurred
-        if ((err as Error).name !== 'AbortError') {
-          // Fallback to clipboard
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied!",
-            description: "Trend link copied to clipboard",
-          });
-        }
-      }
-    } else {
-      // Fallback to clipboard
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Trend link copied to clipboard",
-      });
-    }
   };
 
   const getNotificationIcon = () => {
@@ -246,13 +171,13 @@ export default function TrendCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" data-testid="menu-trend-options">
-                <DropdownMenuItem onClick={handleShare} data-testid="menu-item-share">
+                <DropdownMenuItem data-testid="menu-item-share">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSave} data-testid="menu-item-save">
-                  <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? "fill-current" : ""}`} />
-                  {isSaved ? "Unsave" : "Save"}
+                <DropdownMenuItem data-testid="menu-item-save">
+                  <Bookmark className="w-4 h-4 mr-2" />
+                  Save
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={cycleNotifications} data-testid="menu-item-notifications">
                   {getNotificationIcon()}

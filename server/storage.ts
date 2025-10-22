@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neonConfig, Pool } from "@neondatabase/serverless";
 import ws from "ws";
-import { eq, and, desc, sql, isNull, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, isNull } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -146,40 +146,6 @@ export class DbStorage implements IStorage {
   }
 
   async deleteTrend(id: string): Promise<void> {
-    // Delete all related records first (cascading delete)
-    
-    // Get all post IDs for this trend first
-    const trendPosts = await db.select({ id: schema.posts.id })
-      .from(schema.posts)
-      .where(eq(schema.posts.trendId, id));
-    const postIds = trendPosts.map(p => p.id);
-    
-    // Delete saved posts for this trend's posts
-    if (postIds.length > 0) {
-      await db.delete(schema.savedPosts).where(inArray(schema.savedPosts.postId, postIds));
-    }
-    
-    // Delete saved trends
-    await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
-    
-    // Delete view tracking
-    await db.delete(schema.viewTracking).where(
-      and(
-        eq(schema.viewTracking.type, 'trend'),
-        eq(schema.viewTracking.identifier, id)
-      )
-    );
-    
-    // Delete comments (both post and trend comments)
-    await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
-    
-    // Delete votes
-    await db.delete(schema.votes).where(eq(schema.votes.trendId, id));
-    
-    // Delete posts
-    await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
-    
-    // Finally delete the trend itself
     await db.delete(schema.trends).where(eq(schema.trends.id, id));
   }
 
@@ -215,7 +181,6 @@ export class DbStorage implements IStorage {
 
   async createPost(post: InsertPost): Promise<Post> {
     const result = await db.insert(schema.posts).values(post).returning();
-    await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} + 1` }).where(eq(schema.trends.id, post.trendId));
     return result[0];
   }
 
@@ -306,7 +271,7 @@ export class DbStorage implements IStorage {
 
   async createComment(comment: InsertComment): Promise<Comment> {
     const result = await db.insert(schema.comments).values(comment).returning();
-    if (comment.trendId && !comment.postId) {
+    if (comment.trendId) {
       await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} + 1` }).where(eq(schema.trends.id, comment.trendId));
     }
     if (comment.postId) {
@@ -319,7 +284,7 @@ export class DbStorage implements IStorage {
     const comment = await this.getComment(id);
     if (comment) {
       await db.delete(schema.comments).where(eq(schema.comments.id, id));
-      if (comment.trendId && !comment.postId) {
+      if (comment.trendId) {
         await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} - 1` }).where(eq(schema.trends.id, comment.trendId));
       }
       if (comment.postId) {
@@ -406,7 +371,7 @@ export class DbStorage implements IStorage {
     
     // Count new trends per category
     const categoryRecords = viewRecords.filter(r => r.type === 'category');
-    const categories = ['AI', 'Arts', 'Education', 'Entertainment', 'Fashion', 'Food', 'Gaming', 'Music', 'Photography', 'Sports', 'Technology'];
+    const categories = ['Music', 'Dance', 'Art', 'Fashion', 'Comedy', 'Food', 'Sports', 'Tech', 'Other'];
     
     for (const category of categories) {
       const record = categoryRecords.find(r => r.identifier === category);
@@ -457,16 +422,10 @@ export class DbStorage implements IStorage {
     const trends = await Promise.all(
       savedRecords.map(async (record) => {
         const trend = await this.getTrend(record.trendId);
-        if (!trend) return null;
-        
-        const creator = await this.getUser(trend.userId);
-        return {
-          ...trend,
-          creator: creator ? { username: creator.username, profilePicture: creator.profilePicture } : null
-        };
+        return trend!;
       })
     );
-    return trends.filter(t => t !== null) as any;
+    return trends.filter(t => t !== undefined);
   }
 
   async savePost(userId: string, postId: string): Promise<SavedPost> {
@@ -495,11 +454,7 @@ export class DbStorage implements IStorage {
   }
 
   async deletePost(id: string): Promise<void> {
-    const post = await this.getPost(id);
-    if (post) {
-      await db.delete(schema.posts).where(eq(schema.posts.id, id));
-      await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} - 1` }).where(eq(schema.trends.id, post.trendId));
-    }
+    await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 }
 

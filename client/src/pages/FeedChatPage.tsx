@@ -204,7 +204,6 @@ export default function FeedChatPage() {
             {sortedComments.map((comment) => {
               const isCurrentUser = comment.userId === user?.id;
               const isHost = comment.userId === trend?.userId;
-              const parentComment = comment.parentId ? sortedComments.find(c => c.id === comment.parentId) : null;
               
               if (isCurrentUser) {
                 return (
@@ -214,12 +213,6 @@ export default function FeedChatPage() {
                         <div className="flex items-center gap-1 mb-1">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" data-testid="icon-host" />
                           <span className="text-xs opacity-80">Host</span>
-                        </div>
-                      )}
-                      {parentComment && (
-                        <div className="flex items-center gap-1 mb-2 text-xs opacity-70" data-testid={`text-replied-${comment.id}`}>
-                          <Reply className="w-3 h-3" />
-                          <span>Replied to {parentComment.user?.username}</span>
                         </div>
                       )}
                       <p className="text-sm" data-testid={`text-message-${comment.id}`}>
@@ -270,12 +263,6 @@ export default function FeedChatPage() {
                         {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
                       </span>
                     </div>
-                    {parentComment && (
-                      <div className="flex items-center gap-1 mb-1 text-xs text-muted-foreground" data-testid={`text-replied-${comment.id}`}>
-                        <Reply className="w-3 h-3" />
-                        <span>Replied to {parentComment.user?.username}</span>
-                      </div>
-                    )}
                     <p className="text-sm text-foreground" data-testid={`text-message-${comment.id}`}>
                       {comment.text}
                     </p>

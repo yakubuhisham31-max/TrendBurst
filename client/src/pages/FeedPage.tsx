@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Post, Trend, User } from "@shared/schema";
 
-type PostWithUser = Post & { user: User | null; userVoted: boolean; isSaved?: boolean };
+type PostWithUser = Post & { user: User | null; userVoted: boolean };
 type TrendWithCreator = Trend & { creator: User | null };
 
 export default function FeedPage() {
@@ -31,13 +31,6 @@ export default function FeedPage() {
     queryKey: ["/api/trends", trendId],
     enabled: !!trendId,
   });
-
-  // Track trend view when page loads
-  useEffect(() => {
-    if (trendId && user) {
-      apiRequest("POST", `/api/trends/${trendId}/view`).catch(console.error);
-    }
-  }, [trendId, user]);
 
   // Fetch posts for this trend
   const { data: posts = [], isLoading: postsLoading } = useQuery<PostWithUser[]>({
@@ -113,13 +106,10 @@ export default function FeedPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
-      if (user?.username) {
-        queryClient.invalidateQueries({ queryKey: ["/api/users", user.username] });
-      }
       setCreatePostOpen(false);
       toast({
         title: "Post created!",
-        description: "Your post has been added to the trend. You earned 50 TrendX points!",
+        description: "Your post has been added to the trend.",
       });
     },
     onError: (error: Error) => {
@@ -149,72 +139,6 @@ export default function FeedPage() {
     onError: (error: Error) => {
       toast({
         title: "Failed to update post status",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete post mutation
-  const deletePostMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      await apiRequest("DELETE", `/api/posts/${postId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
-      toast({
-        title: "Post deleted",
-        description: "Your post has been deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to delete post",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Save post mutation
-  const savePostMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      await apiRequest("POST", `/api/saved/posts/${postId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
-      toast({
-        title: "Post saved",
-        description: "Post saved to your collection",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to save post",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Unsave post mutation
-  const unsavePostMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      await apiRequest("DELETE", `/api/saved/posts/${postId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
-      toast({
-        title: "Post unsaved",
-        description: "Post removed from your collection",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to unsave post",
         description: error.message,
         variant: "destructive",
       });
@@ -268,30 +192,10 @@ export default function FeedPage() {
     disqualifyMutation.mutate(postId);
   };
 
-  const handleDeletePost = (postId: string) => {
-    deletePostMutation.mutate(postId);
-  };
-
-  const handleSavePost = (postId: string, isSaved: boolean) => {
-    if (isSaved) {
-      unsavePostMutation.mutate(postId);
-    } else {
-      savePostMutation.mutate(postId);
-    }
-  };
-
 
   const isTrendCreator = user?.id === trend?.userId;
 
-  // Calculate rank based on votes
-  const postRankings = [...posts]
-    .sort((a, b) => (b.votes || 0) - (a.votes || 0))
-    .reduce((acc, post, index) => {
-      acc[post.id] = index + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-  // Sort posts by time posted (oldest first) for display
+  // Sort posts by createdAt (oldest first as per requirements)
   const sortedPosts = [...posts].sort((a, b) => 
     new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
   );
@@ -312,7 +216,7 @@ export default function FeedPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-12 object-contain"
+            className="h-10 object-contain"
             data-testid="img-logo"
           />
 
@@ -355,11 +259,11 @@ export default function FeedPage() {
             No posts yet. Be the first to post!
           </div>
         ) : (
-          sortedPosts.map((post) => (
+          sortedPosts.map((post, index) => (
             <PostCard
               key={post.id}
               id={post.id}
-              rank={postRankings[post.id]}
+              rank={index + 1}
               imageUrl={post.imageUrl}
               caption={post.caption || ""}
               username={post.user?.username || "Unknown"}
@@ -373,14 +277,10 @@ export default function FeedPage() {
               isCreator={user?.id === post.userId}
               isDisqualified={!!post.isDisqualified}
               isTrendEnded={isTrendEnded}
-              isSaved={post.isSaved}
-              trendId={trendId}
               onVoteUp={() => handleVoteUp(post.id)}
               onVoteDown={() => handleVoteDown(post.id)}
               onComment={() => setCommentsPostId(post.id)}
               onDisqualify={() => handleDisqualify(post.id)}
-              onDelete={() => handleDeletePost(post.id)}
-              onSave={() => handleSavePost(post.id, post.isSaved || false)}
             />
           ))
         )}

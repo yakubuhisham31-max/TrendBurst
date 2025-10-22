@@ -20,17 +20,16 @@ type TrendWithCreator = Trend & {
 
 const categories = [
   "All",
-  "AI",
-  "Arts",
-  "Education",
-  "Entertainment",
-  "Fashion",
   "Food",
-  "Gaming",
-  "Music",
-  "Photography",
+  "Arts",
   "Sports",
+  "Fashion",
+  "Photography",
+  "AI",
+  "Entertainment",
+  "Music",
   "Technology",
+  "Gaming",
 ];
 
 const subcategories = [
@@ -106,15 +105,14 @@ export default function HomePage() {
         });
       
       case "Trending":
-        // Trending: Sort by participation rate (participants / views)
+        // Trending: Sort by engagement (views + participants * 2 + chatCount * 3)
         return [...allTrends]
-          .filter(trend => (trend.views || 0) > 0) // Only trends with views
           .map(trend => ({
             ...trend,
-            participationRate: (trend.participants || 0) / (trend.views || 1) * 100
+            engagement: (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3
           }))
-          .sort((a, b) => b.participationRate - a.participationRate)
-          .slice(0, 10); // Top 10 with highest participation
+          .sort((a, b) => b.engagement - a.engagement)
+          .slice(0, 20); // Top 20 trending
       
       case "Ending Soon":
         return allTrends.filter(trend => {
@@ -161,7 +159,7 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-12 object-contain"
+            className="h-20 object-contain"
             data-testid="img-logo"
           />
           <div className="w-10" />
@@ -279,7 +277,6 @@ export default function HomePage() {
                 chatCount={trend.chatCount || 0}
                 createdAt={trend.createdAt || new Date()}
                 endDate={trend.endDate || undefined}
-                description={trend.description || undefined}
                 isTrending={selectedSubcategory === "Trending"}
                 onClick={() => setLocation(`/feed/${trend.id}`)}
               />
@@ -290,7 +287,7 @@ export default function HomePage() {
 
       <Link href="/create-trend">
         <Button
-          className="fixed bottom-6 right-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium z-50"
+          className="fixed bottom-6 right-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium"
           data-testid="button-create-trend"
         >
           <Plus className="w-5 h-5" />

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Trophy, Loader2, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 import type { Post, User } from "@shared/schema";
 
 interface RankingEntry {
   rank: number;
   post: Post & { user?: User };
-  bonusPoints?: number;
 }
 
 interface RankingsResponse {
@@ -28,7 +25,6 @@ export default function RankingsPage() {
   const { id: trendId } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
 
   const { data: rankingsData, isLoading } = useQuery<RankingsResponse>({
     queryKey: [`/api/rankings/${trendId}`],
@@ -38,23 +34,6 @@ export default function RankingsPage() {
   const currentUserPost = rankingsData?.rankings.find(
     (entry) => entry.post.userId === currentUser?.id
   );
-
-  // Show notification for bonus points when user is in top 3 (only once)
-  useEffect(() => {
-    if (currentUserPost && currentUserPost.bonusPoints && currentUserPost.bonusPoints > 0 && rankingsData?.isEnded) {
-      const notificationKey = `bonus-points-${trendId}-${currentUser?.id}`;
-      const hasShown = sessionStorage.getItem(notificationKey);
-      
-      if (!hasShown) {
-        toast({
-          title: "Bonus Points Earned!",
-          description: `Congratulations! You earned ${currentUserPost.bonusPoints} bonus TrendX points for ranking #${currentUserPost.rank}!`,
-          duration: 5000,
-        });
-        sessionStorage.setItem(notificationKey, "true");
-      }
-    }
-  }, [currentUserPost?.bonusPoints, rankingsData?.isEnded, trendId, currentUser?.id, toast]);
 
   const getRankBadge = (rank: number) => {
     const suffixes = ["st", "nd", "rd"];

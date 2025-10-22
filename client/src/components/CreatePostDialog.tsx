@@ -26,43 +26,11 @@ export default function CreatePostDialog({
 }: CreatePostDialogProps) {
   const [caption, setCaption] = useState("");
   const [imageUrl, setImageUrl] = useState<string>();
-  const [isVideo, setIsVideo] = useState(false);
 
-  const getFileExtension = (filename?: string, mimeType?: string): string => {
-    if (filename) {
-      const ext = filename.split('.').pop();
-      if (ext && ext.length <= 4) return ext;
-    }
-    if (mimeType) {
-      const typeMap: Record<string, string> = {
-        'image/jpeg': 'jpg',
-        'image/jpg': 'jpg',
-        'image/png': 'png',
-        'image/gif': 'gif',
-        'image/webp': 'webp',
-        'video/mp4': 'mp4',
-        'video/webm': 'webm',
-        'video/quicktime': 'mov',
-      };
-      return typeMap[mimeType] || 'jpg';
-    }
-    return 'jpg';
-  };
-
-  const handleGetUploadParameters = async (file: { name?: string; type?: string }) => {
-    const ext = getFileExtension(file.name, file.type);
-    const isVideoFile = file.type?.startsWith('video/');
-    setIsVideo(isVideoFile || false);
-    
+  const handleGetUploadParameters = async () => {
     const response = await fetch("/api/objects/upload", {
       method: "POST",
       credentials: "include",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        filename: `post-${Date.now()}.${ext}`,
-      }),
     });
     const data = await response.json();
     return {
@@ -73,13 +41,7 @@ export default function CreatePostDialog({
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      const fileUrl = uploadedFile.uploadURL;
-      setImageUrl(fileUrl);
-      
-      // Check if uploaded file is a video by looking at the file type
-      const fileType = uploadedFile.type || '';
-      setIsVideo(fileType.startsWith('video/'));
+      setImageUrl(result.successful[0].uploadURL);
     }
   };
 
@@ -98,67 +60,31 @@ export default function CreatePostDialog({
         <DialogHeader>
           <DialogTitle>Create Post</DialogTitle>
           <DialogDescription>
-            Upload an image or video and add a caption to share with the trend
+            Upload an image and add a caption to share with the trend
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Media</Label>
-            {imageUrl ? (
-              <div className="space-y-2">
-                <div className="relative w-full aspect-square rounded-lg overflow-hidden border">
-                  {isVideo ? (
-                    <video
-                      src={imageUrl}
-                      controls
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      src={imageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={52428800}
-                  allowedFileTypes={['image/*', 'video/*']}
-                  onGetUploadParameters={handleGetUploadParameters}
-                  onComplete={handleUploadComplete}
-                  variant="outline"
-                  buttonClassName="w-full"
-                >
-                  <div className="text-center py-2">
-                    <p className="text-sm text-muted-foreground">
-                      Click to change media
-                    </p>
-                  </div>
-                </ObjectUploader>
+            <Label>Image</Label>
+            <ObjectUploader
+              maxNumberOfFiles={1}
+              maxFileSize={10485760}
+              onGetUploadParameters={handleGetUploadParameters}
+              onComplete={handleUploadComplete}
+              variant="outline"
+              buttonClassName="w-full h-48 border-2 border-dashed"
+            >
+              <div className="text-center">
+                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {imageUrl ? "Image uploaded - click to change" : "Click to upload or drag and drop"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG up to 10MB
+                </p>
               </div>
-            ) : (
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={52428800}
-                allowedFileTypes={['image/*', 'video/*']}
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleUploadComplete}
-                variant="outline"
-                buttonClassName="w-full h-48 border-2 border-dashed"
-              >
-                <div className="text-center">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Images (PNG, JPG) or Videos (MP4, MOV) up to 50MB
-                  </p>
-                </div>
-              </ObjectUploader>
-            )}
+            </ObjectUploader>
           </div>
 
           <div className="space-y-2">

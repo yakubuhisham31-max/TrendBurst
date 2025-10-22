@@ -13,7 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { InsertTrend } from "@shared/schema";
 
-const categories = ["AI", "Arts", "Education", "Entertainment", "Fashion", "Food", "Gaming", "Music", "Photography", "Sports", "Technology"];
+const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Music", "Food", "Fashion", "Photography"];
 
 export default function CreateTrendPage() {
   const [, setLocation] = useLocation();
@@ -66,31 +66,9 @@ export default function CreateTrendPage() {
     }
   };
 
-  const getFileExtension = (filename?: string, mimeType?: string): string => {
-    if (filename) {
-      const ext = filename.split('.').pop();
-      if (ext && ext.length <= 4) return ext;
-    }
-    if (mimeType) {
-      const typeMap: Record<string, string> = {
-        'image/jpeg': 'jpg',
-        'image/jpg': 'jpg',
-        'image/png': 'png',
-        'image/gif': 'gif',
-        'image/webp': 'webp',
-        'video/mp4': 'mp4',
-        'video/webm': 'webm',
-        'video/quicktime': 'mov',
-      };
-      return typeMap[mimeType] || 'jpg';
-    }
-    return 'jpg';
-  };
-
-  const getCoverUploadParameters = async (file: { name?: string; type?: string }) => {
-    const ext = getFileExtension(file.name, file.type);
+  const getCoverUploadParameters = async () => {
     const response = await apiRequest("POST", "/api/object-storage/upload-url", {
-      path: `trend-covers/${Date.now()}.${ext}`,
+      path: `trend-covers/${Date.now()}.jpg`,
       isPublic: true,
     });
     const data = await response.json();
@@ -111,10 +89,9 @@ export default function CreateTrendPage() {
     }
   };
 
-  const getReferenceUploadParameters = async (file: { name?: string; type?: string }) => {
-    const ext = getFileExtension(file.name, file.type);
+  const getReferenceUploadParameters = async () => {
     const response = await apiRequest("POST", "/api/object-storage/upload-url", {
-      path: `trend-references/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`,
+      path: `trend-references/${Date.now()}.jpg`,
       isPublic: true,
     });
     const data = await response.json();
@@ -125,12 +102,12 @@ export default function CreateTrendPage() {
   };
 
   const handleReferenceUploadComplete = (result: any) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedUrls = result.successful.map((file: any) => file.uploadURL.split('?')[0]);
-      setReferenceMedia([...referenceMedia, ...uploadedUrls].slice(0, 3));
+    if (result.successful && result.successful[0]) {
+      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+      setReferenceMedia([...referenceMedia, uploadedUrl]);
       toast({
         title: "Success",
-        description: `${uploadedUrls.length} reference media uploaded successfully`,
+        description: "Reference media uploaded successfully",
       });
     }
   };
@@ -167,17 +144,6 @@ export default function CreateTrendPage() {
       return;
     }
 
-    // Validate and convert endDate to Date object
-    const endDateObj = new Date(endDate);
-    if (isNaN(endDateObj.getTime())) {
-      toast({
-        title: "Invalid End Date",
-        description: "Please provide a valid end date.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const filteredRules = rules.filter(r => r.trim() !== "");
     
     const trendData: Omit<InsertTrend, "userId"> = {
@@ -188,7 +154,7 @@ export default function CreateTrendPage() {
       category: selectedCategory,
       coverPicture: coverImage || null,
       referenceMedia: referenceMedia.length > 0 ? referenceMedia : undefined,
-      endDate: endDateObj,
+      endDate: endDate, // Send as string, schema will transform to Date
     };
 
     createTrendMutation.mutate(trendData);
@@ -372,44 +338,37 @@ export default function CreateTrendPage() {
             <div className="space-y-2">
               <Label>Reference (Images/Videos)</Label>
               <p className="text-sm text-muted-foreground">
-                Upload up to 3 examples for participants to reference
+                Upload examples for participants to reference
               </p>
-              {referenceMedia.length < 3 && (
-                <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center bg-muted/20">
-                  <div className="text-center">
-                    <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                    <ObjectUploader
-                      maxNumberOfFiles={3 - referenceMedia.length}
-                      maxFileSize={50485760}
-                      allowedFileTypes={['image/*', 'video/*']}
-                      onGetUploadParameters={getReferenceUploadParameters}
-                      onComplete={handleReferenceUploadComplete}
-                      variant="outline"
-                      buttonClassName="data-testid-dropzone-reference"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Reference Media ({referenceMedia.length}/3)
-                    </ObjectUploader>
-                  </div>
+              <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center bg-muted/20">
+                <div className="text-center">
+                  <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={10485760}
+                    onGetUploadParameters={getReferenceUploadParameters}
+                    onComplete={handleReferenceUploadComplete}
+                    variant="outline"
+                    buttonClassName="data-testid-dropzone-reference"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Reference Media
+                  </ObjectUploader>
                 </div>
-              )}
+              </div>
               {referenceMedia.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mt-2">
+                <div className="grid grid-cols-4 gap-2 mt-2">
                   {referenceMedia.map((media, index) => (
-                    <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                      {media.match(/\.(mp4|webm|mov)$/i) ? (
-                        <video src={media} className="w-full h-full object-cover" controls />
-                      ) : (
-                        <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
-                      )}
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
+                      <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
                       <Button
                         size="icon"
                         variant="destructive"
-                        className="absolute top-2 right-2 h-8 w-8"
+                        className="absolute top-1 right-1 h-6 w-6"
                         onClick={() => setReferenceMedia(referenceMedia.filter((_, i) => i !== index))}
                         data-testid={`button-remove-reference-${index}`}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
