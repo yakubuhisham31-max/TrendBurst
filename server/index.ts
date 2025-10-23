@@ -1,5 +1,4 @@
 import "dotenv/config";
-import "./env"; // Fix DATABASE_URL before any other imports
 import "./types"; // Import session type declarations
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
@@ -29,13 +28,21 @@ app.use(express.urlencoded({ extended: false }));
 
 const PgStore = connectPgSimple(session);
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+// Fix malformed DATABASE_URL (remove 'psql ' prefix and trailing quotes if present)
+let databaseUrl = process.env.DATABASE_URL!;
+if (databaseUrl.startsWith("psql '")) {
+  log("⚠️  Fixing malformed DATABASE_URL - removing 'psql ' prefix");
+  databaseUrl = databaseUrl.replace(/^psql '/, '').replace(/'$/, '');
+}
+
+const pool = new Pool({ connectionString: databaseUrl });
 
 // Test database connection
 pool.query('SELECT NOW()').then(() => {
   log('✅ Database connected successfully');
 }).catch((error) => {
   console.error('❌ Database connection failed:', error);
+  console.error('DATABASE_URL format:', databaseUrl?.substring(0, 30) + '...');
 });
 
 app.use(
