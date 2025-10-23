@@ -136,7 +136,11 @@ export class DbStorage implements IStorage {
   }
 
   async createTrend(trend: InsertTrend): Promise<Trend> {
-    const result = await db.insert(schema.trends).values(trend).returning();
+    const trendData = {
+      ...trend,
+      endDate: typeof trend.endDate === 'string' ? new Date(trend.endDate) : trend.endDate,
+    };
+    const result = await db.insert(schema.trends).values(trendData).returning();
     return result[0];
   }
 
