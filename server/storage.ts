@@ -1,3 +1,4 @@
+import "../server/env"; // Ensure DATABASE_URL is fixed before creating pool
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neonConfig, Pool } from "@neondatabase/serverless";
 import ws from "ws";
