@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload, User } from "lucide-react";
-import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
+import logoImage from "@assets/file_000000003b9861f58e6c60daa28b8f45_1761404274206.png";
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
@@ -44,7 +44,7 @@ export default function SignupPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-16 mx-auto object-contain"
+            className="h-16 sm:h-20 mx-auto object-contain px-4"
             data-testid="img-logo"
           />
           <p className="text-muted-foreground">

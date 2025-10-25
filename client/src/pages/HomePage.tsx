@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";
-import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
+import logoImage from "@assets/file_000000003b9861f58e6c60daa28b8f45_1761404274206.png";
 
 type TrendWithCreator = Trend & {
   creator: Pick<User, "id" | "username" | "profilePicture"> | null;
@@ -159,7 +159,7 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-20 object-contain"
+            className="h-20 sm:h-24 object-contain px-2"
             data-testid="img-logo"
           />
           <div className="w-10" />

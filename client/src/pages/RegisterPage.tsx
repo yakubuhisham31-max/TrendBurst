@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload, User } from "lucide-react";
-import logoImage from "@assets/file_0000000058b0622fae99adc55619c415_1759754745057.png";
+import logoImage from "@assets/file_000000003b9861f58e6c60daa28b8f45_1761404274206.png";
 import { useEffect } from "react";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";
@@ -109,7 +109,7 @@ export default function RegisterPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-16 mx-auto object-contain"
+            className="h-16 sm:h-20 mx-auto object-contain px-4"
             data-testid="img-logo"
           />
           <p className="text-muted-foreground">
