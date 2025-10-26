@@ -104,17 +104,20 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6">
+      <Card className="w-full max-w-md p-8 sm:p-10 space-y-6">
         <div className="text-center space-y-4">
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-16 sm:h-20 mx-auto object-contain px-4"
+            className="h-24 sm:h-32 mx-auto object-contain"
             data-testid="img-logo"
           />
-          <p className="text-muted-foreground">
-            Create your account
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Join Trendx</h1>
+            <p className="text-muted-foreground">
+              Create your account and start trending
+            </p>
+          </div>
         </div>
 
         <Form {...form}>
@@ -242,12 +245,12 @@ export default function RegisterPage() {
           </form>
         </Form>
 
-        <div className="text-center">
+        <div className="text-center pt-2">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:underline font-semibold"
               data-testid="link-login"
             >
               Sign in

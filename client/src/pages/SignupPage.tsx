@@ -39,17 +39,20 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6">
+      <Card className="w-full max-w-md p-8 sm:p-10 space-y-6">
         <div className="text-center space-y-4">
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-16 sm:h-20 mx-auto object-contain px-4"
+            className="h-24 sm:h-32 mx-auto object-contain"
             data-testid="img-logo"
           />
-          <p className="text-muted-foreground">
-            Create your account
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Join Trendx</h1>
+            <p className="text-muted-foreground">
+              Create your account and start trending
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">

@@ -203,7 +203,7 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-3xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
           <Button
             size="icon"
             variant="ghost"
@@ -216,7 +216,7 @@ export default function FeedPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-10 sm:h-12 object-contain px-2"
+            className="h-14 sm:h-16 md:h-20 object-contain"
             data-testid="img-logo"
           />
 
