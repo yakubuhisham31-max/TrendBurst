@@ -18,7 +18,22 @@ export function log(message: string, source = "express") {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "../client/dist");
+  // In production (Render), the server is bundled to dist/index.js
+  // and client files are in client/dist
+  // In development, server runs from server/index.ts
+  // and client files are in client/dist
+  
+  let distPath: string;
+  
+  if (process.env.NODE_ENV === "production") {
+    // Production: server runs from /opt/render/project/src/dist/index.js
+    // Client files are at /opt/render/project/src/client/dist
+    distPath = path.resolve(__dirname, "../client/dist");
+  } else {
+    // Development: server runs from /home/runner/workspace/server/index.ts
+    // Client files are at /home/runner/workspace/client/dist
+    distPath = path.resolve(__dirname, "../client/dist");
+  }
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
