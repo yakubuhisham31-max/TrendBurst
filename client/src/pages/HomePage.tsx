@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";
-import logoImage from "@assets/file_000000003b9861f58e6c60daa28b8f45_1761404274206.png";
+import logoImage from "@assets/trendx_transparent_1761633096863.png";
 
 type TrendWithCreator = Trend & {
   creator: Pick<User, "id" | "username" | "profilePicture"> | null;

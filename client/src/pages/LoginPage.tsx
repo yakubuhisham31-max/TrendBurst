@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import logoImage from "@assets/file_000000003b9861f58e6c60daa28b8f45_1761404274206.png";
+import logoImage from "@assets/trendx_transparent_1761633096863.png";
 import { useEffect } from "react";
 
 const loginSchema = z.object({

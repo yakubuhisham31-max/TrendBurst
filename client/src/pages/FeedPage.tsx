@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
 import PostCommentsDialog from "@/components/PostCommentsDialog";
-import logoImage from "@assets/file_000000003b9861f58e6c60daa28b8f45_1761404274206.png";
+import logoImage from "@assets/trendx_transparent_1761633096863.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
