@@ -14,9 +14,43 @@ const app = express();
 app.set("trust proxy", 1);
 
 // CORS configuration - MUST come before session middleware
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // Production frontend URL (e.g., https://yourdomain.com)
+  process.env.RENDER_EXTERNAL_URL, // Render's automatic URL
+  /\.replit\.dev$/, // Replit preview URLs
+  /\.repl\.co$/, // Replit URLs
+  /localhost:\d+$/, // Local development
+];
+
 app.use(
   cors({
-    origin: true, // Allow all origins in Replit (same domain)
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is in allowed list or matches regex patterns
+      const isAllowed = allowedOrigins.some(allowed => {
+        if (typeof allowed === 'string') {
+          return allowed === origin;
+        }
+        if (allowed instanceof RegExp) {
+          return allowed.test(origin);
+        }
+        return false;
+      });
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        // In development, allow all origins
+        if (process.env.NODE_ENV !== 'production') {
+          callback(null, true);
+        } else {
+          log(`⚠️  CORS blocked origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
+    },
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -45,20 +79,27 @@ pool.query('SELECT NOW()').then(() => {
   console.error('DATABASE_URL format:', databaseUrl?.substring(0, 30) + '...');
 });
 
+// Validate required environment variables
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('❌ SESSION_SECRET environment variable is required in production');
+  process.exit(1);
+}
+
 app.use(
   session({
     store: new PgStore({
       pool,
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+    secret: process.env.SESSION_SECRET || "dev-secret-key-not-for-production",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain: process.env.COOKIE_DOMAIN, // Optional: set cookie domain for cross-subdomain auth
     },
   })
 );
