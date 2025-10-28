@@ -6,6 +6,20 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 
 ## Recent Changes
 
+**October 28, 2025:**
+- **Authentication & Deployment Fixes for Render:**
+  - Fixed static file serving to work correctly in both development and production
+  - Updated CORS configuration to support Render, Cloudflare, and Replit preview URLs
+  - Added SESSION_SECRET environment variable validation for production
+  - Created health check endpoint `/health` for Render monitoring
+  - Added comprehensive deployment documentation (`DEPLOYMENT.md`)
+  - Created `render.yaml` blueprint for easy Render deployment
+  - Created `.env.example` with all required environment variables
+  - Installed missing `@types/cors` TypeScript definitions
+  - Fixed session cookie configuration for cross-origin authentication
+  - All authentication routes (register, login, logout, me) verified working
+  - Production build path verified: `client/dist` (not `dist/public`)
+
 **October 23, 2025:**
 - **Production Build System for Render Deployment:**
   - Created `build.sh` script that builds frontend first, copies to dist/public, then compiles backend
@@ -171,6 +185,9 @@ Preferred communication style: Simple, everyday language.
 
 **Authentication & Sessions:**
 - **connect-pg-simple**: PostgreSQL session store for Express
+- **bcrypt**: Password hashing
+- **express-session**: Session middleware with PostgreSQL persistence
+- **CORS**: Configured for Replit, Render, and Cloudflare domains
 
 **Form Management:**
 - **react-hook-form**: Performant form handling
