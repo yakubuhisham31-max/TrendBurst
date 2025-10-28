@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload, User } from "lucide-react";
-import logoImage from "@assets/trendx_transparent_1761633096863.png";
+import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useEffect } from "react";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";

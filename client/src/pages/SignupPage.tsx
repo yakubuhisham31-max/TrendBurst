@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload, User } from "lucide-react";
-import logoImage from "@assets/trendx_transparent_1761633096863.png";
+import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
