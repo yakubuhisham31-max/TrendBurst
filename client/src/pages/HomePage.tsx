@@ -287,10 +287,10 @@ export default function HomePage() {
 
       <Link href="/create-trend">
         <Button
-          className="fixed bottom-6 right-6 h-14 px-6 rounded-full shadow-lg gap-2 text-base font-medium z-50"
+          className="fixed bottom-6 right-6 h-16 px-7 rounded-full shadow-2xl hover:shadow-3xl gap-2 text-base font-medium z-[100] transition-shadow"
           data-testid="button-create-trend"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-6 h-6" />
           Create New Trend
         </Button>
       </Link>

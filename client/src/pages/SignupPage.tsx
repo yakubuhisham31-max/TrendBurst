@@ -34,6 +34,7 @@ export default function SignupPage() {
       profilePic,
     });
     
+    // Navigate to category selection, then role selection
     setLocation("/onboarding/categories");
   };
 

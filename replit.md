@@ -6,6 +6,19 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 
 ## Recent Changes
 
+**October 30, 2025:**
+- **Migration to Replit Environment:**
+  - Configured server to serve static files in development mode instead of using Vite dev server to avoid top-level await issues in vite.config.ts
+  - Created PostgreSQL database with all required tables (users, trends, posts, votes, comments, follows, view_tracking, saved_trends, saved_posts)
+  - Removed `userHasPosted` condition from create post button - button now always visible for active trends
+  - Enhanced floating action buttons (Create Trend, Create Post, Chat) with:
+    - Increased size (w-16 h-16) for better touch targets
+    - Higher z-index (z-[100]) to ensure they stay above all content
+    - Better spacing between buttons (bottom-28 for chat, bottom-6 for create)
+    - Enhanced shadows (shadow-2xl) for better depth perception
+    - Smooth hover transitions
+  - Verified signup flow: SignupPage → CategorySelectionPage → RoleSelectionPage → HomePage
+
 **October 28, 2025:**
 - **Authentication & Deployment Fixes for Render:**
   - Fixed static file serving to work correctly in both development and production

@@ -286,24 +286,24 @@ export default function FeedPage() {
         )}
       </main>
 
-      {!isTrendEnded && user && !userHasPosted && (
+      {!isTrendEnded && user && (
         <Button
           size="icon"
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50"
+          className="fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-shadow z-[100]"
           onClick={() => setCreatePostOpen(true)}
           data-testid="button-create-post"
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-7 h-7" />
         </Button>
       )}
 
       <Button
         size="icon"
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-lg bg-chart-2 z-50 relative"
+        className="fixed bottom-28 right-6 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl bg-chart-2 hover:bg-chart-2/90 transition-all z-[100] relative"
         onClick={() => setLocation(`/feed-chat/${trendId}`)}
         data-testid="button-feed-chat"
       >
-        <MessageSquare className="w-6 h-6" />
+        <MessageSquare className="w-7 h-7" />
         {unreadChatCount > 0 && (
           <Badge 
             className="absolute -top-1 -right-1 h-6 min-w-6 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center"
