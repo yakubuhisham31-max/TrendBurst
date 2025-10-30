@@ -145,10 +145,9 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // IMPORTANT: Use production mode to prevent Vite crashes
-  // Vite dev mode has a bug that causes process.exit(1) on errors
-  // This cannot be fixed without editing server/vite.ts (which is forbidden)
-  log('Serving static files from dist/public (production mode)');
+  // Serve static files (production mode)
+  // Note: Using production mode to avoid Vite config top-level await issues
+  log('Serving static files from client/dist');
   serveStatic(app);
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
