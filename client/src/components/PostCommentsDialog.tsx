@@ -133,6 +133,10 @@ export default function PostCommentsDialog({
           ) : (
             sortedComments.map((comment) => {
               const isOwnComment = comment.userId === user?.id;
+              const parentComment = comment.parentId 
+                ? sortedComments.find(c => c.id === comment.parentId)
+                : null;
+              
               return (
                 <div
                   key={comment.id}
@@ -162,6 +166,12 @@ export default function PostCommentsDialog({
                         })}
                       </span>
                     </div>
+                    {parentComment && (
+                      <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded italic border-l-2 border-primary/50">
+                        <Reply className="w-3 h-3 inline mr-1" />
+                        Replying to <strong>{parentComment.user?.username}</strong>: {parentComment.text.slice(0, 50)}{parentComment.text.length > 50 ? '...' : ''}
+                      </div>
+                    )}
                     <p className="text-sm" data-testid="text-comment">
                       {comment.text}
                     </p>
