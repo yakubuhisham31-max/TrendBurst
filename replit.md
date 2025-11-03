@@ -6,7 +6,24 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 
 ## Recent Changes
 
-**November 3, 2025:**
+**November 3, 2025 (Latest):**
+- **Video Upload and Auto-Play Functionality:**
+  - Added `mediaUrl` and `mediaType` fields to posts schema (backward compatible with existing `imageUrl`)
+  - Updated ObjectUploader component to accept both image and video uploads (image/*, video/*)
+  - Implemented Instagram-style video playback in PostCard component:
+    - Auto-plays when 50% visible using IntersectionObserver API
+    - Automatically pauses when scrolled out of view
+    - Videos start muted with loop enabled for seamless experience
+  - CreatePostDialog now detects file type and sets mediaType accordingly ('image' or 'video')
+- **Category Management Improvements:**
+  - Added "Other" as a selectable category across all pages (HomePage, CategorySelectionPage, CreateTrendDialog)
+  - Sorted all category lists alphabetically for better user experience
+  - Consistent category options: AI, Arts, Entertainment, Fashion, Fitness, Food, Gaming, Music, Other, Photography, Sports, Technology, Travel
+- **HomePage UI Enhancements:**
+  - Removed border from title bar for cleaner appearance
+  - Reduced header height (from h-28 to py-4) and moved search bar + category filters inside header
+  - Moved search and category filters closer to logo for more compact, modern layout
+  - All floating buttons verified at optimal positions (Create Trend, Post, Chat)
 - **Chat and Comments System Verification:**
   - Verified that post comments do NOT appear in trend chat and are correctly separated
   - Confirmed that only trend-level chats (where postId is NULL) count toward chatCount
@@ -29,9 +46,6 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
   - Share button opens ShareDialog component with social media sharing and copy link
   - Delete button removes trends from database (only visible to trend creators)
   - All features include proper cache invalidation and toast notifications
-- **Code Cleanup:**
-  - Removed unused useEffect import from TrendCard component
-  - All features verified working with architect review
 
 **October 30, 2025:**
 - **Migration to Replit Environment:**
