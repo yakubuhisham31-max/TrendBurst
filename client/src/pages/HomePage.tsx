@@ -20,16 +20,19 @@ type TrendWithCreator = Trend & {
 
 const categories = [
   "All",
-  "Food",
-  "Arts",
-  "Sports",
-  "Fashion",
-  "Photography",
   "AI",
+  "Arts",
   "Entertainment",
-  "Music",
-  "Technology",
+  "Fashion",
+  "Fitness",
+  "Food",
   "Gaming",
+  "Music",
+  "Other",
+  "Photography",
+  "Sports",
+  "Technology",
+  "Travel",
 ];
 
 const subcategories = [
@@ -146,8 +149,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-7xl mx-auto px-4 h-28 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <Button
             size="icon"
             variant="ghost"
@@ -159,15 +162,13 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-24 sm:h-28 md:h-32 object-contain"
+            className="h-16 sm:h-18 md:h-20 object-contain"
             data-testid="img-logo"
           />
           <div className="w-10" />
         </div>
-      </header>
 
-      <div className="sticky top-28 z-40 bg-background/95 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 py-2 space-y-3">
+        <div className="max-w-7xl mx-auto px-4 pb-3 space-y-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -229,7 +230,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       <main className="max-w-7xl mx-auto px-4 py-4">
         {error && (

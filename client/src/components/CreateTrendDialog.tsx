@@ -24,7 +24,7 @@ interface CreateTrendDialogProps {
   }) => void;
 }
 
-const categories = ["Entertainment", "Sports", "AI", "Art", "Technology", "Gaming", "Music", "Food", "Fashion"];
+const categories = ["AI", "Arts", "Entertainment", "Fashion", "Fitness", "Food", "Gaming", "Music", "Other", "Photography", "Sports", "Technology", "Travel"];
 
 export default function CreateTrendDialog({
   open,
