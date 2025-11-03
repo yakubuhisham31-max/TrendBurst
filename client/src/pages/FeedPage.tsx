@@ -220,7 +220,36 @@ export default function FeedPage() {
             data-testid="img-logo"
           />
 
-          <div className="w-10" />
+          <div className="flex items-center gap-2">
+            {!isTrendEnded && user && (
+              <Button
+                size="icon"
+                variant="default"
+                className="w-10 h-10 rounded-full"
+                onClick={() => setCreatePostOpen(true)}
+                data-testid="button-create-post"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            )}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="w-10 h-10 rounded-full relative"
+              onClick={() => setLocation(`/feed-chat/${trendId}`)}
+              data-testid="button-feed-chat"
+            >
+              <MessageSquare className="w-5 h-5" />
+              {unreadChatCount > 0 && (
+                <Badge 
+                  className="absolute -top-1 -right-1 h-5 min-w-5 px-1 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center"
+                  data-testid="badge-chat-notification"
+                >
+                  {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                </Badge>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-3">
@@ -286,34 +315,6 @@ export default function FeedPage() {
           ))
         )}
       </main>
-
-      {!isTrendEnded && user && (
-        <Button
-          size="icon"
-          className="fixed bottom-5 right-5 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-shadow z-[100]"
-          onClick={() => setCreatePostOpen(true)}
-          data-testid="button-create-post"
-        >
-          <Plus className="w-7 h-7" />
-        </Button>
-      )}
-
-      <Button
-        size="icon"
-        className="fixed bottom-[104px] right-5 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl bg-chart-2 hover:bg-chart-2/90 transition-all z-[100] relative"
-        onClick={() => setLocation(`/feed-chat/${trendId}`)}
-        data-testid="button-feed-chat"
-      >
-        <MessageSquare className="w-7 h-7" />
-        {unreadChatCount > 0 && (
-          <Badge 
-            className="absolute -top-1 -right-1 h-6 min-w-6 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center"
-            data-testid="badge-chat-notification"
-          >
-            {unreadChatCount > 99 ? "99+" : unreadChatCount}
-          </Badge>
-        )}
-      </Button>
 
       <CreatePostDialog
         open={createPostOpen}
