@@ -290,7 +290,7 @@ export default function FeedPage() {
       {!isTrendEnded && user && (
         <Button
           size="icon"
-          className="fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-shadow z-[100]"
+          className="fixed bottom-5 right-5 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-shadow z-[100]"
           onClick={() => setCreatePostOpen(true)}
           data-testid="button-create-post"
         >
@@ -300,7 +300,7 @@ export default function FeedPage() {
 
       <Button
         size="icon"
-        className="fixed bottom-28 right-6 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl bg-chart-2 hover:bg-chart-2/90 transition-all z-[100] relative"
+        className="fixed bottom-[104px] right-5 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl bg-chart-2 hover:bg-chart-2/90 transition-all z-[100] relative"
         onClick={() => setLocation(`/feed-chat/${trendId}`)}
         data-testid="button-feed-chat"
       >
