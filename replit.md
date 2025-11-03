@@ -6,6 +6,33 @@ Mini Feed (also referred to as "Trendz" in the UI) is a social media platform wh
 
 ## Recent Changes
 
+**November 3, 2025:**
+- **Chat and Comments System Verification:**
+  - Verified that post comments do NOT appear in trend chat and are correctly separated
+  - Confirmed that only trend-level chats (where postId is NULL) count toward chatCount
+  - Storage layer correctly filters using `isNull(postId)` for trend chats vs `eq(postId)` for post comments
+  - Reply functionality already implemented in both systems using parentId field
+- **Enhanced Instructions Page:**
+  - Now displays trend host's bio alongside their username and social links
+  - Host bio provides context about who created the trend
+  - Reference media gallery remains functional for visual examples
+- **Profile Page Privacy Improvements:**
+  - Hidden the "Saved" tab when viewing another user's profile
+  - Saved content only visible on user's own profile (isOwnProfile check)
+  - Maintains privacy of saved trends and posts
+- **Dashboard Analytics Enhancement:**
+  - Added Participation Rate metric showing engagement percentage
+  - Calculation: (total participants / total views) * 100%
+  - Includes division-by-zero guard to handle trends with no views
+- **Save/Share/Delete Functionality:**
+  - Save button toggles saved status with proper API mutations
+  - Share button opens ShareDialog component with social media sharing and copy link
+  - Delete button removes trends from database (only visible to trend creators)
+  - All features include proper cache invalidation and toast notifications
+- **Code Cleanup:**
+  - Removed unused useEffect import from TrendCard component
+  - All features verified working with architect review
+
 **October 30, 2025:**
 - **Migration to Replit Environment:**
   - Configured server to serve static files in development mode instead of using Vite dev server to avoid top-level await issues in vite.config.ts
