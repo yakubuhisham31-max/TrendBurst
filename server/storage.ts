@@ -184,7 +184,14 @@ export class DbStorage implements IStorage {
   }
 
   async createPost(post: InsertPost): Promise<Post> {
-    const result = await db.insert(schema.posts).values(post).returning();
+    // Support backwards compatibility: use mediaUrl if provided, otherwise use imageUrl
+    const postData = {
+      ...post,
+      mediaUrl: post.mediaUrl || post.imageUrl || '',
+      mediaType: post.mediaType || 'image',
+      imageUrl: post.imageUrl || post.mediaUrl || '', // Keep imageUrl for backwards compat
+    };
+    const result = await db.insert(schema.posts).values(postData).returning();
     return result[0];
   }
 

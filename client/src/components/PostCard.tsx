@@ -11,14 +11,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import FollowButton from "./FollowButton";
 
 interface PostCardProps {
   id: string;
   rank: number;
-  imageUrl: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
   caption?: string;
   username: string;
   userAvatar?: string;
@@ -46,7 +47,8 @@ const getRankBadge = (rank: number) => {
 
 export default function PostCard({
   rank,
-  imageUrl,
+  mediaUrl,
+  mediaType,
   caption,
   username,
   userAvatar,
@@ -67,6 +69,34 @@ export default function PostCard({
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [, setLocation] = useLocation();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Auto-play video when in view (Instagram style)
+  useEffect(() => {
+    if (mediaType !== 'video' || !videoRef.current) return;
+
+    const video = videoRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {
+              // Video play failed (e.g., user interaction required)
+            });
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 } // Play when 50% visible
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [mediaType]);
 
   return (
     <Card className="overflow-hidden" data-testid="card-post">
@@ -164,12 +194,24 @@ export default function PostCard({
         )}
 
         <div className={`relative aspect-square overflow-hidden bg-muted ${isDisqualified ? 'blur-sm' : ''}`}>
-          <img
-            src={imageUrl}
-            alt="Post"
-            className="w-full h-full object-cover"
-            data-testid="img-post"
-          />
+          {mediaType === 'video' ? (
+            <video
+              ref={videoRef}
+              src={mediaUrl}
+              className="w-full h-full object-cover"
+              loop
+              muted
+              playsInline
+              data-testid="video-post"
+            />
+          ) : (
+            <img
+              src={mediaUrl}
+              alt="Post"
+              className="w-full h-full object-cover"
+              data-testid="img-post"
+            />
+          )}
         </div>
       </div>
 

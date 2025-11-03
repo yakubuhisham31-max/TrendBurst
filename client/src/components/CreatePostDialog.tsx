@@ -16,7 +16,7 @@ import type { UploadResult } from "@uppy/core";
 interface CreatePostDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: { imageUrl: string; caption: string }) => void;
+  onSubmit?: (data: { mediaUrl: string; mediaType: 'image' | 'video'; caption: string }) => void;
 }
 
 export default function CreatePostDialog({
@@ -25,7 +25,8 @@ export default function CreatePostDialog({
   onSubmit,
 }: CreatePostDialogProps) {
   const [caption, setCaption] = useState("");
-  const [imageUrl, setImageUrl] = useState<string>();
+  const [mediaUrl, setMediaUrl] = useState<string>();
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
 
   const handleGetUploadParameters = async () => {
     const response = await fetch("/api/objects/upload", {
@@ -41,16 +42,25 @@ export default function CreatePostDialog({
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
-      setImageUrl(result.successful[0].uploadURL);
+      const file = result.successful[0];
+      const uploadURL = file.uploadURL;
+      setMediaUrl(uploadURL);
+      
+      // Detect file type from file extension or MIME type
+      const fileName = file.name || '';
+      const isVideo = fileName.match(/\.(mp4|webm|mov|avi|mkv)$/i) || 
+                     (file.type && file.type.startsWith('video/'));
+      setMediaType(isVideo ? 'video' : 'image');
     }
   };
 
   const handleSubmit = () => {
-    if (onSubmit && imageUrl) {
-      onSubmit({ imageUrl, caption });
+    if (onSubmit && mediaUrl) {
+      onSubmit({ mediaUrl, mediaType, caption });
     }
     setCaption("");
-    setImageUrl(undefined);
+    setMediaUrl(undefined);
+    setMediaType('image');
     onOpenChange(false);
   };
 
@@ -60,16 +70,17 @@ export default function CreatePostDialog({
         <DialogHeader>
           <DialogTitle>Create Post</DialogTitle>
           <DialogDescription>
-            Upload an image and add a caption to share with the trend
+            Upload an image or video and add a caption to share with the trend
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Image</Label>
+            <Label>Image or Video</Label>
             <ObjectUploader
               maxNumberOfFiles={1}
-              maxFileSize={10485760}
+              maxFileSize={52428800}
+              allowedFileTypes={['image/*', 'video/*']}
               onGetUploadParameters={handleGetUploadParameters}
               onComplete={handleUploadComplete}
               variant="outline"
@@ -78,10 +89,10 @@ export default function CreatePostDialog({
               <div className="text-center">
                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  {imageUrl ? "Image uploaded - click to change" : "Click to upload or drag and drop"}
+                  {mediaUrl ? `${mediaType === 'video' ? 'Video' : 'Image'} uploaded - click to change` : "Click to upload or drag and drop"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG up to 10MB
+                  Images (PNG, JPG) or Videos (MP4, WebM) up to 50MB
                 </p>
               </div>
             </ObjectUploader>
@@ -109,7 +120,7 @@ export default function CreatePostDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!imageUrl}
+              disabled={!mediaUrl}
               data-testid="button-create-post"
             >
               Post

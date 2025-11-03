@@ -96,7 +96,7 @@ export default function FeedPage() {
 
   // Create post mutation
   const createPostMutation = useMutation({
-    mutationFn: async (data: { imageUrl: string; caption: string }) => {
+    mutationFn: async (data: { mediaUrl: string; mediaType: 'image' | 'video'; caption: string }) => {
       if (!trendId) throw new Error("Trend ID is required");
       const response = await apiRequest("POST", "/api/posts", {
         trendId,
@@ -184,7 +184,7 @@ export default function FeedPage() {
     voteDownMutation.mutate(postId);
   };
 
-  const handleCreatePost = (data: { imageUrl: string; caption: string }) => {
+  const handleCreatePost = (data: { mediaUrl: string; mediaType: 'image' | 'video'; caption: string }) => {
     createPostMutation.mutate(data);
   };
 
@@ -264,7 +264,8 @@ export default function FeedPage() {
               key={post.id}
               id={post.id}
               rank={index + 1}
-              imageUrl={post.imageUrl}
+              mediaUrl={post.mediaUrl || post.imageUrl || ""}
+              mediaType={(post.mediaType as 'image' | 'video') || 'image'}
               caption={post.caption || ""}
               username={post.user?.username || "Unknown"}
               userAvatar={post.user?.profilePicture || undefined}

@@ -44,7 +44,9 @@ export const posts = pgTable("posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   trendId: varchar("trend_id").notNull().references(() => trends.id),
   userId: varchar("user_id").notNull().references(() => users.id),
-  imageUrl: text("image_url").notNull(),
+  imageUrl: text("image_url"),
+  mediaUrl: text("media_url"),
+  mediaType: text("media_type").default('image'),
   caption: text("caption"),
   votes: integer("votes").default(0),
   commentCount: integer("comment_count").default(0),
@@ -131,6 +133,8 @@ export const insertPostSchema = createInsertSchema(posts).omit({
   commentCount: true,
   isDisqualified: true,
   createdAt: true,
+}).extend({
+  mediaType: z.enum(['image', 'video']).default('image'),
 });
 
 export const insertVoteSchema = createInsertSchema(votes).omit({
