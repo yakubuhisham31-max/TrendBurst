@@ -8,6 +8,27 @@ Mini Feed (also known as "Trendz") is a social media platform designed for creat
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**November 3, 2025 - View Tracking and Participant Count Updates:**
+- **View Tracking on Trend Cards:**
+  - Added automatic view tracking when users click/tap on trend cards
+  - View tracking records one view per user per trend (prevents duplicate counting)
+  - Tracks views via POST `/api/trends/:id/view` endpoint
+  - Updates view counts in real-time with proper cache invalidation
+
+- **Participant Count Redefined:**
+  - Changed `participants` field from "unique users" to "total posts count"
+  - Increments when a user creates a post in a trend
+  - Decrements when a user deletes a post from a trend
+  - Added `incrementTrendParticipants()` and `decrementTrendParticipants()` methods to storage interface
+  - Provides accurate count of all submissions in each trend
+
+- **Cache Invalidation Improvements:**
+  - Updated TrendCard mutations to use predicate-based cache invalidation
+  - Ensures all trend-related queries refresh after view/participant changes
+  - Supports category-filtered queries and general trend listings
+
 ## System Architecture
 
 ### Frontend Architecture
