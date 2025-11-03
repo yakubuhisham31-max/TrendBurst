@@ -73,6 +73,11 @@ export default function InstructionsPage() {
                   </span>
                   <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                 </div>
+                {trend.creator.bio && (
+                  <p className="text-sm text-muted-foreground mb-3" data-testid="text-host-bio">
+                    {trend.creator.bio}
+                  </p>
+                )}
                 <div className="flex items-center gap-3 mb-3">
                   {trend.creator.instagramUrl && (
                     <a 

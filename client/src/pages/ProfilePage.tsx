@@ -191,9 +191,11 @@ export default function ProfilePage() {
                     <TabsTrigger value="posts" className="flex-1" data-testid="tab-posts">
                       Posts
                     </TabsTrigger>
-                    <TabsTrigger value="saved" className="flex-1" data-testid="tab-saved">
-                      Saved
-                    </TabsTrigger>
+                    {isOwnProfile && (
+                      <TabsTrigger value="saved" className="flex-1" data-testid="tab-saved">
+                        Saved
+                      </TabsTrigger>
+                    )}
                   </TabsList>
 
                   <TabsContent value="trends" className="mt-6">
@@ -262,11 +264,13 @@ export default function ProfilePage() {
                     )}
                   </TabsContent>
 
-                  <TabsContent value="saved" className="mt-6">
-                    <div className="text-center py-12 text-muted-foreground">
-                      No saved items yet
-                    </div>
-                  </TabsContent>
+                  {isOwnProfile && (
+                    <TabsContent value="saved" className="mt-6">
+                      <div className="text-center py-12 text-muted-foreground">
+                        No saved items yet
+                      </div>
+                    </TabsContent>
+                  )}
                 </Tabs>
               </div>
             </div>

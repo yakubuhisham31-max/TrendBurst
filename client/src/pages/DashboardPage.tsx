@@ -273,7 +273,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <MessageSquare className="w-4 h-4" />
@@ -288,6 +288,18 @@ export default function DashboardPage() {
                               </div>
                               <p className="text-2xl font-bold">{trendAnalytics.engagementRate}</p>
                               <p className="text-xs text-muted-foreground">votes per participant</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Users className="w-4 h-4" />
+                                <span>Participation Rate</span>
+                              </div>
+                              <p className="text-2xl font-bold">
+                                {trendAnalytics.views > 0 
+                                  ? `${((trendAnalytics.participants / trendAnalytics.views) * 100).toFixed(1)}%`
+                                  : '0%'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">participants / views</p>
                             </div>
                           </div>
 
