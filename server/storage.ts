@@ -150,6 +150,35 @@ export class DbStorage implements IStorage {
   }
 
   async deleteTrend(id: string): Promise<void> {
+    // Delete all related data first
+    // Delete comments for this trend (both trend-level chats and post comments)
+    await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
+    
+    // Get all posts for this trend so we can delete their related data
+    const posts = await db.select().from(schema.posts).where(eq(schema.posts.trendId, id));
+    const postIds = posts.map(p => p.id);
+    
+    if (postIds.length > 0) {
+      // Delete votes for all posts in this trend
+      for (const postId of postIds) {
+        await db.delete(schema.votes).where(eq(schema.votes.postId, postId));
+        await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, postId));
+      }
+      
+      // Delete all posts for this trend
+      await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
+    }
+    
+    // Delete saved trends
+    await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
+    
+    // Delete view tracking for this trend
+    await db.delete(schema.viewTracking).where(and(
+      eq(schema.viewTracking.type, 'chat'),
+      eq(schema.viewTracking.identifier, id)
+    ));
+    
+    // Finally delete the trend itself
     await db.delete(schema.trends).where(eq(schema.trends.id, id));
   }
 
@@ -465,6 +494,17 @@ export class DbStorage implements IStorage {
   }
 
   async deletePost(id: string): Promise<void> {
+    // Delete all related data first
+    // Delete votes for this post
+    await db.delete(schema.votes).where(eq(schema.votes.postId, id));
+    
+    // Delete comments for this post
+    await db.delete(schema.comments).where(eq(schema.comments.postId, id));
+    
+    // Delete saved post records
+    await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
+    
+    // Finally delete the post itself
     await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 }
