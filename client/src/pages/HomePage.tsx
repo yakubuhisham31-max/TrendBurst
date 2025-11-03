@@ -24,15 +24,12 @@ const categories = [
   "Arts",
   "Entertainment",
   "Fashion",
-  "Fitness",
   "Food",
   "Gaming",
-  "Music",
-  "Other",
   "Photography",
   "Sports",
   "Technology",
-  "Travel",
+  "Other",
 ];
 
 const subcategories = [
