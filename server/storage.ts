@@ -42,6 +42,8 @@ export interface IStorage {
   createTrend(trend: InsertTrend): Promise<Trend>;
   updateTrend(id: string, data: Partial<Trend>): Promise<Trend | undefined>;
   deleteTrend(id: string): Promise<void>;
+  incrementTrendParticipants(trendId: string): Promise<void>;
+  decrementTrendParticipants(trendId: string): Promise<void>;
   
   // Posts
   getPost(id: string): Promise<Post | undefined>;
@@ -180,6 +182,14 @@ export class DbStorage implements IStorage {
     
     // Finally delete the trend itself
     await db.delete(schema.trends).where(eq(schema.trends.id, id));
+  }
+
+  async incrementTrendParticipants(trendId: string): Promise<void> {
+    await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} + 1` }).where(eq(schema.trends.id, trendId));
+  }
+
+  async decrementTrendParticipants(trendId: string): Promise<void> {
+    await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} - 1` }).where(eq(schema.trends.id, trendId));
   }
 
   // Posts
