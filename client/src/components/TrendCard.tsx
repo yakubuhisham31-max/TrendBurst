@@ -121,6 +121,17 @@ export default function TrendCard({
     },
   });
 
+  // Track view mutation
+  const trackViewMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      await apiRequest("POST", `/api/trends/${id}/view`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
+    },
+  });
+
   const getTrendStatus = () => {
     if (!endDate) return null;
     const now = new Date();
@@ -169,10 +180,15 @@ export default function TrendCard({
     return "Posts & chat";
   };
 
+  const handleCardClick = () => {
+    trackViewMutation.mutate();
+    if (onClick) onClick();
+  };
+
   return (
     <Card
       className="overflow-hidden rounded-2xl shadow-lg transition-all duration-200 hover-elevate hover:shadow-xl cursor-pointer"
-      onClick={onClick}
+      onClick={handleCardClick}
       data-testid="card-trend"
     >
       <div className="relative aspect-[4/3] bg-muted overflow-hidden">
