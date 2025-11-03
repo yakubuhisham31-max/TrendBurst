@@ -178,6 +178,17 @@ export default function HomePage() {
             />
           </div>
 
+          {/* Create Trend Button */}
+          <Link href="/create-trend">
+            <Button
+              className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2 text-base font-medium transition-shadow"
+              data-testid="button-create-trend"
+            >
+              <Plus className="w-5 h-5" />
+              Create New Trend
+            </Button>
+          </Link>
+
           {/* Subcategories */}
           <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
             <div className="flex gap-2 min-w-max pb-1">
@@ -283,16 +294,6 @@ export default function HomePage() {
           </div>
         )}
       </main>
-
-      <Link href="/create-trend">
-        <Button
-          className="fixed bottom-5 right-5 h-16 px-7 rounded-full shadow-2xl hover:shadow-3xl gap-2 text-base font-medium z-[100] transition-shadow"
-          data-testid="button-create-trend"
-        >
-          <Plus className="w-6 h-6" />
-          Create New Trend
-        </Button>
-      </Link>
 
       <NavigationMenu
         open={menuOpen}
