@@ -128,7 +128,12 @@ export default function TrendCard({
       await apiRequest("POST", `/api/trends/${id}/view`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/trends');
+        }
+      });
     },
   });
 
