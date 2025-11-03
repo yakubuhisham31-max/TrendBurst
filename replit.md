@@ -2,123 +2,7 @@
 
 ## Overview
 
-Mini Feed (also referred to as "Trendz" in the UI) is a social media platform where users create trends, share posts, vote on submissions, and engage with the community. The application features a competitive trend-based system where users can host challenges, submit content, and participate in rankings. The platform supports both creative users and brands, with onboarding flows for category selection and role definition.
-
-## Recent Changes
-
-**November 3, 2025 (Latest):**
-- **Video Upload and Auto-Play Functionality:**
-  - Added `mediaUrl` and `mediaType` fields to posts schema (backward compatible with existing `imageUrl`)
-  - Updated ObjectUploader component to accept both image and video uploads (image/*, video/*)
-  - Implemented Instagram-style video playback in PostCard component:
-    - Auto-plays when 50% visible using IntersectionObserver API
-    - Automatically pauses when scrolled out of view
-    - Videos start muted with loop enabled for seamless experience
-  - CreatePostDialog now detects file type and sets mediaType accordingly ('image' or 'video')
-- **Category Management Improvements:**
-  - Added "Other" as a selectable category across all pages (HomePage, CategorySelectionPage, CreateTrendDialog)
-  - Sorted all category lists alphabetically for better user experience
-  - Consistent category options: AI, Arts, Entertainment, Fashion, Fitness, Food, Gaming, Music, Other, Photography, Sports, Technology, Travel
-- **HomePage UI Enhancements:**
-  - Removed border from title bar for cleaner appearance
-  - Reduced header height (from h-28 to py-4) and moved search bar + category filters inside header
-  - Moved search and category filters closer to logo for more compact, modern layout
-  - All floating buttons verified at optimal positions (Create Trend, Post, Chat)
-- **Chat and Comments System Verification:**
-  - Verified that post comments do NOT appear in trend chat and are correctly separated
-  - Confirmed that only trend-level chats (where postId is NULL) count toward chatCount
-  - Storage layer correctly filters using `isNull(postId)` for trend chats vs `eq(postId)` for post comments
-  - Reply functionality already implemented in both systems using parentId field
-- **Enhanced Instructions Page:**
-  - Now displays trend host's bio alongside their username and social links
-  - Host bio provides context about who created the trend
-  - Reference media gallery remains functional for visual examples
-- **Profile Page Privacy Improvements:**
-  - Hidden the "Saved" tab when viewing another user's profile
-  - Saved content only visible on user's own profile (isOwnProfile check)
-  - Maintains privacy of saved trends and posts
-- **Dashboard Analytics Enhancement:**
-  - Added Participation Rate metric showing engagement percentage
-  - Calculation: (total participants / total views) * 100%
-  - Includes division-by-zero guard to handle trends with no views
-- **Save/Share/Delete Functionality:**
-  - Save button toggles saved status with proper API mutations
-  - Share button opens ShareDialog component with social media sharing and copy link
-  - Delete button removes trends from database (only visible to trend creators)
-  - All features include proper cache invalidation and toast notifications
-
-**October 30, 2025:**
-- **Migration to Replit Environment:**
-  - Configured server to serve static files in development mode instead of using Vite dev server to avoid top-level await issues in vite.config.ts
-  - Created PostgreSQL database with all required tables (users, trends, posts, votes, comments, follows, view_tracking, saved_trends, saved_posts)
-  - Removed `userHasPosted` condition from create post button - button now always visible for active trends
-  - Enhanced floating action buttons (Create Trend, Create Post, Chat) with:
-    - Increased size (w-16 h-16) for better touch targets
-    - Higher z-index (z-[100]) to ensure they stay above all content
-    - Better spacing between buttons (bottom-28 for chat, bottom-6 for create)
-    - Enhanced shadows (shadow-2xl) for better depth perception
-    - Smooth hover transitions
-  - Verified signup flow: SignupPage → CategorySelectionPage → RoleSelectionPage → HomePage
-
-**October 28, 2025:**
-- **Authentication & Deployment Fixes for Render:**
-  - Fixed static file serving to work correctly in both development and production
-  - Updated CORS configuration to support Render, Cloudflare, and Replit preview URLs
-  - Added SESSION_SECRET environment variable validation for production
-  - Created health check endpoint `/health` for Render monitoring
-  - Added comprehensive deployment documentation (`DEPLOYMENT.md`)
-  - Created `render.yaml` blueprint for easy Render deployment
-  - Created `.env.example` with all required environment variables
-  - Installed missing `@types/cors` TypeScript definitions
-  - Fixed session cookie configuration for cross-origin authentication
-  - All authentication routes (register, login, logout, me) verified working
-  - Production build path verified: `client/dist` (not `dist/public`)
-
-**October 23, 2025:**
-- **Production Build System for Render Deployment:**
-  - Created `build.sh` script that builds frontend first, copies to dist/public, then compiles backend
-  - Fixed `InsertTrend` type to use `z.input` (accepts string | Date) for API requests
-  - Added endDate transformation in `server/storage.ts` to convert string to Date before database insert
-  - Fixed TypeScript errors in NavigationMenu example component
-  - Created `server/helpers.ts` with serveStatic and log functions (using __dirname fallback for compatibility)
-  - Updated `server/index.ts` to import from helpers instead of vite.ts (avoids vite.config top-level await issues)
-  - Build pipeline verified: frontend → dist/public/, backend → dist/index.js (62KB)
-  - Created `RENDER_DEPLOYMENT.md` with complete deployment instructions
-  - All TypeScript errors resolved (0 LSP diagnostics)
-  - Production build tested and working
-
-**October 22, 2025:**
-- **TypeScript Build Fixes for Render Deployment:**
-  - Created `server/types.ts` to extend Express Session interface with `userId` property
-  - Completely rewrote `server/auth.ts` to provide proper helper functions (hashPassword, comparePassword, sanitizeUser, requireAuth)
-  - Removed Prisma imports (project uses Drizzle ORM, not Prisma)
-  - Restored correct `server/index.ts` from git history (was accidentally replaced with template version)
-  - All 54 TypeScript LSP errors resolved initially
-
-**October 10, 2025:**
-- **Profile Page User Posts:** Implemented user posts display in Profile page
-  - Added `/api/posts/user/:userId` endpoint to fetch posts by user
-  - Posts displayed as clickable image thumbnails in grid layout
-  - Clicking post thumbnail navigates to trend feed page
-  - Shows proper loading skeleton and empty states
-- **Button Positioning Fix:** Corrected sticky button positions in FeedPage
-  - Chat button now positioned above create post button (bottom-24 vs bottom-6)
-  - Both buttons remain sticky in bottom-right corner
-
-**October 7, 2025:**
-- **Image Upload System:** Implemented complete image upload functionality using Replit object storage and Uppy file uploader
-  - Added ObjectUploader component with modal interface for image uploads
-  - Integrated image uploads for profile pictures and post creation
-  - Using presigned URLs and ACL policies for secure, direct-to-storage uploads
-  - Fixed Uppy CSS loading by using CDN links in index.html
-- **Removed Mock Data:** Replaced all placeholder data with real API calls
-  - DashboardPage now fetches real user statistics via `/api/dashboard/stats` endpoint
-  - RankingsPage fetches actual rankings from `/api/rankings/:id`
-  - InstructionsPage displays real trend data from `/api/trends/:id`
-  - All pages show proper loading and empty states
-- Updated trend status badges (Ended/Ending Soon) to display centered over trend card images with red background styling
-- Fixed create post button visibility in feed - now always visible when trend is active (removed userHasPosted condition)
-- Modernized FeedChatPage with new layout: trend info card header, cleaner chat messages with avatars, and fixed message input footer
+Mini Feed (also known as "Trendz") is a social media platform designed for creating, sharing, and engaging with trend-based content. Users can host challenges, submit posts, vote on submissions, and participate in competitive rankings. The platform caters to both creative individuals and brands, featuring tailored onboarding processes for category and role selection.
 
 ## User Preferences
 
@@ -128,133 +12,74 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Technology Stack:**
-- **Framework**: React 18 with TypeScript
-- **Routing**: Wouter (lightweight client-side routing)
-- **State Management**: TanStack Query (React Query) for server state
-- **UI Framework**: Shadcn/ui components built on Radix UI primitives
-- **Styling**: Tailwind CSS with custom design system
+**Technology Stack:** React 18 with TypeScript, Wouter for routing, TanStack Query for server state, Shadcn/ui (built on Radix UI) for components, and Tailwind CSS for styling.
 
-**Design System:**
-- Custom color palette with light/dark mode support using CSS variables
-- Typography based on Inter font family via Google Fonts
-- Consistent spacing scale using Tailwind units
-- Component library following modern social platform patterns (Instagram cards, Twitter feed layout, LinkedIn profile structure)
-- Elevated card designs with shadow transitions for interactive elements
+**Design System:** Features a custom color palette with light/dark mode support, Inter font family, consistent spacing, and a component library inspired by modern social platforms. Elevated card designs with shadow transitions enhance interactivity.
 
-**Key Frontend Patterns:**
-- Component-based architecture with reusable UI components
-- Custom hooks for mobile detection and toast notifications
-- Form handling with React Hook Form and Zod validation
-- Responsive design with mobile-first approach
-- Path aliases for clean imports (@/, @shared/, @assets/)
+**Key Frontend Patterns:** Employs a component-based architecture, custom hooks for mobile detection and toast notifications, React Hook Form with Zod validation, and a mobile-first responsive design. Path aliases (`@/`, `@shared/`, `@assets/`) are used for clean imports.
 
 ### Backend Architecture
 
-**Technology Stack:**
-- **Runtime**: Node.js with Express.js
-- **Database ORM**: Drizzle ORM
-- **Database**: PostgreSQL (via Neon serverless)
-- **Build Tool**: Vite for frontend, esbuild for backend bundling
-- **Development**: tsx for TypeScript execution
+**Technology Stack:** Node.js with Express.js, Drizzle ORM for database interaction, PostgreSQL (via Neon serverless), Vite for frontend builds, esbuild for backend bundling, and tsx for TypeScript development execution.
 
-**Storage Interface:**
-- Abstract storage interface (IStorage) for CRUD operations
-- In-memory storage implementation (MemStorage) for development
-- Designed for easy migration to persistent database storage
-- User management with username-based authentication
+**Storage Interface:** Utilizes an abstract `IStorage` interface for CRUD operations, with an in-memory implementation (`MemStorage`) for development, designed for easy migration to persistent storage. User management is username-based.
 
-**API Design:**
-- RESTful endpoints prefixed with /api
-- Request/response logging middleware
-- JSON body parsing with Express
-- Error handling middleware with status code propagation
+**API Design:** Implements RESTful endpoints prefixed with `/api`, including request/response logging, JSON body parsing, and comprehensive error handling.
 
 ### Data Model
 
 **Core Entities:**
 
-1. **Users**
-   - Authentication credentials (username, password)
-   - Profile information (bio, profile picture)
-   - Social stats (followers, following)
-   - UUID-based primary keys
+*   **Users:** Manages authentication (username, password), profile information (bio, picture), and social statistics (followers, following) with UUIDs.
+*   **Trends:** Stores creator reference, metadata (name, instructions, rules), category, engagement metrics (views, participants, chat count), optional cover pictures, and end dates.
+*   **Posts:** Links to trends and users, contains media (image/video URL, type), optional captions, vote counts, and timestamps.
+*   **Votes:** Connects posts, users, and trends, preventing duplicate votes and supporting ranking calculations.
+*   **Comments:** Supports both post and trend-level discussions, with nested reply structures, user attribution, and timestamps.
 
-2. **Trends**
-   - Creator reference to user
-   - Trend metadata (name, instructions, rules array)
-   - Category classification
-   - Engagement metrics (views, participants, chat count)
-   - Optional cover picture and end date support
+**Database Schema Patterns:** Uses PostgreSQL with `gen_random_uuid()` for primary keys, foreign key relationships, text arrays for rules, `defaultNow()` for timestamps, and integer counters with default values.
 
-3. **Posts**
-   - Belongs to trend and user
-   - Media content (image URL)
-   - Optional caption
-   - Vote count tracking
-   - Timestamp for sorting/ranking
-
-4. **Votes**
-   - Links posts, users, and trends
-   - Prevents duplicate voting
-   - Supports ranking calculations
-
-5. **Comments**
-   - Supports both post and trend-level discussions
-   - Nested reply structure with parent references
-   - User attribution and timestamps
-
-**Database Schema Patterns:**
-- PostgreSQL with UUID primary keys (gen_random_uuid())
-- Foreign key relationships for data integrity
-- Text arrays for flexible rule storage
-- Timestamp tracking with defaultNow()
-- Integer counters with default values
-
-### External Dependencies
+## External Dependencies
 
 **UI Component Libraries:**
-- **Radix UI**: Comprehensive set of unstyled, accessible components (accordion, alert-dialog, avatar, checkbox, dialog, dropdown-menu, hover-card, navigation-menu, popover, radio-group, scroll-area, select, separator, slider, switch, tabs, toast, toggle, tooltip)
-- **Shadcn/ui**: Pre-configured component patterns built on Radix
-- **class-variance-authority**: Type-safe variant handling for components
-- **cmdk**: Command palette component
+*   **Radix UI:** Unstyled, accessible components (accordion, alert-dialog, avatar, checkbox, dialog, dropdown-menu, hover-card, navigation-menu, popover, radio-group, scroll-area, select, separator, slider, switch, tabs, toast, toggle, tooltip).
+*   **Shadcn/ui:** Pre-configured components built on Radix.
+*   **class-variance-authority:** Type-safe variant handling.
+*   **cmdk:** Command palette.
 
 **Utilities:**
-- **date-fns**: Date formatting and manipulation
-- **lucide-react**: Icon library
-- **react-icons**: Additional social media icons (Instagram, TikTok, X/Twitter, YouTube)
-- **clsx & tailwind-merge**: Conditional class name utilities
-- **zod**: Schema validation with Drizzle integration (drizzle-zod)
+*   **date-fns:** Date formatting and manipulation.
+*   **lucide-react & react-icons:** Icon libraries.
+*   **clsx & tailwind-merge:** Conditional class name utilities.
+*   **zod:** Schema validation with Drizzle integration.
 
 **Database & ORM:**
-- **@neondatabase/serverless**: PostgreSQL serverless driver with WebSocket support
-- **drizzle-orm**: Type-safe ORM with schema-first approach
-- **drizzle-kit**: Migration tooling and schema management
+*   **@neondatabase/serverless:** PostgreSQL serverless driver.
+*   **drizzle-orm:** Type-safe ORM.
+*   **drizzle-kit:** Migration tooling.
 
 **Development Tools:**
-- **Vite**: Frontend build tool with HMR
-- **esbuild**: Fast backend bundling
-- **tsx**: TypeScript execution for development
-- **@replit/vite-plugin-***: Replit-specific development enhancements (runtime error overlay, cartographer, dev banner)
+*   **Vite:** Frontend build tool.
+*   **esbuild:** Fast backend bundling.
+*   **tsx:** TypeScript execution.
+*   **@replit/vite-plugin-***: Replit-specific development enhancements.
 
 **Authentication & Sessions:**
-- **connect-pg-simple**: PostgreSQL session store for Express
-- **bcrypt**: Password hashing
-- **express-session**: Session middleware with PostgreSQL persistence
-- **CORS**: Configured for Replit, Render, and Cloudflare domains
+*   **connect-pg-simple:** PostgreSQL session store.
+*   **bcrypt:** Password hashing.
+*   **express-session:** Session middleware.
+*   **CORS:** Configured for Replit, Render, and Cloudflare.
 
 **Form Management:**
-- **react-hook-form**: Performant form handling
-- **@hookform/resolvers**: Validation resolver integration
+*   **react-hook-form:** Performant form handling.
+*   **@hookform/resolvers:** Validation resolver integration.
 
 **Visualization:**
-- **recharts**: Chart components for dashboard analytics
+*   **recharts:** Chart components for dashboard analytics.
 
 **Carousel:**
-- **embla-carousel-react**: Touch-friendly carousel for reference media galleries
+*   **embla-carousel-react:** Touch-friendly carousel.
 
 **File Upload:**
-- **@uppy/core**: File uploader core functionality
-- **@uppy/react**: React components for Uppy
-- **@uppy/dashboard**: Dashboard UI for file uploads
-- **@uppy/aws-s3**: AWS S3 (and compatible services) upload support for Uppy
+*   **@uppy/core & @uppy/react:** File uploader core and React components.
+*   **@uppy/dashboard:** Dashboard UI for file uploads.
+*   **@uppy/aws-s3:** AWS S3 compatible upload support.
