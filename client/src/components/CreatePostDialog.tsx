@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
-import { ObjectUploader } from "@/components/ObjectUploader";
-import type { UploadResult } from "@uppy/core";
+import { Input } from "@/components/ui/input";
+import { Upload, Loader2 } from "lucide-react";
+import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreatePostDialogProps {
   open: boolean;
@@ -25,48 +26,88 @@ export default function CreatePostDialog({
   onSubmit,
 }: CreatePostDialogProps) {
   const [caption, setCaption] = useState("");
-  const [mediaUrl, setMediaUrl] = useState<string>();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
-  const publicURLRef = useRef<string>();
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
-  const handleGetUploadParameters = async () => {
-    const response = await fetch("/api/objects/upload", {
-      method: "POST",
-      credentials: "include",
-    });
-    const data = await response.json();
-    // Store the public URL in a ref so it's immediately available
-    publicURLRef.current = data.publicURL;
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
+  // Clean up preview URL when dialog closes
+  useEffect(() => {
+    if (!open && previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl("");
+      setSelectedFile(null);
+      setCaption("");
+    }
+  }, [open]);
 
-  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const file = result.successful[0];
-      // Use the public URL from the ref
-      if (publicURLRef.current) {
-        setMediaUrl(publicURLRef.current);
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
       }
-      
-      // Detect file type from file extension or MIME type
-      const fileName = file.name || '';
-      const isVideo = fileName.match(/\.(mp4|webm|mov|avi|mkv)$/i) || 
-                     (file.type && file.type.startsWith('video/'));
-      setMediaType(isVideo ? 'video' : 'image');
+    };
+  }, [previewUrl]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (50MB)
+    if (file.size > 52428800) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 50MB",
+        variant: "destructive",
+      });
+      return;
     }
+
+    // Revoke old preview URL if exists
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    // Detect file type
+    const isVideo = file.type.startsWith('video/');
+    setMediaType(isVideo ? 'video' : 'image');
+
+    // Create preview URL
+    const preview = createPreviewURL(file);
+    setPreviewUrl(preview);
+    setSelectedFile(file);
   };
 
-  const handleSubmit = () => {
-    if (onSubmit && mediaUrl) {
-      onSubmit({ mediaUrl, mediaType, caption });
+  const handleSubmit = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    try {
+      // Upload to R2 in the 'posts' folder
+      const publicUrl = await uploadToR2(selectedFile, 'posts');
+      
+      if (onSubmit) {
+        onSubmit({ mediaUrl: publicUrl, mediaType, caption });
+      }
+
+      // Clean up
+      URL.revokeObjectURL(previewUrl);
+      setCaption("");
+      setPreviewUrl("");
+      setSelectedFile(null);
+      setMediaType('image');
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload media. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
     }
-    setCaption("");
-    setMediaUrl(undefined);
-    setMediaType('image');
-    onOpenChange(false);
   };
 
   return (
@@ -82,47 +123,44 @@ export default function CreatePostDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Image or Video</Label>
-            {mediaUrl ? (
+            {previewUrl ? (
               <div className="relative rounded-lg overflow-hidden border-2 border-border bg-muted">
                 {mediaType === 'video' ? (
                   <video 
-                    src={mediaUrl} 
+                    src={previewUrl} 
                     controls 
                     className="w-full h-auto max-h-96 object-contain"
                     data-testid="preview-video"
                   />
                 ) : (
                   <img 
-                    src={mediaUrl} 
+                    src={previewUrl} 
                     alt="Preview" 
                     className="w-full h-auto max-h-96 object-contain"
                     data-testid="preview-image"
                   />
                 )}
                 <div className="absolute top-2 right-2">
-                  <ObjectUploader
-                    maxNumberOfFiles={1}
-                    maxFileSize={52428800}
-                    allowedFileTypes={['image/*', 'video/*']}
-                    onGetUploadParameters={handleGetUploadParameters}
-                    onComplete={handleUploadComplete}
+                  <Button
                     variant="secondary"
-                    buttonClassName="gap-2 shadow-lg"
+                    className="gap-2 shadow-lg"
+                    onClick={() => {
+                      URL.revokeObjectURL(previewUrl);
+                      setPreviewUrl("");
+                      setSelectedFile(null);
+                    }}
+                    data-testid="button-change-media"
                   >
                     <Upload className="w-4 h-4" />
                     Change
-                  </ObjectUploader>
+                  </Button>
                 </div>
               </div>
             ) : (
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={52428800}
-                allowedFileTypes={['image/*', 'video/*']}
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleUploadComplete}
-                variant="outline"
-                buttonClassName="w-full h-48 border-2 border-dashed"
+              <label 
+                htmlFor="media-upload" 
+                className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                data-testid="dropzone-media"
               >
                 <div className="text-center">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
@@ -133,7 +171,15 @@ export default function CreatePostDialog({
                     Images (PNG, JPG) or Videos (MP4, WebM) up to 50MB
                   </p>
                 </div>
-              </ObjectUploader>
+                <Input
+                  id="media-upload"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  data-testid="input-media-file"
+                />
+              </label>
             )}
           </div>
 
@@ -153,16 +199,24 @@ export default function CreatePostDialog({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isUploading}
               data-testid="button-cancel"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!mediaUrl}
+              disabled={!selectedFile || isUploading}
               data-testid="button-create-post"
             >
-              Post
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Post"
+              )}
             </Button>
           </div>
         </div>

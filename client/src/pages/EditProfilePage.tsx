@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
-import { ObjectUploader } from "@/components/ObjectUploader";
-import type { UploadResult } from "@uppy/core";
+import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
 export default function EditProfilePage() {
   const [, setLocation] = useLocation();
@@ -28,8 +27,8 @@ export default function EditProfilePage() {
     twitter: "",
     youtube: "",
   });
-  const [newProfilePicture, setNewProfilePicture] = useState<string>();
-  const uploadPublicURLRef = useRef<string>();
+  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
+  const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>("");
 
   useEffect(() => {
     if (user) {
@@ -41,16 +40,50 @@ export default function EditProfilePage() {
         youtube: user.youtubeUrl || "",
       });
       // Reset the preview when user changes
-      setNewProfilePicture(undefined);
+      setSelectedProfileFile(null);
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
+        setProfilePreviewUrl("");
+      }
     }
   }, [user]);
 
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
+      }
+    };
+  }, [profilePreviewUrl]);
+
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: Partial<User>) => {
-      const response = await apiRequest("PATCH", "/api/users/profile", data);
+    mutationFn: async (data: Partial<User> & { profileFile?: File }) => {
+      let profilePictureUrl = data.profilePicture;
+      
+      // Upload profile picture to R2 if a new file was selected
+      if (data.profileFile) {
+        profilePictureUrl = await uploadToR2(data.profileFile, 'profile-pictures');
+      }
+      
+      // Remove profileFile from data before sending to API
+      const { profileFile, ...apiData } = data;
+      const updateData = {
+        ...apiData,
+        profilePicture: profilePictureUrl,
+      };
+      
+      const response = await apiRequest("PATCH", "/api/users/profile", updateData);
       return response.json();
     },
     onSuccess: async () => {
+      // Clean up preview URL
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
+        setProfilePreviewUrl("");
+      }
+      setSelectedProfileFile(null);
+      
       await checkAuth();
       toast({
         title: "Profile updated",
@@ -67,46 +100,34 @@ export default function EditProfilePage() {
     },
   });
 
-  const handleGetUploadParameters = async () => {
-    const response = await fetch("/api/objects/upload", {
-      method: "POST",
-      credentials: "include",
-    });
-    const data = await response.json();
-    // Store the public URL in a ref so it's immediately available
-    uploadPublicURLRef.current = data.publicURL;
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
+  const handleProfilePictureSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      // Use the public URL from the ref
-      const uploadUrl = uploadPublicURLRef.current;
-      
-      if (!uploadUrl) {
-        toast({
-          title: "Error",
-          description: "Failed to get upload URL.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Store for preview - will be saved when user clicks "Save Profile"
-      setNewProfilePicture(uploadUrl);
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
       toast({
-        title: "Upload complete",
-        description: "Click 'Save Profile' to apply your new profile picture.",
+        title: "File too large",
+        description: "Maximum file size is 10MB",
+        variant: "destructive",
       });
+      return;
     }
+
+    // Revoke old preview URL if exists
+    if (profilePreviewUrl) {
+      URL.revokeObjectURL(profilePreviewUrl);
+    }
+
+    // Create preview URL
+    const preview = createPreviewURL(file);
+    setProfilePreviewUrl(preview);
+    setSelectedProfileFile(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updateData: Partial<User> = {
+    const updateData: Partial<User> & { profileFile?: File } = {
       bio: formData.bio,
       instagramUrl: formData.instagram,
       tiktokUrl: formData.tiktok,
@@ -114,9 +135,9 @@ export default function EditProfilePage() {
       youtubeUrl: formData.youtube,
     };
     
-    // Include new profile picture if uploaded
-    if (newProfilePicture) {
-      updateData.profilePicture = newProfilePicture;
+    // Include new profile picture file if selected
+    if (selectedProfileFile) {
+      updateData.profileFile = selectedProfileFile;
     }
     
     updateProfileMutation.mutate(updateData);
@@ -152,32 +173,42 @@ export default function EditProfilePage() {
               <div className="relative">
                 <Avatar className="w-20 h-20" data-testid="avatar-profile">
                   <AvatarImage 
-                    src={newProfilePicture || user.profilePicture || undefined} 
+                    src={profilePreviewUrl || user.profilePicture || undefined} 
                     alt={user.username} 
                   />
                   <AvatarFallback className="text-xl">
                     {user.username.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                {newProfilePicture && (
+                {profilePreviewUrl && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-xs text-primary-foreground">✓</span>
                   </div>
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={10485760}
-                  onGetUploadParameters={handleGetUploadParameters}
-                  onComplete={handleUploadComplete}
-                  variant="outline"
-                  buttonClassName="gap-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  {newProfilePicture ? "Change Photo" : "Upload Photo"}
-                </ObjectUploader>
-                {newProfilePicture && (
+                <label htmlFor="profile-picture-upload">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    asChild
+                  >
+                    <span>
+                      <Upload className="w-4 h-4" />
+                      {profilePreviewUrl ? "Change Photo" : "Upload Photo"}
+                    </span>
+                  </Button>
+                </label>
+                <Input
+                  id="profile-picture-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureSelect}
+                  className="hidden"
+                  data-testid="input-profile-picture"
+                />
+                {profilePreviewUrl && (
                   <p className="text-xs text-muted-foreground">
                     Preview - click "Save Profile" to apply
                   </p>

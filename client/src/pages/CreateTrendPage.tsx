@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Upload, ArrowLeft, Plus, X, Calendar, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ObjectUploader } from "@/components/ObjectUploader";
+import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { InsertTrend } from "@shared/schema";
 
 const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Music", "Food", "Fashion", "Photography"];
@@ -24,18 +24,70 @@ export default function CreateTrendPage() {
   const [instructions, setInstructions] = useState("");
   const [rules, setRules] = useState([""]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [coverImage, setCoverImage] = useState<string>();
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string>("");
   const [endDate, setEndDate] = useState("");
-  const [referenceMedia, setReferenceMedia] = useState<string[]>([]);
-  const coverPublicURLRef = useRef<string>();
-  const referencePublicURLRef = useRef<string>();
+  const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
+  const [referencePreviewUrls, setReferencePreviewUrls] = useState<string[]>([]);
+  
+  // Track preview URLs in refs for cleanup without triggering re-renders
+  const coverPreviewRef = useRef<string>("");
+  const referencePreviewsRef = useRef<string[]>([]);
+
+  // Update refs when preview URLs change
+  useEffect(() => {
+    coverPreviewRef.current = coverPreviewUrl;
+  }, [coverPreviewUrl]);
+
+  useEffect(() => {
+    referencePreviewsRef.current = referencePreviewUrls;
+  }, [referencePreviewUrls]);
+
+  // Clean up preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (coverPreviewRef.current) {
+        URL.revokeObjectURL(coverPreviewRef.current);
+      }
+      referencePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const createTrendMutation = useMutation({
-    mutationFn: async (trendData: Omit<InsertTrend, "userId">) => {
-      const response = await apiRequest("POST", "/api/trends", trendData);
+    mutationFn: async (trendData: Omit<InsertTrend, "userId"> & { coverFile?: File; referenceFiles?: File[] }) => {
+      let coverPictureUrl = trendData.coverPicture;
+      let referenceMediaUrls = trendData.referenceMedia || [];
+      
+      // Upload cover picture to R2 if provided
+      if (trendData.coverFile) {
+        coverPictureUrl = await uploadToR2(trendData.coverFile, 'trend-covers');
+      }
+      
+      // Upload reference media files to R2 if provided
+      if (trendData.referenceFiles && trendData.referenceFiles.length > 0) {
+        referenceMediaUrls = await Promise.all(
+          trendData.referenceFiles.map(file => uploadToR2(file, 'reference-media'))
+        );
+      }
+      
+      // Remove file objects from data before sending to API
+      const { coverFile, referenceFiles, ...apiData } = trendData;
+      const finalData = {
+        ...apiData,
+        coverPicture: coverPictureUrl || null,
+        referenceMedia: referenceMediaUrls.length > 0 ? referenceMediaUrls : undefined,
+      };
+      
+      const response = await apiRequest("POST", "/api/trends", finalData);
       return response.json();
     },
     onSuccess: (data) => {
+      // Clean up preview URLs
+      if (coverPreviewUrl) {
+        URL.revokeObjectURL(coverPreviewUrl);
+      }
+      referencePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      
       queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
       toast({
         title: "Success!",
@@ -68,58 +120,57 @@ export default function CreateTrendPage() {
     }
   };
 
-  const getCoverUploadParameters = async () => {
-    const response = await apiRequest("POST", "/api/object-storage/upload-url", {
-      path: `trend-covers/${Date.now()}.jpg`,
-      isPublic: true,
-    });
-    const data = await response.json();
-    // Store the public URL in a ref so it's immediately available
-    coverPublicURLRef.current = data.publicUrl;
-    return {
-      method: "PUT" as const,
-      url: data.uploadUrl,
-    };
-  };
+  const handleCoverFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleCoverUploadComplete = (result: any) => {
-    if (result.successful && result.successful[0]) {
-      // Use the public URL from the ref
-      if (coverPublicURLRef.current) {
-        setCoverImage(coverPublicURLRef.current);
-        toast({
-          title: "Success",
-          description: "Cover picture uploaded successfully",
-        });
-      }
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 10MB",
+        variant: "destructive",
+      });
+      return;
     }
-  };
 
-  const getReferenceUploadParameters = async () => {
-    const response = await apiRequest("POST", "/api/object-storage/upload-url", {
-      path: `trend-references/${Date.now()}.jpg`,
-      isPublic: true,
-    });
-    const data = await response.json();
-    // Store the public URL in a ref so it's immediately available
-    referencePublicURLRef.current = data.publicUrl;
-    return {
-      method: "PUT" as const,
-      url: data.uploadUrl,
-    };
-  };
-
-  const handleReferenceUploadComplete = (result: any) => {
-    if (result.successful && result.successful[0]) {
-      // Use the public URL from the ref
-      if (referencePublicURLRef.current) {
-        setReferenceMedia([...referenceMedia, referencePublicURLRef.current]);
-        toast({
-          title: "Success",
-          description: "Reference media uploaded successfully",
-        });
-      }
+    // Revoke old preview URL if exists
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
     }
+
+    // Create preview URL
+    const preview = createPreviewURL(file);
+    setCoverPreviewUrl(preview);
+    setCoverFile(file);
+  };
+
+  const handleReferenceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create preview URL
+    const preview = createPreviewURL(file);
+    setReferenceFiles([...referenceFiles, file]);
+    setReferencePreviewUrls([...referencePreviewUrls, preview]);
+  };
+
+  const removeReferenceFile = (index: number) => {
+    // Revoke the preview URL for the removed file
+    URL.revokeObjectURL(referencePreviewUrls[index]);
+    
+    setReferenceFiles(referenceFiles.filter((_, i) => i !== index));
+    setReferencePreviewUrls(referencePreviewUrls.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
@@ -156,14 +207,14 @@ export default function CreateTrendPage() {
 
     const filteredRules = rules.filter(r => r.trim() !== "");
     
-    const trendData: Omit<InsertTrend, "userId"> = {
+    const trendData: Omit<InsertTrend, "userId"> & { coverFile?: File; referenceFiles?: File[] } = {
       name,
       description: description.trim() || undefined,
       instructions,
       rules: filteredRules,
       category: selectedCategory,
-      coverPicture: coverImage || null,
-      referenceMedia: referenceMedia.length > 0 ? referenceMedia : undefined,
+      coverFile: coverFile || undefined,
+      referenceFiles: referenceFiles.length > 0 ? referenceFiles : undefined,
       endDate: endDate, // Send as string, schema will transform to Date
     };
 
@@ -305,43 +356,49 @@ export default function CreateTrendPage() {
 
             <div className="space-y-2">
               <Label>Cover Picture</Label>
-              {coverImage ? (
-                <div className="relative h-48 rounded-lg overflow-hidden">
+              {coverPreviewUrl ? (
+                <div className="relative h-48 rounded-lg overflow-hidden border-2 border-border">
                   <img 
-                    src={coverImage} 
+                    src={coverPreviewUrl} 
                     alt="Cover" 
                     className="w-full h-full object-cover"
+                    data-testid="preview-cover"
                   />
                   <Button
                     size="icon"
                     variant="destructive"
                     className="absolute top-2 right-2"
-                    onClick={() => setCoverImage(undefined)}
+                    onClick={() => {
+                      URL.revokeObjectURL(coverPreviewUrl);
+                      setCoverPreviewUrl("");
+                      setCoverFile(null);
+                    }}
                     data-testid="button-remove-cover"
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/20">
+                <label 
+                  htmlFor="cover-upload" 
+                  className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  data-testid="dropzone-cover"
+                >
                   <div className="text-center">
                     <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground mb-3">
-                      PNG, JPG up to 10MB
+                      Click to upload PNG, JPG up to 10MB
                     </p>
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={10485760}
-                      onGetUploadParameters={getCoverUploadParameters}
-                      onComplete={handleCoverUploadComplete}
-                      variant="outline"
-                      buttonClassName="data-testid-dropzone-cover"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Cover Picture
-                    </ObjectUploader>
                   </div>
-                </div>
+                  <Input
+                    id="cover-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverFileSelect}
+                    className="hidden"
+                    data-testid="input-cover-file"
+                  />
+                </label>
               )}
             </div>
 
@@ -350,32 +407,36 @@ export default function CreateTrendPage() {
               <p className="text-sm text-muted-foreground">
                 Upload examples for participants to reference
               </p>
-              <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center bg-muted/20">
+              <label 
+                htmlFor="reference-upload" 
+                className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                data-testid="dropzone-reference"
+              >
                 <div className="text-center">
                   <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                  <ObjectUploader
-                    maxNumberOfFiles={1}
-                    maxFileSize={10485760}
-                    onGetUploadParameters={getReferenceUploadParameters}
-                    onComplete={handleReferenceUploadComplete}
-                    variant="outline"
-                    buttonClassName="data-testid-dropzone-reference"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Reference Media
-                  </ObjectUploader>
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload reference media (up to 10MB)
+                  </p>
                 </div>
-              </div>
-              {referenceMedia.length > 0 && (
+                <Input
+                  id="reference-upload"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleReferenceFileSelect}
+                  className="hidden"
+                  data-testid="input-reference-file"
+                />
+              </label>
+              {referencePreviewUrls.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 mt-2">
-                  {referenceMedia.map((media, index) => (
+                  {referencePreviewUrls.map((url, index) => (
                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
-                      <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
+                      <img src={url} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" data-testid={`preview-reference-${index}`} />
                       <Button
                         size="icon"
                         variant="destructive"
                         className="absolute top-1 right-1 h-6 w-6"
-                        onClick={() => setReferenceMedia(referenceMedia.filter((_, i) => i !== index))}
+                        onClick={() => removeReferenceFile(index)}
                         data-testid={`button-remove-reference-${index}`}
                       >
                         <X className="w-3 h-3" />

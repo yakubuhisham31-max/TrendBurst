@@ -33,10 +33,12 @@ export class R2StorageService {
   /**
    * Generate a presigned URL for uploading an object entity (posts, etc.)
    * Returns both the upload URL and the public URL for accessing the file
+   * @param folder - Optional folder name (e.g., 'posts', 'profile-pictures', 'trend-covers', 'reference-media')
+   * @param fileExtension - Optional file extension (e.g., '.jpg', '.mp4')
    */
-  async getObjectEntityUploadURL(): Promise<{ uploadURL: string; publicURL: string }> {
+  async getObjectEntityUploadURL(folder: string = 'uploads', fileExtension: string = ''): Promise<{ uploadURL: string; publicURL: string }> {
     const objectId = randomUUID();
-    const key = `uploads/${objectId}`;
+    const key = `${folder}/${objectId}${fileExtension}`;
 
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,

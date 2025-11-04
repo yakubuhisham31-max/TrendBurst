@@ -798,8 +798,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/objects/upload - Get presigned URL for upload (R2)
   app.post("/api/objects/upload", requireAuth, async (req, res) => {
     try {
+      const { folder, fileExtension } = req.body;
       const r2Service = new R2StorageService();
-      const { uploadURL, publicURL } = await r2Service.getObjectEntityUploadURL();
+      const { uploadURL, publicURL } = await r2Service.getObjectEntityUploadURL(
+        folder || 'uploads',
+        fileExtension || ''
+      );
       console.log("Generated upload URL:", uploadURL);
       console.log("Generated public URL:", publicURL);
       res.json({ uploadURL, publicURL });
