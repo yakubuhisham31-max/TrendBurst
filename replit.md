@@ -10,6 +10,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 4, 2025 - Upload Preview Functionality:**
+- **Preview Before Posting:**
+  - CreatePostDialog now displays uploaded image/video preview before posting
+  - Shows media preview with "Change" button to replace upload
+  - R2 public URL stored temporarily in state, saved to database only when user clicks "Post"
+  
+- **Profile Picture Preview:**
+  - EditProfilePage changed to preview profile picture before saving
+  - Displays new profile picture with checkmark indicator when uploaded
+  - Shows "Preview - click 'Save Profile' to apply" message
+  - URL saved to database only when user submits form (not immediately on upload)
+  
+- **Trend Creation:**
+  - CreateTrendPage already had preview functionality for cover images and reference media
+  - Displays uploaded cover with remove button
+  - Shows grid of reference media with individual remove buttons
+
 **November 4, 2025 - Cloudflare R2 Storage Integration & Upload Fixes:**
 - **Object Storage Migration:**
   - Replaced Google Cloud Storage with Cloudflare R2 for all file uploads
