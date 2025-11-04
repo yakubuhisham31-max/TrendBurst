@@ -28,6 +28,7 @@ export default function EditProfilePage() {
     twitter: "",
     youtube: "",
   });
+  const [newProfilePicture, setNewProfilePicture] = useState<string>();
   const uploadPublicURLRef = useRef<string>();
 
   useEffect(() => {
@@ -39,6 +40,8 @@ export default function EditProfilePage() {
         twitter: user.twitterUrl || "",
         youtube: user.youtubeUrl || "",
       });
+      // Reset the preview when user changes
+      setNewProfilePicture(undefined);
     }
   }, [user]);
 
@@ -78,7 +81,7 @@ export default function EditProfilePage() {
     };
   };
 
-  const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       // Use the public URL from the ref
       const uploadUrl = uploadPublicURLRef.current;
@@ -92,37 +95,31 @@ export default function EditProfilePage() {
         return;
       }
       
-      try {
-        const response = await apiRequest("PUT", "/api/users/profile-picture", {
-          profilePictureUrl: uploadUrl,
-        });
-        const data = await response.json();
-        
-        await checkAuth();
-        
-        toast({
-          title: "Profile picture updated",
-          description: "Your profile picture has been updated successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update profile picture.",
-          variant: "destructive",
-        });
-      }
+      // Store for preview - will be saved when user clicks "Save Profile"
+      setNewProfilePicture(uploadUrl);
+      toast({
+        title: "Upload complete",
+        description: "Click 'Save Profile' to apply your new profile picture.",
+      });
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfileMutation.mutate({
+    const updateData: Partial<User> = {
       bio: formData.bio,
       instagramUrl: formData.instagram,
       tiktokUrl: formData.tiktok,
       twitterUrl: formData.twitter,
       youtubeUrl: formData.youtube,
-    });
+    };
+    
+    // Include new profile picture if uploaded
+    if (newProfilePicture) {
+      updateData.profilePicture = newProfilePicture;
+    }
+    
+    updateProfileMutation.mutate(updateData);
   };
 
   if (!user) {
@@ -152,23 +149,40 @@ export default function EditProfilePage() {
               <CardTitle>Profile Picture</CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-4">
-              <Avatar className="w-20 h-20" data-testid="avatar-profile">
-                <AvatarImage src={user.profilePicture || undefined} alt={user.username} />
-                <AvatarFallback className="text-xl">
-                  {user.username.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={10485760}
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleUploadComplete}
-                variant="outline"
-                buttonClassName="gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Photo
-              </ObjectUploader>
+              <div className="relative">
+                <Avatar className="w-20 h-20" data-testid="avatar-profile">
+                  <AvatarImage 
+                    src={newProfilePicture || user.profilePicture || undefined} 
+                    alt={user.username} 
+                  />
+                  <AvatarFallback className="text-xl">
+                    {user.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                {newProfilePicture && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-xs text-primary-foreground">✓</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={handleGetUploadParameters}
+                  onComplete={handleUploadComplete}
+                  variant="outline"
+                  buttonClassName="gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  {newProfilePicture ? "Change Photo" : "Upload Photo"}
+                </ObjectUploader>
+                {newProfilePicture && (
+                  <p className="text-xs text-muted-foreground">
+                    Preview - click "Save Profile" to apply
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 

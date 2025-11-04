@@ -82,25 +82,59 @@ export default function CreatePostDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Image or Video</Label>
-            <ObjectUploader
-              maxNumberOfFiles={1}
-              maxFileSize={52428800}
-              allowedFileTypes={['image/*', 'video/*']}
-              onGetUploadParameters={handleGetUploadParameters}
-              onComplete={handleUploadComplete}
-              variant="outline"
-              buttonClassName="w-full h-48 border-2 border-dashed"
-            >
-              <div className="text-center">
-                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  {mediaUrl ? `${mediaType === 'video' ? 'Video' : 'Image'} uploaded - click to change` : "Click to upload or drag and drop"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Images (PNG, JPG) or Videos (MP4, WebM) up to 50MB
-                </p>
+            {mediaUrl ? (
+              <div className="relative rounded-lg overflow-hidden border-2 border-border bg-muted">
+                {mediaType === 'video' ? (
+                  <video 
+                    src={mediaUrl} 
+                    controls 
+                    className="w-full h-auto max-h-96 object-contain"
+                    data-testid="preview-video"
+                  />
+                ) : (
+                  <img 
+                    src={mediaUrl} 
+                    alt="Preview" 
+                    className="w-full h-auto max-h-96 object-contain"
+                    data-testid="preview-image"
+                  />
+                )}
+                <div className="absolute top-2 right-2">
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={52428800}
+                    allowedFileTypes={['image/*', 'video/*']}
+                    onGetUploadParameters={handleGetUploadParameters}
+                    onComplete={handleUploadComplete}
+                    variant="secondary"
+                    buttonClassName="gap-2 shadow-lg"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Change
+                  </ObjectUploader>
+                </div>
               </div>
-            </ObjectUploader>
+            ) : (
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={52428800}
+                allowedFileTypes={['image/*', 'video/*']}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                variant="outline"
+                buttonClassName="w-full h-48 border-2 border-dashed"
+              >
+                <div className="text-center">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Images (PNG, JPG) or Videos (MP4, WebM) up to 50MB
+                  </p>
+                </div>
+              </ObjectUploader>
+            )}
           </div>
 
           <div className="space-y-2">
