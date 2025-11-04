@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ export default function CreatePostDialog({
   const [caption, setCaption] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string>();
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
-  const [publicURL, setPublicURL] = useState<string>();
+  const publicURLRef = useRef<string>();
 
   const handleGetUploadParameters = async () => {
     const response = await fetch("/api/objects/upload", {
@@ -35,8 +35,8 @@ export default function CreatePostDialog({
       credentials: "include",
     });
     const data = await response.json();
-    // Store the public URL for later use
-    setPublicURL(data.publicURL);
+    // Store the public URL in a ref so it's immediately available
+    publicURLRef.current = data.publicURL;
     return {
       method: "PUT" as const,
       url: data.uploadURL,
@@ -46,8 +46,10 @@ export default function CreatePostDialog({
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const file = result.successful[0];
-      // Use the public URL provided by the backend
-      setMediaUrl(publicURL);
+      // Use the public URL from the ref
+      if (publicURLRef.current) {
+        setMediaUrl(publicURLRef.current);
+      }
       
       // Detect file type from file extension or MIME type
       const fileName = file.name || '';

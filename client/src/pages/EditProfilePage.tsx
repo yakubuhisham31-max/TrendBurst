@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ export default function EditProfilePage() {
     twitter: "",
     youtube: "",
   });
-  const [uploadPublicURL, setUploadPublicURL] = useState<string>();
+  const uploadPublicURLRef = useRef<string>();
 
   useEffect(() => {
     if (user) {
@@ -70,8 +70,8 @@ export default function EditProfilePage() {
       credentials: "include",
     });
     const data = await response.json();
-    // Store the public URL for later use
-    setUploadPublicURL(data.publicURL);
+    // Store the public URL in a ref so it's immediately available
+    uploadPublicURLRef.current = data.publicURL;
     return {
       method: "PUT" as const,
       url: data.uploadURL,
@@ -80,8 +80,8 @@ export default function EditProfilePage() {
 
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
-      // Use the public URL provided by the backend
-      const uploadUrl = uploadPublicURL;
+      // Use the public URL from the ref
+      const uploadUrl = uploadPublicURLRef.current;
       
       if (!uploadUrl) {
         toast({

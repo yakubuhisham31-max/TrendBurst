@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,8 @@ export default function CreateTrendPage() {
   const [coverImage, setCoverImage] = useState<string>();
   const [endDate, setEndDate] = useState("");
   const [referenceMedia, setReferenceMedia] = useState<string[]>([]);
-  const [coverPublicURL, setCoverPublicURL] = useState<string>();
-  const [referencePublicURL, setReferencePublicURL] = useState<string>();
+  const coverPublicURLRef = useRef<string>();
+  const referencePublicURLRef = useRef<string>();
 
   const createTrendMutation = useMutation({
     mutationFn: async (trendData: Omit<InsertTrend, "userId">) => {
@@ -74,8 +74,8 @@ export default function CreateTrendPage() {
       isPublic: true,
     });
     const data = await response.json();
-    // Store the public URL for later use
-    setCoverPublicURL(data.publicUrl);
+    // Store the public URL in a ref so it's immediately available
+    coverPublicURLRef.current = data.publicUrl;
     return {
       method: "PUT" as const,
       url: data.uploadUrl,
@@ -84,12 +84,14 @@ export default function CreateTrendPage() {
 
   const handleCoverUploadComplete = (result: any) => {
     if (result.successful && result.successful[0]) {
-      // Use the public URL provided by the backend
-      setCoverImage(coverPublicURL);
-      toast({
-        title: "Success",
-        description: "Cover picture uploaded successfully",
-      });
+      // Use the public URL from the ref
+      if (coverPublicURLRef.current) {
+        setCoverImage(coverPublicURLRef.current);
+        toast({
+          title: "Success",
+          description: "Cover picture uploaded successfully",
+        });
+      }
     }
   };
 
@@ -99,8 +101,8 @@ export default function CreateTrendPage() {
       isPublic: true,
     });
     const data = await response.json();
-    // Store the public URL for later use
-    setReferencePublicURL(data.publicUrl);
+    // Store the public URL in a ref so it's immediately available
+    referencePublicURLRef.current = data.publicUrl;
     return {
       method: "PUT" as const,
       url: data.uploadUrl,
@@ -109,9 +111,9 @@ export default function CreateTrendPage() {
 
   const handleReferenceUploadComplete = (result: any) => {
     if (result.successful && result.successful[0]) {
-      // Use the public URL provided by the backend
-      if (referencePublicURL) {
-        setReferenceMedia([...referenceMedia, referencePublicURL]);
+      // Use the public URL from the ref
+      if (referencePublicURLRef.current) {
+        setReferenceMedia([...referenceMedia, referencePublicURLRef.current]);
         toast({
           title: "Success",
           description: "Reference media uploaded successfully",
