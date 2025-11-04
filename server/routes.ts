@@ -800,6 +800,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const r2Service = new R2StorageService();
       const { uploadURL, publicURL } = await r2Service.getObjectEntityUploadURL();
+      console.log("Generated upload URL:", uploadURL);
+      console.log("Generated public URL:", publicURL);
       res.json({ uploadURL, publicURL });
     } catch (error) {
       console.error("Error generating R2 upload URL:", error);

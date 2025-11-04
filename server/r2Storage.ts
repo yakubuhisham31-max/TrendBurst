@@ -17,33 +17,17 @@ const BUCKET_NAME = process.env.R2_BUCKET_NAME!;
 export class R2StorageService {
   constructor() {
     if (!process.env.R2_ENDPOINT || !process.env.R2_ACCESS_KEY_ID || 
-        !process.env.R2_SECRET_ACCESS_KEY || !process.env.R2_BUCKET_NAME) {
-      throw new Error("R2 credentials not configured. Please set R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET_NAME environment variables.");
+        !process.env.R2_SECRET_ACCESS_KEY || !process.env.R2_BUCKET_NAME ||
+        !process.env.R2_PUBLIC_DOMAIN) {
+      throw new Error("R2 credentials not configured. Please set R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, and R2_PUBLIC_DOMAIN environment variables.");
     }
   }
 
   /**
-   * Extract the public domain from R2 endpoint
-   * Converts https://xxx.r2.cloudflarestorage.com to public R2.dev domain
+   * Get the public domain for accessing uploaded files
    */
   private getPublicDomain(): string {
-    // For Cloudflare R2, the public URL pattern is:
-    // https://<account-id>.r2.cloudflarestorage.com (API endpoint - private)
-    // https://pub-<hash>.r2.dev/<bucket>/<key> (public R2.dev domain)
-    // Or use a custom domain if configured
-    
-    // Extract account ID from endpoint
-    const endpoint = process.env.R2_ENDPOINT!;
-    const match = endpoint.match(/https:\/\/([^.]+)\.r2\.cloudflarestorage\.com/);
-    
-    if (match) {
-      const accountId = match[1];
-      // Use R2.dev public domain format
-      return `https://pub-${accountId.substring(0, 16)}.r2.dev`;
-    }
-    
-    // Fallback: use the endpoint as-is (will need manual configuration)
-    return endpoint;
+    return process.env.R2_PUBLIC_DOMAIN!;
   }
 
   /**
@@ -61,9 +45,8 @@ export class R2StorageService {
 
     const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15 minutes
     
-    // Construct public URL: use the presigned URL's base but with the object path
-    // The presigned URL format is: https://<endpoint>/<bucket>/<key>?<signature>
-    const publicURL = uploadURL.split('?')[0];
+    // Construct public URL using the R2_PUBLIC_DOMAIN
+    const publicURL = `${this.getPublicDomain()}/${key}`;
 
     return { uploadURL, publicURL };
   }
@@ -83,8 +66,8 @@ export class R2StorageService {
 
     const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15 minutes
     
-    // Construct public URL: use the presigned URL's base but with the object path
-    const publicURL = uploadURL.split('?')[0];
+    // Construct public URL using the R2_PUBLIC_DOMAIN
+    const publicURL = `${this.getPublicDomain()}/${sanitizedPath}`;
 
     return { uploadURL, publicURL };
   }
@@ -93,6 +76,6 @@ export class R2StorageService {
    * Get the public URL for an uploaded file
    */
   getPublicURL(key: string): string {
-    return `${this.getPublicDomain()}/${BUCKET_NAME}/${key}`;
+    return `${this.getPublicDomain()}/${key}`;
   }
 }

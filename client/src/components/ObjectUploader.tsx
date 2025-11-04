@@ -47,7 +47,20 @@ export function ObjectUploader({
         getUploadParameters: onGetUploadParameters,
       })
       .on("complete", (result) => {
+        console.log("Upload complete:", result);
+        if (result.failed && result.failed.length > 0) {
+          console.error("Upload failed:", result.failed);
+          result.failed.forEach(file => {
+            console.error("Failed file:", file.name, "Error:", file.error);
+          });
+        }
         onComplete?.(result);
+      })
+      .on("upload-error", (file, error) => {
+        console.error("Upload error for file:", file?.name, "Error:", error);
+      })
+      .on("error", (error) => {
+        console.error("Uppy error:", error);
       })
   );
 
