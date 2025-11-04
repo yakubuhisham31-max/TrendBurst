@@ -28,6 +28,7 @@ export default function EditProfilePage() {
     twitter: "",
     youtube: "",
   });
+  const [uploadPublicURL, setUploadPublicURL] = useState<string>();
 
   useEffect(() => {
     if (user) {
@@ -69,6 +70,8 @@ export default function EditProfilePage() {
       credentials: "include",
     });
     const data = await response.json();
+    // Store the public URL for later use
+    setUploadPublicURL(data.publicURL);
     return {
       method: "PUT" as const,
       url: data.uploadURL,
@@ -77,8 +80,17 @@ export default function EditProfilePage() {
 
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
-      // Extract the public URL from the upload URL (remove query parameters)
-      const uploadUrl = result.successful[0].uploadURL?.split('?')[0] || result.successful[0].uploadURL;
+      // Use the public URL provided by the backend
+      const uploadUrl = uploadPublicURL;
+      
+      if (!uploadUrl) {
+        toast({
+          title: "Error",
+          description: "Failed to get upload URL.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       try {
         const response = await apiRequest("PUT", "/api/users/profile-picture", {

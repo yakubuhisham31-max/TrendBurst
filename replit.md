@@ -10,6 +10,29 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 4, 2025 - Cloudflare R2 Storage Integration:**
+- **Object Storage Migration:**
+  - Replaced Google Cloud Storage with Cloudflare R2 for all file uploads
+  - Configured AWS SDK S3 client to connect to R2 endpoint
+  - Created R2StorageService for generating presigned upload URLs
+  - All uploads now store files in the trendx-media R2 bucket
+
+- **Upload Endpoints Updated:**
+  - `/api/objects/upload`: Generates presigned URLs for post media (images/videos)
+  - `/api/object-storage/upload-url`: Generates presigned URLs for custom paths (trend covers, profile pictures, reference media)
+  - Both endpoints return uploadURL (for upload) and publicURL (for access)
+
+- **Frontend Upload Handlers:**
+  - Updated CreatePostDialog to use R2 for post media uploads
+  - Updated EditProfilePage to use R2 for profile picture uploads
+  - Updated CreateTrendPage to use R2 for trend covers and reference media
+  - All handlers now use the publicURL provided by backend instead of extracting from uploadURL
+
+- **Security & Configuration:**
+  - R2 credentials stored as environment secrets (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT, R2_BUCKET_NAME)
+  - Presigned URLs expire after 15 minutes for security
+  - Path sanitization prevents directory traversal attacks
+
 **November 3, 2025 - View Tracking and Participant Count Updates:**
 - **View Tracking on Trend Cards:**
   - Added automatic view tracking when users click/tap on trend cards

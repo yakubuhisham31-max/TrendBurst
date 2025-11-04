@@ -27,6 +27,8 @@ export default function CreateTrendPage() {
   const [coverImage, setCoverImage] = useState<string>();
   const [endDate, setEndDate] = useState("");
   const [referenceMedia, setReferenceMedia] = useState<string[]>([]);
+  const [coverPublicURL, setCoverPublicURL] = useState<string>();
+  const [referencePublicURL, setReferencePublicURL] = useState<string>();
 
   const createTrendMutation = useMutation({
     mutationFn: async (trendData: Omit<InsertTrend, "userId">) => {
@@ -72,6 +74,8 @@ export default function CreateTrendPage() {
       isPublic: true,
     });
     const data = await response.json();
+    // Store the public URL for later use
+    setCoverPublicURL(data.publicUrl);
     return {
       method: "PUT" as const,
       url: data.uploadUrl,
@@ -80,8 +84,8 @@ export default function CreateTrendPage() {
 
   const handleCoverUploadComplete = (result: any) => {
     if (result.successful && result.successful[0]) {
-      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
-      setCoverImage(uploadedUrl);
+      // Use the public URL provided by the backend
+      setCoverImage(coverPublicURL);
       toast({
         title: "Success",
         description: "Cover picture uploaded successfully",
@@ -95,6 +99,8 @@ export default function CreateTrendPage() {
       isPublic: true,
     });
     const data = await response.json();
+    // Store the public URL for later use
+    setReferencePublicURL(data.publicUrl);
     return {
       method: "PUT" as const,
       url: data.uploadUrl,
@@ -103,12 +109,14 @@ export default function CreateTrendPage() {
 
   const handleReferenceUploadComplete = (result: any) => {
     if (result.successful && result.successful[0]) {
-      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
-      setReferenceMedia([...referenceMedia, uploadedUrl]);
-      toast({
-        title: "Success",
-        description: "Reference media uploaded successfully",
-      });
+      // Use the public URL provided by the backend
+      if (referencePublicURL) {
+        setReferenceMedia([...referenceMedia, referencePublicURL]);
+        toast({
+          title: "Success",
+          description: "Reference media uploaded successfully",
+        });
+      }
     }
   };
 

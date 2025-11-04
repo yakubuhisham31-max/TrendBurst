@@ -23,6 +23,30 @@ export class R2StorageService {
   }
 
   /**
+   * Extract the public domain from R2 endpoint
+   * Converts https://xxx.r2.cloudflarestorage.com to public R2.dev domain
+   */
+  private getPublicDomain(): string {
+    // For Cloudflare R2, the public URL pattern is:
+    // https://<account-id>.r2.cloudflarestorage.com (API endpoint - private)
+    // https://pub-<hash>.r2.dev/<bucket>/<key> (public R2.dev domain)
+    // Or use a custom domain if configured
+    
+    // Extract account ID from endpoint
+    const endpoint = process.env.R2_ENDPOINT!;
+    const match = endpoint.match(/https:\/\/([^.]+)\.r2\.cloudflarestorage\.com/);
+    
+    if (match) {
+      const accountId = match[1];
+      // Use R2.dev public domain format
+      return `https://pub-${accountId.substring(0, 16)}.r2.dev`;
+    }
+    
+    // Fallback: use the endpoint as-is (will need manual configuration)
+    return endpoint;
+  }
+
+  /**
    * Generate a presigned URL for uploading an object entity (posts, etc.)
    * Returns both the upload URL and the public URL for accessing the file
    */
@@ -36,7 +60,10 @@ export class R2StorageService {
     });
 
     const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15 minutes
-    const publicURL = `${process.env.R2_ENDPOINT}/${BUCKET_NAME}/${key}`;
+    
+    // Construct public URL: use the presigned URL's base but with the object path
+    // The presigned URL format is: https://<endpoint>/<bucket>/<key>?<signature>
+    const publicURL = uploadURL.split('?')[0];
 
     return { uploadURL, publicURL };
   }
@@ -55,7 +82,9 @@ export class R2StorageService {
     });
 
     const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15 minutes
-    const publicURL = `${process.env.R2_ENDPOINT}/${BUCKET_NAME}/${sanitizedPath}`;
+    
+    // Construct public URL: use the presigned URL's base but with the object path
+    const publicURL = uploadURL.split('?')[0];
 
     return { uploadURL, publicURL };
   }
@@ -64,6 +93,6 @@ export class R2StorageService {
    * Get the public URL for an uploaded file
    */
   getPublicURL(key: string): string {
-    return `${process.env.R2_ENDPOINT}/${BUCKET_NAME}/${key}`;
+    return `${this.getPublicDomain()}/${BUCKET_NAME}/${key}`;
   }
 }
