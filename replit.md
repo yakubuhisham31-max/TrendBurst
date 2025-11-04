@@ -10,22 +10,45 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 4, 2025 - Upload Preview Functionality:**
-- **Preview Before Posting:**
-  - CreatePostDialog now displays uploaded image/video preview before posting
-  - Shows media preview with "Change" button to replace upload
-  - R2 public URL stored temporarily in state, saved to database only when user clicks "Post"
+**November 4, 2025 - Local-First Upload Flow with Deferred R2 Upload:**
+- **Complete Upload Flow Redesign:**
+  - Files now held in browser memory as File objects until user confirms submission
+  - Previews shown using blob: URLs created with URL.createObjectURL
+  - No uploads to R2 occur until user clicks final submission button
+  - Memory leak prevention via proper object URL cleanup using refs
   
-- **Profile Picture Preview:**
-  - EditProfilePage changed to preview profile picture before saving
-  - Displays new profile picture with checkmark indicator when uploaded
-  - Shows "Preview - click 'Save Profile' to apply" message
-  - URL saved to database only when user submits form (not immediately on upload)
-  
-- **Trend Creation:**
-  - CreateTrendPage already had preview functionality for cover images and reference media
-  - Displays uploaded cover with remove button
-  - Shows grid of reference media with individual remove buttons
+- **R2 Folder Organization:**
+  - Created organized folder structure in R2 bucket:
+    - `posts/` - User-submitted post media (images and videos)
+    - `profile-pictures/` - User profile pictures
+    - `trend-covers/` - Trend cover images
+    - `reference-media/` - Trend reference examples
+  - Updated R2StorageService with `getUploadURLWithFolder` method
+  - Backend endpoint `/api/objects/upload` accepts folder and fileExtension parameters
+
+- **New Upload Utility (client/src/lib/uploadToR2.ts):**
+  - Client-side utility for uploading files to R2 with folder specification
+  - Handles presigned URL requests and file uploads
+  - Returns public R2 URLs for database storage
+
+- **CreatePostDialog:**
+  - Files stored locally until user clicks "Post"
+  - Preview shown using object URLs
+  - Uploads to R2 `posts/` folder only on submission
+  - Proper cleanup of object URLs on dialog close
+
+- **EditProfilePage:**
+  - Profile pictures held locally until "Save Profile" clicked
+  - Preview shown with checkmark indicator
+  - Uploads to R2 `profile-pictures/` folder only on form submit
+  - Proper cleanup of object URLs
+
+- **CreateTrendPage:**
+  - Cover images and reference media held locally until trend creation
+  - Multiple reference files supported with previews
+  - Uploads to R2 `trend-covers/` and `reference-media/` folders on submission
+  - Ref-based cleanup prevents memory leaks while preserving active previews
+  - Fixed bug where adding new reference files would revoke existing preview URLs
 
 **November 4, 2025 - Cloudflare R2 Storage Integration & Upload Fixes:**
 - **Object Storage Migration:**
