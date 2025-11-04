@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
+import { R2StorageService } from "./r2Storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -794,27 +795,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST /api/objects/upload - Get presigned URL for upload
+  // POST /api/objects/upload - Get presigned URL for upload (R2)
   app.post("/api/objects/upload", requireAuth, async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    res.json({ uploadURL });
+    try {
+      const r2Service = new R2StorageService();
+      const { uploadURL, publicURL } = await r2Service.getObjectEntityUploadURL();
+      res.json({ uploadURL, publicURL });
+    } catch (error) {
+      console.error("Error generating R2 upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
   });
 
-  // POST /api/object-storage/upload-url - Get presigned URL for custom path upload
+  // POST /api/object-storage/upload-url - Get presigned URL for custom path upload (R2)
   app.post("/api/object-storage/upload-url", requireAuth, async (req, res) => {
     try {
-      const { path, isPublic } = req.body;
+      const { path } = req.body;
       
       if (!path) {
         return res.status(400).json({ error: "path is required" });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const uploadUrl = await objectStorageService.getCustomUploadURL(path, isPublic ?? true);
-      res.json({ uploadUrl });
+      const r2Service = new R2StorageService();
+      const { uploadURL, publicURL } = await r2Service.getCustomUploadURL(path);
+      res.json({ uploadUrl: uploadURL, publicUrl: publicURL });
     } catch (error) {
-      console.error("Error generating upload URL:", error);
+      console.error("Error generating R2 upload URL:", error);
       res.status(500).json({ error: "Failed to generate upload URL" });
     }
   });

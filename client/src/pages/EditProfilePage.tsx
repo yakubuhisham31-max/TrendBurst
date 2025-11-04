@@ -77,7 +77,8 @@ export default function EditProfilePage() {
 
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
-      const uploadUrl = result.successful[0].uploadURL;
+      // Extract the public URL from the upload URL (remove query parameters)
+      const uploadUrl = result.successful[0].uploadURL?.split('?')[0] || result.successful[0].uploadURL;
       
       try {
         const response = await apiRequest("PUT", "/api/users/profile-picture", {

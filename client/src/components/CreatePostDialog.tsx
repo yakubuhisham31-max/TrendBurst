@@ -43,7 +43,8 @@ export default function CreatePostDialog({
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const file = result.successful[0];
-      const uploadURL = file.uploadURL;
+      // Extract the public URL from the upload URL (remove query parameters)
+      const uploadURL = file.uploadURL?.split('?')[0] || file.uploadURL;
       setMediaUrl(uploadURL);
       
       // Detect file type from file extension or MIME type
