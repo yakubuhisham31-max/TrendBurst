@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 5, 2025 - Instagram-Like Two-Step Upload Flow:**
+- **CreatePostDialog Redesigned with Two-Step Flow:**
+  - Step 1 (File Selection): User selects image/video, sees "Next" button when file chosen
+  - Step 2 (Preview + Caption): Shows media preview and caption input
+  - Upload to R2 occurs only when user clicks "Post" in Step 2
+  - "Back" button allows user to return to file selection
+  - Caption textarea has autofocus for better UX
+  - Dialog title and description change based on current step
+
 **November 4, 2025 - Local-First Upload Flow with Deferred R2 Upload:**
 - **Complete Upload Flow Redesign:**
   - Files now held in browser memory as File objects until user confirms submission
