@@ -220,8 +220,17 @@ export default function FeedPage() {
 
   const isTrendCreator = user?.id === trend?.userId;
 
-  // Sort posts by votes (highest first) to match ranking page
-  const sortedPosts = [...posts].sort((a, b) => b.votes - a.votes);
+  // Sort posts by time (oldest first) for display
+  const sortedPosts = [...posts].sort((a, b) => 
+    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
+  );
+
+  // Calculate vote-based rankings
+  const rankedByVotes = [...posts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  const voteRankMap = new Map<string, number>();
+  rankedByVotes.forEach((post, index) => {
+    voteRankMap.set(post.id, index + 1);
+  });
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -311,11 +320,11 @@ export default function FeedPage() {
             No posts yet. Be the first to post!
           </div>
         ) : (
-          sortedPosts.map((post, index) => (
+          sortedPosts.map((post) => (
             <PostCard
               key={post.id}
               id={post.id}
-              rank={index + 1}
+              rank={voteRankMap.get(post.id) || 0}
               mediaUrl={post.mediaUrl || post.imageUrl || ""}
               mediaType={(post.mediaType as 'image' | 'video') || 'image'}
               caption={post.caption || ""}

@@ -17,6 +17,7 @@ interface RankingsResponse {
   trendId: string;
   trendName: string;
   trendHostId: string;
+  trendHostUsername: string;
   isEnded: boolean;
   rankings: RankingEntry[];
 }
@@ -77,11 +78,9 @@ export default function RankingsPage() {
               <Trophy className="w-5 h-5 text-primary" />
               <h1 className="text-lg font-semibold">{rankingsData.trendName}</h1>
             </div>
-            {rankingsData.rankings[0]?.post.user && (
-              <p className="text-xs text-muted-foreground">
-                Hosted by {rankingsData.rankings[0].post.user.username}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Hosted by {rankingsData.trendHostUsername}
+            </p>
           </div>
         </div>
       </header>

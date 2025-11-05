@@ -10,6 +10,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 5, 2025 - Feed Sorting & Ranking Page Host Display:**
+- **Feed Page Post Sorting:**
+  - Posts now sorted by time (oldest to newest) for display order
+  - Each post shows its vote-based rank/position badge
+  - Rank is calculated based on vote count (highest votes = rank #1)
+  - Posts with more votes display a higher rank number regardless of posting time
+  
+- **Rankings Page Host Display:**
+  - Added "Hosted by [username]" below trend title
+  - Backend now returns `trendHostUsername` in rankings API response
+  - Displays actual trend creator's name instead of first ranked user
+  - Consistent host identification throughout the rankings page
+
 **November 5, 2025 - Profile Picture Upload Removed from Signup:**
 - **Signup Page Simplified:**
   - Removed profile picture upload option completely from signup flow

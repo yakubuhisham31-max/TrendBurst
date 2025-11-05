@@ -426,11 +426,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const rankedPosts = await storage.getRankedPostsForTrend(req.params.trendId);
+      const trendHost = await storage.getUser(trend.userId);
 
       res.json({
         trendId: req.params.trendId,
         trendName: trend.name,
         trendHostId: trend.userId,
+        trendHostUsername: trendHost?.username || "Unknown",
         isEnded: !!trend.endDate,
         rankings: rankedPosts.map((post, index) => ({
           rank: index + 1,
