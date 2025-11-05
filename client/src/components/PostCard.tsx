@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star, Volume2, VolumeX } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -68,6 +68,7 @@ export default function PostCard({
   onDisqualify,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -195,15 +196,31 @@ export default function PostCard({
 
         <div className={`relative aspect-square overflow-hidden bg-muted ${isDisqualified ? 'blur-sm' : ''}`}>
           {mediaType === 'video' ? (
-            <video
-              ref={videoRef}
-              src={mediaUrl}
-              className="w-full h-full object-cover"
-              loop
-              muted
-              playsInline
-              data-testid="video-post"
-            />
+            <>
+              <video
+                ref={videoRef}
+                src={mediaUrl}
+                className="w-full h-full object-cover"
+                loop
+                muted={isMuted}
+                playsInline
+                data-testid="video-post"
+              />
+              {/* Mute/Unmute button */}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg hover-elevate"
+                onClick={() => setIsMuted(!isMuted)}
+                data-testid="button-toggle-mute"
+              >
+                {isMuted ? (
+                  <VolumeX className="w-5 h-5" />
+                ) : (
+                  <Volume2 className="w-5 h-5" />
+                )}
+              </Button>
+            </>
           ) : (
             <img
               src={mediaUrl}

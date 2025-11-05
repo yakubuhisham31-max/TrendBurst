@@ -224,6 +224,7 @@ export default function ProfilePage() {
                             chatCount={trend.chatCount || 0}
                             createdAt={new Date(trend.createdAt!)}
                             endDate={trend.endDate ? new Date(trend.endDate) : undefined}
+                            description={trend.description || undefined}
                             isHost={isOwnProfile}
                             onClick={() => setLocation(`/feed/${trend.id}`)}
                           />

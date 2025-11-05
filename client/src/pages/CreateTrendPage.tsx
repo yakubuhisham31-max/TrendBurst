@@ -146,23 +146,36 @@ export default function CreateTrendPage() {
   };
 
   const handleReferenceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    // Validate file size (10MB)
-    if (file.size > 10485760) {
-      toast({
-        title: "File too large",
-        description: "Maximum file size is 10MB",
-        variant: "destructive",
-      });
-      return;
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+
+    // Process all selected files
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Validate file size (10MB)
+      if (file.size > 10485760) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds 10MB limit`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      newFiles.push(file);
+      newPreviews.push(createPreviewURL(file));
     }
 
-    // Create preview URL
-    const preview = createPreviewURL(file);
-    setReferenceFiles([...referenceFiles, file]);
-    setReferencePreviewUrls([...referencePreviewUrls, preview]);
+    // Add new files and previews to existing ones
+    setReferenceFiles([...referenceFiles, ...newFiles]);
+    setReferencePreviewUrls([...referencePreviewUrls, ...newPreviews]);
+    
+    // Reset the input so the same file can be selected again if needed
+    e.target.value = '';
   };
 
   const removeReferenceFile = (index: number) => {
@@ -422,6 +435,7 @@ export default function CreateTrendPage() {
                   id="reference-upload"
                   type="file"
                   accept="image/*,video/*"
+                  multiple
                   onChange={handleReferenceFileSelect}
                   className="hidden"
                   data-testid="input-reference-file"

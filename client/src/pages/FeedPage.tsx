@@ -121,6 +121,27 @@ export default function FeedPage() {
     },
   });
 
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await apiRequest("DELETE", `/api/posts/${postId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      toast({
+        title: "Post deleted",
+        description: "Your post has been removed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Disqualify post mutation
   const disqualifyMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -186,6 +207,10 @@ export default function FeedPage() {
 
   const handleCreatePost = (data: { mediaUrl: string; mediaType: 'image' | 'video'; caption: string }) => {
     createPostMutation.mutate(data);
+  };
+
+  const handleDeletePost = (postId: string) => {
+    deletePostMutation.mutate(postId);
   };
 
   const handleDisqualify = (postId: string) => {
@@ -310,6 +335,7 @@ export default function FeedPage() {
               onVoteUp={() => handleVoteUp(post.id)}
               onVoteDown={() => handleVoteDown(post.id)}
               onComment={() => setCommentsPostId(post.id)}
+              onDelete={() => handleDeletePost(post.id)}
               onDisqualify={() => handleDisqualify(post.id)}
             />
           ))
