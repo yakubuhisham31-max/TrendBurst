@@ -246,7 +246,7 @@ export default function FeedPage() {
           />
 
           <div className="flex items-center gap-2">
-            {!isTrendEnded && user && (
+            {!isTrendEnded && user && !userHasPosted && (
               <Button
                 size="icon"
                 variant="default"
