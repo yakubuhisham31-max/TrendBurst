@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "lucide-react";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -89,14 +87,6 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
-          <div className="flex justify-center mb-2">
-            <Avatar className="w-24 h-24" data-testid="avatar-preview">
-              <AvatarFallback>
-                {username ? username.slice(0, 2).toUpperCase() : <User className="w-10 h-10" />}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
