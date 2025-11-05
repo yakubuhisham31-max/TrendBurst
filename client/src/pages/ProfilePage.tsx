@@ -226,7 +226,7 @@ export default function ProfilePage() {
                             endDate={trend.endDate ? new Date(trend.endDate) : undefined}
                             description={trend.description || undefined}
                             isHost={isOwnProfile}
-                            onClick={() => setLocation(`/feed/${trend.id}`)}
+                            onClick={() => setLocation(`/instructions/${trend.id}`)}
                           />
                         ))}
                       </div>

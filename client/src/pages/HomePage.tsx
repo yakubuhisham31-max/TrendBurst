@@ -288,7 +288,7 @@ export default function HomePage() {
                 createdAt={trend.createdAt || new Date()}
                 endDate={trend.endDate || undefined}
                 isTrending={selectedSubcategory === "Trending"}
-                onClick={() => setLocation(`/feed/${trend.id}`)}
+                onClick={() => setLocation(`/instructions/${trend.id}`)}
               />
             ))}
           </div>

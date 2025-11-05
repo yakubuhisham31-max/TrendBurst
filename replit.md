@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 5, 2025 - Trend Card Navigation to Instructions:**
+- **First-Time Trend Access:**
+  - Clicking on a trend card now navigates to the instructions page instead of the feed
+  - Applies to trend cards on both Home page and Profile page
+  - Users see trend instructions/rules before entering the feed
+  - Improves onboarding experience for new trend participants
+
 **November 5, 2025 - Feed Sorting & Ranking Page Host Display:**
 - **Feed Page Post Sorting:**
   - Posts now sorted by time (oldest to newest) for display order
