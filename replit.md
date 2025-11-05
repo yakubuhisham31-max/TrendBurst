@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 5, 2025 - Profile Picture Upload Removed from Signup:**
+- **Signup Page Simplified:**
+  - Removed profile picture upload option completely from signup flow
+  - Users now sign up with just username, email, bio, and password
+  - Profile pictures can only be added later via the Edit Profile page
+  - Simplified signup process focuses on essential account creation
+  - Avatar placeholder shows username initials only during signup
+
 **November 5, 2025 - Video Sound Controls, Signup Upload Fix, and Deployment Configuration:**
 - **Video Posts Start Unmuted:**
   - Changed default muted state from `true` to `false` in PostCard component

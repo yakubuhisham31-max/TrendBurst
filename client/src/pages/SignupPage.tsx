@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, User, Check } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { User } from "lucide-react";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
@@ -23,83 +22,19 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [bio, setBio] = useState("");
-  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
-  const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Clean up preview URL when component unmounts
-  useEffect(() => {
-    return () => {
-      if (profilePreviewUrl) {
-        URL.revokeObjectURL(profilePreviewUrl);
-      }
-    };
-  }, [profilePreviewUrl]);
-
-  const handleProfilePictureSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (10MB)
-    if (file.size > 10485760) {
-      toast({
-        title: "File too large",
-        description: "Maximum file size is 10MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Revoke old preview URL if exists
-    if (profilePreviewUrl) {
-      URL.revokeObjectURL(profilePreviewUrl);
-    }
-
-    // Create preview URL
-    const preview = createPreviewURL(file);
-    setProfilePreviewUrl(preview);
-    setSelectedProfileFile(file);
-  };
 
   const signupMutation = useMutation({
     mutationFn: async () => {
-      // Register the user first (without profile picture)
       const response = await apiRequest("POST", "/api/auth/register", {
         username,
         email,
         password,
         bio,
       });
-      
-      // Check auth to load the newly created user
-      await checkAuth();
-      
-      // Upload profile picture to R2 if a new file was selected
-      let profilePictureUrl;
-      if (selectedProfileFile) {
-        profilePictureUrl = await uploadToR2(selectedProfileFile, 'profile-pictures');
-      }
-      
-      // Update user profile with picture URL if uploaded
-      if (profilePictureUrl) {
-        await apiRequest("PATCH", "/api/users/profile", {
-          profilePicture: profilePictureUrl,
-        });
-      }
-      
       return response.json();
     },
     onSuccess: async () => {
-      // Clean up preview URL
-      if (profilePreviewUrl) {
-        URL.revokeObjectURL(profilePreviewUrl);
-        setProfilePreviewUrl("");
-      }
-      setSelectedProfileFile(null);
-      
       await checkAuth();
-      
-      // Navigate to category selection
       setLocation("/onboarding/categories");
     },
     onError: (error: Error) => {
@@ -154,44 +89,12 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative">
-              <Avatar className="w-24 h-24" data-testid="avatar-preview">
-                <AvatarImage src={profilePreviewUrl || undefined} alt={username} />
-                <AvatarFallback>
-                  {username ? username.slice(0, 2).toUpperCase() : <User className="w-10 h-10" />}
-                </AvatarFallback>
-              </Avatar>
-              {profilePreviewUrl && (
-                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                  <Check className="w-4 h-4 text-primary-foreground" />
-                </div>
-              )}
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => fileInputRef.current?.click()}
-              data-testid="button-upload-avatar"
-            >
-              <Upload className="w-4 h-4" />
-              {profilePreviewUrl ? "Change Picture" : "Upload Profile Picture"}
-            </Button>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePictureSelect}
-              className="hidden"
-              data-testid="input-profile-picture"
-            />
-            {profilePreviewUrl && (
-              <p className="text-xs text-muted-foreground">
-                Preview - click "Create Account" to upload
-              </p>
-            )}
+          <div className="flex justify-center mb-2">
+            <Avatar className="w-24 h-24" data-testid="avatar-preview">
+              <AvatarFallback>
+                {username ? username.slice(0, 2).toUpperCase() : <User className="w-10 h-10" />}
+              </AvatarFallback>
+            </Avatar>
           </div>
 
           <div className="space-y-2">
