@@ -17,13 +17,15 @@ Preferred communication style: Simple, everyday language.
   - Users can tap the volume button to mute, tap again to unmute
   - Syncs muted state with video element via useEffect for reliable sound control
 
-- **Signup Profile Picture Upload Refactored:**
-  - Now matches EditProfilePage pattern: upload AFTER account creation
-  - Account is created first without profile picture
-  - If profile picture selected, it uploads to R2 after account creation succeeds
-  - Profile is then updated with the R2 URL automatically
-  - Prevents orphaned uploads if account creation fails
-  - Shows error toast if upload fails but account creation succeeded
+- **Signup Profile Picture Upload Refactored (Matches Edit Profile Exactly):**
+  - Now uses identical pattern to EditProfilePage for consistency
+  - Uses `useState` for `profilePreviewUrl` and `selectedProfileFile`
+  - Uses `createPreviewURL()` helper function from uploadToR2.ts
+  - Same validation: 10MB file size limit (consistent with edit profile)
+  - Upload happens in `mutationFn` after account creation (not in onSuccess)
+  - Preview cleanup via useEffect with dependency array
+  - Shows preview indicator: "Preview - click 'Create Account' to upload"
+  - Account created → Profile picture uploaded to R2 → Profile updated → Navigate to categories
 
 - **Deployment Configuration for Published URLs:**
   - Configured autoscale deployment with proper build and run commands
