@@ -220,10 +220,8 @@ export default function FeedPage() {
 
   const isTrendCreator = user?.id === trend?.userId;
 
-  // Sort posts by createdAt (oldest first as per requirements)
-  const sortedPosts = [...posts].sort((a, b) => 
-    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
-  );
+  // Sort posts by votes (highest first) to match ranking page
+  const sortedPosts = [...posts].sort((a, b) => b.votes - a.votes);
 
   return (
     <div className="min-h-screen bg-background pb-20">
