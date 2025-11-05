@@ -41,10 +41,22 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static files with cache control
+  app.use(express.static(distPath, {
+    setHeaders: (res, filepath) => {
+      // Don't cache HTML files (always fetch latest)
+      if (filepath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      } else {
+        // Cache other static assets (JS, CSS, images) for 1 hour
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      }
+    }
+  }));
 
   // Fall through to index.html for SPA routing
   app.use("*", (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
