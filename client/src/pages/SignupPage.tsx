@@ -65,31 +65,45 @@ export default function SignupPage() {
 
   const signupMutation = useMutation({
     mutationFn: async () => {
-      // Upload profile picture if selected
-      let profilePictureUrl: string | undefined = undefined;
-      if (profilePicFile) {
-        profilePictureUrl = await uploadToR2(profilePicFile, "profile-pictures");
-      }
-
-      // Register the user
+      // Register the user first (without profile picture)
       const response = await apiRequest("POST", "/api/auth/register", {
         username,
         email,
         password,
         bio,
-        profilePicture: profilePictureUrl,
       });
       return response.json();
     },
     onSuccess: async () => {
+      // Check auth to load the newly created user
+      await checkAuth();
+      
+      // Upload profile picture if selected and update profile
+      if (profilePicFile) {
+        try {
+          const profilePictureUrl = await uploadToR2(profilePicFile, "profile-pictures");
+          
+          // Update user profile with picture URL
+          await apiRequest("PATCH", "/api/users/profile", {
+            profilePicture: profilePictureUrl,
+          });
+          
+          // Refresh auth to get updated user data
+          await checkAuth();
+        } catch (error) {
+          toast({
+            title: "Profile picture upload failed",
+            description: "Your account was created, but the profile picture couldn't be uploaded.",
+            variant: "destructive",
+          });
+        }
+      }
+      
       // Revoke preview URL after successful upload
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
         previewUrlRef.current = null;
       }
-      
-      // Check auth to load the user
-      await checkAuth();
       
       // Navigate to category selection
       setLocation("/onboarding/categories");
