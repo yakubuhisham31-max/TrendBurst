@@ -72,6 +72,12 @@ export default function PostCard({
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Sync muted state with video element
+  useEffect(() => {
+    if (mediaType !== 'video' || !videoRef.current) return;
+    videoRef.current.muted = isMuted;
+  }, [isMuted, mediaType]);
+
   // Auto-play video when in view (Instagram style)
   useEffect(() => {
     if (mediaType !== 'video' || !videoRef.current) return;
