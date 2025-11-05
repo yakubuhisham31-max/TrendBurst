@@ -10,6 +10,34 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 5, 2025 - Video Sound Controls, Signup Upload Fix, and Deployment Configuration:**
+- **Video Posts Start Unmuted:**
+  - Changed default muted state from `true` to `false` in PostCard component
+  - Videos now play with sound by default when scrolled into view
+  - Users can tap the volume button to mute, tap again to unmute
+  - Syncs muted state with video element via useEffect for reliable sound control
+
+- **Signup Profile Picture Upload Refactored:**
+  - Now matches EditProfilePage pattern: upload AFTER account creation
+  - Account is created first without profile picture
+  - If profile picture selected, it uploads to R2 after account creation succeeds
+  - Profile is then updated with the R2 URL automatically
+  - Prevents orphaned uploads if account creation fails
+  - Shows error toast if upload fails but account creation succeeded
+
+- **Deployment Configuration for Published URLs:**
+  - Configured autoscale deployment with proper build and run commands
+  - Added cache-control headers to static file serving
+  - HTML files: no-cache to always fetch latest version
+  - Static assets (JS/CSS): cached for 1 hour for performance
+  - SPA routing fallback includes no-cache headers
+  - Ensures published Replit URL serves the full frontend correctly
+
+- **One Post Per Trend Enforcement:**
+  - Create post button (➕) now disappears after user posts to a trend
+  - Prevents multiple posts per user per trend
+  - Uses existing `userHasPosted` logic to hide button
+
 **November 5, 2025 - Instagram-Like Two-Step Upload Flow:**
 - **CreatePostDialog Redesigned with Two-Step Flow:**
   - Step 1 (File Selection): User selects image/video, sees "Next" button when file chosen
