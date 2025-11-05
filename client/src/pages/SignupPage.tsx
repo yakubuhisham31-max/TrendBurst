@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import logoImage from "@assets/trendx_background_fully_transparent (1)_176163518
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { uploadToR2 } from "@/lib/uploadToR2";
+import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
@@ -23,44 +23,42 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [bio, setBio] = useState("");
-  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
-  const [profilePicPreview, setProfilePicPreview] = useState<string>();
+  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
+  const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewUrlRef = useRef<string | null>(null);
 
-  // Cleanup preview URL on unmount
+  // Clean up preview URL when component unmounts
   useEffect(() => {
     return () => {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
       }
     };
-  }, []);
+  }, [profilePreviewUrl]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePictureSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (5MB for profile pictures)
-    if (file.size > 5242880) {
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
       toast({
         title: "File too large",
-        description: "Profile picture must be under 5MB",
+        description: "Maximum file size is 10MB",
         variant: "destructive",
       });
       return;
     }
 
-    // Revoke old preview URL if it exists
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
+    // Revoke old preview URL if exists
+    if (profilePreviewUrl) {
+      URL.revokeObjectURL(profilePreviewUrl);
     }
 
-    // Create new preview URL
-    const preview = URL.createObjectURL(file);
-    previewUrlRef.current = preview;
-    setProfilePicFile(file);
-    setProfilePicPreview(preview);
+    // Create preview URL
+    const preview = createPreviewURL(file);
+    setProfilePreviewUrl(preview);
+    setSelectedProfileFile(file);
   };
 
   const signupMutation = useMutation({
@@ -72,38 +70,34 @@ export default function SignupPage() {
         password,
         bio,
       });
-      return response.json();
-    },
-    onSuccess: async () => {
+      
       // Check auth to load the newly created user
       await checkAuth();
       
-      // Upload profile picture if selected and update profile
-      if (profilePicFile) {
-        try {
-          const profilePictureUrl = await uploadToR2(profilePicFile, "profile-pictures");
-          
-          // Update user profile with picture URL
-          await apiRequest("PATCH", "/api/users/profile", {
-            profilePicture: profilePictureUrl,
-          });
-          
-          // Refresh auth to get updated user data
-          await checkAuth();
-        } catch (error) {
-          toast({
-            title: "Profile picture upload failed",
-            description: "Your account was created, but the profile picture couldn't be uploaded.",
-            variant: "destructive",
-          });
-        }
+      // Upload profile picture to R2 if a new file was selected
+      let profilePictureUrl;
+      if (selectedProfileFile) {
+        profilePictureUrl = await uploadToR2(selectedProfileFile, 'profile-pictures');
       }
       
-      // Revoke preview URL after successful upload
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
+      // Update user profile with picture URL if uploaded
+      if (profilePictureUrl) {
+        await apiRequest("PATCH", "/api/users/profile", {
+          profilePicture: profilePictureUrl,
+        });
       }
+      
+      return response.json();
+    },
+    onSuccess: async () => {
+      // Clean up preview URL
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
+        setProfilePreviewUrl("");
+      }
+      setSelectedProfileFile(null);
+      
+      await checkAuth();
       
       // Navigate to category selection
       setLocation("/onboarding/categories");
@@ -163,12 +157,12 @@ export default function SignupPage() {
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <Avatar className="w-24 h-24" data-testid="avatar-preview">
-                <AvatarImage src={profilePicPreview} alt={username} />
+                <AvatarImage src={profilePreviewUrl || undefined} alt={username} />
                 <AvatarFallback>
                   {username ? username.slice(0, 2).toUpperCase() : <User className="w-10 h-10" />}
                 </AvatarFallback>
               </Avatar>
-              {profilePicFile && (
+              {profilePreviewUrl && (
                 <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                   <Check className="w-4 h-4 text-primary-foreground" />
                 </div>
@@ -183,16 +177,21 @@ export default function SignupPage() {
               data-testid="button-upload-avatar"
             >
               <Upload className="w-4 h-4" />
-              {profilePicFile ? "Change Picture" : "Upload Profile Picture"}
+              {profilePreviewUrl ? "Change Picture" : "Upload Profile Picture"}
             </Button>
             <Input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleFileSelect}
+              onChange={handleProfilePictureSelect}
               className="hidden"
               data-testid="input-profile-picture"
             />
+            {profilePreviewUrl && (
+              <p className="text-xs text-muted-foreground">
+                Preview - click "Create Account" to upload
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
