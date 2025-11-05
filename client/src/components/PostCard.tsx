@@ -68,7 +68,7 @@ export default function PostCard({
   onDisqualify,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
 
