@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 6, 2025 - Production Deployment Fix:**
+- **Fixed Deployed App Not Loading:**
+  - Updated Vite build configuration to output frontend files to root `dist/` folder
+  - Backend server (esbuild) also outputs to `dist/index.js` in same folder
+  - Updated static file serving to correctly locate frontend files in production
+  - Both development and production now use consistent `dist/` folder structure
+  - Deployed/published app link now works correctly and displays the full application
+
 **November 5, 2025 - Trend Card Navigation to Instructions:**
 - **First-Time Trend Access:**
   - Clicking on a trend card now navigates to the instructions page instead of the feed

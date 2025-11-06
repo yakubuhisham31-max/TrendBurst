@@ -18,27 +18,37 @@ export function log(message: string, source = "express") {
 }
 
 export function serveStatic(app: Express) {
-  // In production (Render), the server is bundled to dist/index.js
-  // and client files are in client/dist
-  // In development, server runs from server/index.ts
-  // and client files are in client/dist
+  // Build process creates dist/ with both frontend and backend:
+  // - vite build -> dist/ (index.html, assets/)
+  // - esbuild -> dist/index.js (backend server)
+  // 
+  // In production: server runs from dist/index.js, frontend files are in same dist/
+  // In development: server runs from server/index.ts, frontend files are in dist/
   
   let distPath: string;
   
   if (process.env.NODE_ENV === "production") {
-    // Production: server runs from /opt/render/project/src/dist/index.js
-    // Client files are at /opt/render/project/src/client/dist
-    distPath = path.resolve(__dirname, "../client/dist");
+    // Production: server (dist/index.js) and frontend files are both in dist/
+    distPath = path.resolve(__dirname);
   } else {
-    // Development: server runs from /home/runner/workspace/server/index.ts
-    // Client files are at /home/runner/workspace/client/dist
-    distPath = path.resolve(__dirname, "../client/dist");
+    // Development: server runs from server/, client files are in dist/
+    distPath = path.resolve(__dirname, "../dist");
   }
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
     );
+  }
+  
+  log(`📁 Serving static files from: ${distPath}`);
+  
+  // Log directory contents for debugging
+  try {
+    const files = fs.readdirSync(distPath);
+    log(`📂 Found ${files.length} files/folders: ${files.slice(0, 10).join(', ')}${files.length > 10 ? '...' : ''}`);
+  } catch (err) {
+    log(`⚠️  Could not read directory contents: ${err}`);
   }
 
   // Serve static files with cache control
