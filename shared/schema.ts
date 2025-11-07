@@ -101,6 +101,19 @@ export const savedPosts = pgTable("saved_posts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id), // who receives the notification
+  actorId: varchar("actor_id").notNull().references(() => users.id), // who triggered the notification
+  type: text("type").notNull(), // comment_on_post, new_post_from_following, new_trend_from_following, new_follower, reply_to_comment, vote_on_post
+  postId: varchar("post_id").references(() => posts.id),
+  trendId: varchar("trend_id").references(() => trends.id),
+  commentId: varchar("comment_id").references(() => comments.id),
+  voteCount: integer("vote_count"), // for vote notifications
+  isRead: integer("is_read").default(0), // 0 = unread, 1 = read
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -166,6 +179,12 @@ export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({
   createdAt: true,
 });
 
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  isRead: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTrend = z.input<typeof insertTrendSchema>;
@@ -184,3 +203,5 @@ export type InsertSavedTrend = z.infer<typeof insertSavedTrendSchema>;
 export type SavedTrend = typeof savedTrends.$inferSelect;
 export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
 export type SavedPost = typeof savedPosts.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

@@ -20,6 +20,8 @@ import type {
   InsertViewTracking,
   SavedTrend,
   SavedPost,
+  Notification,
+  InsertNotification,
 } from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
@@ -91,6 +93,13 @@ export interface IStorage {
   isPostSaved(userId: string, postId: string): Promise<boolean>;
   getSavedPosts(userId: string): Promise<Post[]>;
   deletePost(id: string): Promise<void>;
+  
+  // Notifications
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId: string, limit?: number): Promise<Array<Notification & { actor: User }>>;
+  getUnreadCount(userId: string): Promise<number>;
+  markAsRead(notificationId: string): Promise<void>;
+  markAllAsRead(userId: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -516,6 +525,54 @@ export class DbStorage implements IStorage {
     
     // Finally delete the post itself
     await db.delete(schema.posts).where(eq(schema.posts.id, id));
+  }
+
+  // Notifications
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const result = await db.insert(schema.notifications).values(notification).returning();
+    return result[0];
+  }
+
+  async getNotifications(userId: string, limit: number = 50): Promise<Array<Notification & { actor: User }>> {
+    const notifications = await db
+      .select()
+      .from(schema.notifications)
+      .where(eq(schema.notifications.userId, userId))
+      .orderBy(desc(schema.notifications.createdAt))
+      .limit(limit);
+    
+    // Fetch actor details for each notification
+    const notificationsWithActor = await Promise.all(
+      notifications.map(async (notif) => {
+        const actor = await this.getUser(notif.actorId);
+        return { ...notif, actor: actor! };
+      })
+    );
+    
+    return notificationsWithActor;
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, userId), eq(schema.notifications.isRead, 0)));
+    
+    return result[0]?.count || 0;
+  }
+
+  async markAsRead(notificationId: string): Promise<void> {
+    await db
+      .update(schema.notifications)
+      .set({ isRead: 1 })
+      .where(eq(schema.notifications.id, notificationId));
+  }
+
+  async markAllAsRead(userId: string): Promise<void> {
+    await db
+      .update(schema.notifications)
+      .set({ isRead: 1 })
+      .where(eq(schema.notifications.userId, userId));
   }
 }
 
