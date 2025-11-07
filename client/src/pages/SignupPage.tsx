@@ -173,6 +173,12 @@ export default function SignupPage() {
             </a>
           </p>
         </div>
+
+        <div className="text-center pt-4 border-t">
+          <p className="text-xs text-muted-foreground" data-testid="text-copyright">
+            © 2025 TrendX. All rights reserved.
+          </p>
+        </div>
       </Card>
     </div>
   );
