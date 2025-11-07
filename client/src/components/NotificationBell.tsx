@@ -99,15 +99,30 @@ export default function NotificationBell() {
       markAsReadMutation.mutate(notification.id);
     }
 
-    // Navigate to relevant content
-    if (notification.postId) {
-      // Navigate to feed page for the trend
+    // Navigate to relevant content based on notification type
+    if (notification.type === "comment_on_post" && notification.postId) {
+      // Comment on a post - navigate to feed page
       setLocation(`/feed/${notification.trendId}`);
-    } else if (notification.trendId) {
-      // Navigate to trend instructions or feed
+    } else if (notification.type === "reply_to_comment") {
+      // Reply to comment - check if it's on a post or trend chat
+      if (notification.postId) {
+        // Reply to post comment - navigate to feed page
+        setLocation(`/feed/${notification.trendId}`);
+      } else if (notification.trendId) {
+        // Reply to trend chat comment - navigate to chat page
+        setLocation(`/feed-chat/${notification.trendId}`);
+      }
+    } else if (notification.type === "vote_on_post" && notification.postId) {
+      // Vote on post - navigate to feed page
+      setLocation(`/feed/${notification.trendId}`);
+    } else if (notification.type === "new_post_from_following" && notification.trendId) {
+      // New post from someone you follow - navigate to feed page
+      setLocation(`/feed/${notification.trendId}`);
+    } else if (notification.type === "new_trend_from_following" && notification.trendId) {
+      // New trend from someone you follow - navigate to instructions page
       setLocation(`/instructions/${notification.trendId}`);
     } else if (notification.type === "new_follower" && notification.actorId) {
-      // Navigate to actor's profile
+      // New follower - navigate to actor's profile
       setLocation(`/profile/${notification.actorId}`);
     }
 
