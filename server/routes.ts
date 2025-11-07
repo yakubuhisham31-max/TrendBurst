@@ -135,12 +135,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const category = req.query.category as string | undefined;
       const trends = await storage.getAllTrends(category);
       
-      // Include creator info for each trend
+      // Include creator info and calculate unique participants for each trend
       const trendsWithCreators = await Promise.all(
         trends.map(async (trend) => {
           const creator = await storage.getUser(trend.userId);
+          const posts = await storage.getPostsByTrend(trend.id);
+          const uniqueParticipants = new Set(posts.map(p => p.userId)).size;
+          
           return {
             ...trend,
+            participants: uniqueParticipants,
             creator: creator ? sanitizeUser(creator) : null,
           };
         })
@@ -162,7 +166,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const creator = await storage.getUser(trend.userId);
-      res.json({ ...trend, creator: creator ? sanitizeUser(creator) : null });
+      const posts = await storage.getPostsByTrend(trend.id);
+      const uniqueParticipants = new Set(posts.map(p => p.userId)).size;
+      
+      res.json({ 
+        ...trend, 
+        participants: uniqueParticipants,
+        creator: creator ? sanitizeUser(creator) : null 
+      });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
