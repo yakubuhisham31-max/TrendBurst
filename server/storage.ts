@@ -171,6 +171,11 @@ export class DbStorage implements IStorage {
     const postIds = posts.map(p => p.id);
     
     if (postIds.length > 0) {
+      // Delete notifications for all posts in this trend
+      for (const postId of postIds) {
+        await db.delete(schema.notifications).where(eq(schema.notifications.postId, postId));
+      }
+      
       // Delete votes for all posts in this trend
       for (const postId of postIds) {
         await db.delete(schema.votes).where(eq(schema.votes.postId, postId));
@@ -180,6 +185,9 @@ export class DbStorage implements IStorage {
       // Delete all posts for this trend
       await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
     }
+    
+    // Delete notifications for this trend
+    await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
     
     // Delete saved trends
     await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
