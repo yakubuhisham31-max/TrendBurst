@@ -553,8 +553,8 @@ export class DbStorage implements IStorage {
     // Fetch actor details for each notification
     const notificationsWithActor = await Promise.all(
       notifications.map(async (notif) => {
-        const actor = await this.getUser(notif.actorId);
-        return { ...notif, actor: actor! };
+        const actor = notif.actorId ? await this.getUser(notif.actorId) : null;
+        return { ...notif, actor: actor || null };
       })
     );
     
