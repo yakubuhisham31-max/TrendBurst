@@ -104,12 +104,13 @@ export const savedPosts = pgTable("saved_posts", {
 export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id), // who receives the notification
-  actorId: varchar("actor_id").notNull().references(() => users.id), // who triggered the notification
-  type: text("type").notNull(), // comment_on_post, new_post_from_following, new_trend_from_following, new_follower, reply_to_comment, vote_on_post
+  actorId: varchar("actor_id").references(() => users.id), // who triggered the notification (can be null for system notifications)
+  type: text("type").notNull(), // comment_on_post, new_post_from_following, new_trend_from_following, new_follower, reply_to_comment, vote_on_post, post_in_your_trend, earned_points, bonus_reward
   postId: varchar("post_id").references(() => posts.id),
   trendId: varchar("trend_id").references(() => trends.id),
   commentId: varchar("comment_id").references(() => comments.id),
   voteCount: integer("vote_count"), // for vote notifications
+  pointsEarned: integer("points_earned"), // for earned_points and bonus_reward notifications
   isRead: integer("is_read").default(0), // 0 = unread, 1 = read
   createdAt: timestamp("created_at").defaultNow(),
 });
