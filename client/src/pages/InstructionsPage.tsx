@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Star, Calendar, Loader2 } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import FollowButton from "@/components/FollowButton";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, format } from "date-fns";
 import type { Trend, User } from "@shared/schema";
 
 interface TrendWithCreator extends Trend {
@@ -39,8 +39,34 @@ export default function InstructionsPage() {
     );
   }
 
-  const daysLeft = trend.endDate ? differenceInDays(new Date(trend.endDate), new Date()) : null;
   const rules = trend.rules || [];
+  
+  // Calculate complete time remaining
+  const getTimeRemaining = () => {
+    if (!trend.endDate) return null;
+    
+    const now = new Date();
+    const endDate = new Date(trend.endDate);
+    
+    if (endDate <= now) return null;
+    
+    const totalSeconds = differenceInSeconds(endDate, now);
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = totalSeconds % 60;
+    
+    return {
+      endDate: format(endDate, "MMM dd, yyyy 'at' h:mm a"),
+      days,
+      hours,
+      minutes,
+      seconds,
+      display: `${days}d ${hours}h ${minutes}m ${seconds}s`
+    };
+  };
+  
+  const timeRemaining = getTimeRemaining();
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,12 +163,19 @@ export default function InstructionsPage() {
               <Badge variant="secondary" data-testid="badge-category">
                 {trend.category}
               </Badge>
-              {daysLeft !== null && daysLeft >= 0 && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span data-testid="text-days-left">
-                    {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left
-                  </span>
+              {timeRemaining && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span data-testid="text-end-date">
+                      Ends: {timeRemaining.endDate}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-primary">
+                    <span data-testid="text-time-remaining">
+                      Time left: {timeRemaining.display}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
