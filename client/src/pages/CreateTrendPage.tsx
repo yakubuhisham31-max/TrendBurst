@@ -443,20 +443,39 @@ export default function CreateTrendPage() {
               </label>
               {referencePreviewUrls.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 mt-2">
-                  {referencePreviewUrls.map((url, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
-                      <img src={url} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" data-testid={`preview-reference-${index}`} />
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="absolute top-1 right-1 h-6 w-6"
-                        onClick={() => removeReferenceFile(index)}
-                        data-testid={`button-remove-reference-${index}`}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
+                  {referencePreviewUrls.map((url, index) => {
+                    const file = referenceFiles[index];
+                    const isVideo = file?.type.startsWith('video/');
+                    
+                    return (
+                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                        {isVideo ? (
+                          <video 
+                            src={url} 
+                            className="w-full h-full object-cover" 
+                            muted 
+                            data-testid={`preview-reference-${index}`}
+                          />
+                        ) : (
+                          <img 
+                            src={url} 
+                            alt={`Reference ${index + 1}`} 
+                            className="w-full h-full object-cover" 
+                            data-testid={`preview-reference-${index}`} 
+                          />
+                        )}
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-1 right-1 h-6 w-6"
+                          onClick={() => removeReferenceFile(index)}
+                          data-testid={`button-remove-reference-${index}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
