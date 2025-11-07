@@ -1094,6 +1094,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/notifications - Get user's notifications (protected)
+  app.get("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const notifications = await storage.getNotifications(req.session.userId!, limit);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/notifications/unread-count - Get unread notification count (protected)
+  app.get("/api/notifications/unread-count", requireAuth, async (req, res) => {
+    try {
+      const count = await storage.getUnreadCount(req.session.userId!);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // PATCH /api/notifications/:id/read - Mark notification as read (protected)
+  app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
+    try {
+      await storage.markAsRead(req.params.id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // PATCH /api/notifications/mark-all-read - Mark all notifications as read (protected)
+  app.patch("/api/notifications/mark-all-read", requireAuth, async (req, res) => {
+    try {
+      await storage.markAllAsRead(req.session.userId!);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
