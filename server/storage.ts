@@ -100,6 +100,7 @@ export interface IStorage {
   getUnreadCount(userId: string): Promise<number>;
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
+  deleteNotification(notificationId: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -573,6 +574,10 @@ export class DbStorage implements IStorage {
       .update(schema.notifications)
       .set({ isRead: 1 })
       .where(eq(schema.notifications.userId, userId));
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    await db.delete(schema.notifications).where(eq(schema.notifications.id, notificationId));
   }
 }
 
