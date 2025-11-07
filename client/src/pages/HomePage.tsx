@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Menu, Plus, Search, AlertCircle } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
+import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
@@ -162,7 +163,7 @@ export default function HomePage() {
             className="h-16 sm:h-18 md:h-20 object-contain"
             data-testid="img-logo"
           />
-          <div className="w-10" />
+          <NotificationBell />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 pb-3 space-y-3">
