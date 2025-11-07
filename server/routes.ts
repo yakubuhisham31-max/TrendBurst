@@ -536,6 +536,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Create notification for trend host (if not posting in their own trend)
+      const trend = await storage.getTrend(result.data.trendId);
+      if (trend && trend.userId !== req.session.userId) {
+        await storage.createNotification({
+          userId: trend.userId,
+          actorId: req.session.userId!,
+          type: 'post_in_your_trend',
+          postId: post.id,
+          trendId: result.data.trendId,
+        });
+      }
+      
       // Award 50 TrendX points for creating a post
       const user = await storage.getUser(req.session.userId!);
       if (user) {
