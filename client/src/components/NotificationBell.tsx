@@ -38,6 +38,16 @@ function getNotificationMessage(notification: NotificationWithActor): string {
     }
     case "post_in_your_trend":
       return `${actorName} posted in your trend`;
+    case "earned_points":
+      return `You earned ${notification.pointsEarned || 50} TrendX points!`;
+    case "bonus_reward": {
+      const points = notification.pointsEarned || 0;
+      let place = "Top 3";
+      if (points === 150) place = "1st place";
+      else if (points === 100) place = "2nd place";
+      else if (points === 50) place = "3rd place";
+      return `Congratulations! ${place} - You earned ${points} bonus points!`;
+    }
     default:
       return "New notification";
   }
