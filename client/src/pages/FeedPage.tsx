@@ -23,6 +23,7 @@ export default function FeedPage() {
   const trendId = params.id;
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
+  const [highlightCommentId, setHighlightCommentId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -180,22 +181,11 @@ export default function FeedPage() {
     if (postMatch) {
       const postId = postMatch[1];
       
-      // If there's a comment ID, open the comments dialog and scroll to comment
+      // If there's a comment ID, open the comments dialog with highlighted comment
       if (commentMatch) {
         const commentId = commentMatch[1];
+        setHighlightCommentId(commentId);
         setCommentsPostId(postId);
-        
-        // Wait for dialog to open, then scroll to comment
-        setTimeout(() => {
-          const commentElement = document.getElementById(`comment-${commentId}`);
-          if (commentElement) {
-            commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-            setTimeout(() => {
-              commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-            }, 3000);
-          }
-        }, 500);
       } else {
         // Just scroll to the post
         setTimeout(() => {
@@ -408,7 +398,13 @@ export default function FeedPage() {
           postId={commentsPostId}
           trendId={trendId}
           open={!!commentsPostId}
-          onOpenChange={(open) => !open && setCommentsPostId(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCommentsPostId(null);
+              setHighlightCommentId(null);
+            }
+          }}
+          highlightCommentId={highlightCommentId || undefined}
         />
       )}
     </div>

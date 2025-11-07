@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface PostCommentsDialogProps {
   trendId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  highlightCommentId?: string;
 }
 
 export default function PostCommentsDialog({
@@ -26,6 +27,7 @@ export default function PostCommentsDialog({
   trendId,
   open,
   onOpenChange,
+  highlightCommentId,
 }: PostCommentsDialogProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
@@ -111,6 +113,23 @@ export default function PostCommentsDialog({
   const sortedComments = [...comments].sort(
     (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
   );
+
+  // Scroll to highlighted comment when dialog opens with comments loaded
+  useEffect(() => {
+    if (!open || !highlightCommentId || !comments.length) return;
+    
+    // Wait for dialog to fully render
+    setTimeout(() => {
+      const commentElement = document.getElementById(`comment-${highlightCommentId}`);
+      if (commentElement) {
+        commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+        setTimeout(() => {
+          commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+        }, 3000);
+      }
+    }, 300);
+  }, [open, highlightCommentId, comments]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

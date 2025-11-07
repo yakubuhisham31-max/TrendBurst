@@ -121,9 +121,9 @@ export default function NotificationBell() {
     } else if (notification.type === "new_trend_from_following" && notification.trendId) {
       // New trend from someone you follow - navigate to instructions page
       setLocation(`/instructions/${notification.trendId}`);
-    } else if (notification.type === "new_follower" && notification.actorId) {
+    } else if (notification.type === "new_follower" && notification.actor?.username) {
       // New follower - navigate to actor's profile
-      setLocation(`/profile/${notification.actorId}`);
+      setLocation(`/profile/${notification.actor.username}`);
     }
 
     setOpen(false);
