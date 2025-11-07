@@ -181,6 +181,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const trend = await storage.createTrend(result.data);
+      
+      // Create notification for followers
+      const followers = await storage.getFollowers(req.session.userId!);
+      for (const follow of followers) {
+        await storage.createNotification({
+          userId: follow.followerId,
+          actorId: req.session.userId!,
+          type: 'new_trend_from_following',
+          trendId: trend.id,
+        });
+      }
+      
       res.status(201).json(trend);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -512,6 +524,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Increment trend participants count (total posts)
       await storage.incrementTrendParticipants(result.data.trendId);
       
+      // Create notification for followers
+      const followers = await storage.getFollowers(req.session.userId!);
+      for (const follow of followers) {
+        await storage.createNotification({
+          userId: follow.followerId,
+          actorId: req.session.userId!,
+          type: 'new_post_from_following',
+          postId: post.id,
+          trendId: result.data.trendId,
+        });
+      }
+      
       // Award 50 TrendX points for creating a post
       const user = await storage.getUser(req.session.userId!);
       if (user) {
@@ -591,6 +615,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const vote = await storage.incrementVote(postId, req.session.userId!, trendId);
+      
+      // Create notification for vote on post
+      const post = await storage.getPost(postId);
+      if (post && post.userId !== req.session.userId) {
+        await storage.createNotification({
+          userId: post.userId,
+          actorId: req.session.userId!,
+          type: 'vote_on_post',
+          postId: postId,
+          trendId: trendId,
+          voteCount: vote.count,
+        });
+      }
+      
       res.status(201).json(vote);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -688,6 +726,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const comment = await storage.createComment(result.data);
+      
+      // Create notification for comment on post or reply to comment
+      if (comment.postId) {
+        // Comment on a post - notify post owner
+        const post = await storage.getPost(comment.postId);
+        if (post && post.userId !== req.session.userId) {
+          await storage.createNotification({
+            userId: post.userId,
+            actorId: req.session.userId!,
+            type: 'comment_on_post',
+            postId: comment.postId,
+            commentId: comment.id,
+          });
+        }
+      }
+      
+      // Check if this is a reply to another comment
+      if (comment.parentId) {
+        const parentComment = await storage.getComment(comment.parentId);
+        if (parentComment && parentComment.userId !== req.session.userId) {
+          await storage.createNotification({
+            userId: parentComment.userId,
+            actorId: req.session.userId!,
+            type: 'reply_to_comment',
+            commentId: comment.id,
+            postId: comment.postId,
+          });
+        }
+      }
+      
       res.status(201).json(comment);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -739,6 +807,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const follow = await storage.createFollow(result.data);
+      
+      // Create notification for new follower
+      await storage.createNotification({
+        userId: result.data.followingId,
+        actorId: req.session.userId!,
+        type: 'new_follower',
+      });
+      
       res.status(201).json(follow);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
