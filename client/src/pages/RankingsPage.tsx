@@ -96,13 +96,22 @@ export default function RankingsPage() {
               >
                 {getRankBadge(currentUserPost.rank)}
               </Badge>
-              {currentUserPost.post.imageUrl && (
-                <img
-                  src={currentUserPost.post.imageUrl}
-                  alt={currentUserPost.post.user?.username}
-                  className="w-20 h-20 rounded-lg object-cover"
-                  data-testid="img-user-post"
-                />
+              {(currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl) && (
+                currentUserPost.post.mediaType === "video" && currentUserPost.post.mediaUrl ? (
+                  <video
+                    src={currentUserPost.post.mediaUrl}
+                    className="w-20 h-20 rounded-lg object-cover"
+                    muted
+                    data-testid="video-user-post"
+                  />
+                ) : (
+                  <img
+                    src={currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl || ""}
+                    alt={currentUserPost.post.user?.username}
+                    className="w-20 h-20 rounded-lg object-cover"
+                    data-testid="img-user-post"
+                  />
+                )
               )}
               <div className="flex-1">
                 <p className="font-medium">{currentUserPost.post.user?.username}</p>
@@ -173,12 +182,22 @@ export default function RankingsPage() {
                 >
                   {getRankBadge(entry.rank)}
                 </Badge>
-                {entry.post.imageUrl && (
-                  <img
-                    src={entry.post.imageUrl}
-                    alt={entry.post.user?.username}
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
+                {(entry.post.imageUrl || entry.post.mediaUrl) && (
+                  entry.post.mediaType === "video" && entry.post.mediaUrl ? (
+                    <video
+                      src={entry.post.mediaUrl}
+                      className="w-16 h-16 rounded-lg object-cover"
+                      muted
+                      data-testid={`video-rank-${entry.rank}`}
+                    />
+                  ) : (
+                    <img
+                      src={entry.post.imageUrl || entry.post.mediaUrl || ""}
+                      alt={entry.post.user?.username}
+                      className="w-16 h-16 rounded-lg object-cover"
+                      data-testid={`img-rank-${entry.rank}`}
+                    />
+                  )
                 )}
                 <div className="flex-1">
                   <div className="flex items-center gap-1">

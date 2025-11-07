@@ -96,7 +96,7 @@ export interface IStorage {
   
   // Notifications
   createNotification(notification: InsertNotification): Promise<Notification>;
-  getNotifications(userId: string, limit?: number): Promise<Array<Notification & { actor: User }>>;
+  getNotifications(userId: string, limit?: number): Promise<Array<Notification & { actor: User | null }>>;
   getUnreadCount(userId: string): Promise<number>;
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
@@ -532,6 +532,9 @@ export class DbStorage implements IStorage {
     // Delete saved post records
     await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
     
+    // Delete notifications related to this post
+    await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
+    
     // Finally delete the post itself
     await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
@@ -542,7 +545,7 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async getNotifications(userId: string, limit: number = 50): Promise<Array<Notification & { actor: User }>> {
+  async getNotifications(userId: string, limit: number = 50): Promise<Array<Notification & { actor: User | null }>> {
     const notifications = await db
       .select()
       .from(schema.notifications)
