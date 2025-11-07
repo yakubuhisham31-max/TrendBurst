@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,7 +43,6 @@ function getNotificationMessage(notification: NotificationWithActor): string {
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [, setLocation] = useLocation();
 
   // Fetch unread count
   const { data: unreadData } = useQuery<{ count: number }>({
@@ -69,18 +67,6 @@ export default function NotificationBell() {
     enabled: open,
   });
 
-  // Mark as read mutation
-  const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const response = await apiRequest("PATCH", `/api/notifications/${notificationId}/read`);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
-    },
-  });
-
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
@@ -93,40 +79,21 @@ export default function NotificationBell() {
     },
   });
 
-  const handleNotificationClick = (notification: NotificationWithActor) => {
-    // Mark as read
-    if (!notification.isRead) {
-      markAsReadMutation.mutate(notification.id);
-    }
+  // Delete notification mutation
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const response = await apiRequest("DELETE", `/api/notifications/${notificationId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+    },
+  });
 
-    // Navigate to relevant content based on notification type with deep linking
-    if (notification.type === "comment_on_post" && notification.postId && notification.commentId) {
-      // Comment on a post - navigate to feed page with post and comment highlighted
-      setLocation(`/feed/${notification.trendId}#post-${notification.postId}-comment-${notification.commentId}`);
-    } else if (notification.type === "reply_to_comment" && notification.commentId) {
-      // Reply to comment - check if it's on a post or trend chat
-      if (notification.postId) {
-        // Reply to post comment - navigate to feed page with comment highlighted
-        setLocation(`/feed/${notification.trendId}#post-${notification.postId}-comment-${notification.commentId}`);
-      } else if (notification.trendId) {
-        // Reply to trend chat comment - navigate to chat page with comment highlighted
-        setLocation(`/feed-chat/${notification.trendId}#comment-${notification.commentId}`);
-      }
-    } else if (notification.type === "vote_on_post" && notification.postId) {
-      // Vote on post - navigate to feed page with post highlighted
-      setLocation(`/feed/${notification.trendId}#post-${notification.postId}`);
-    } else if (notification.type === "new_post_from_following" && notification.postId) {
-      // New post from someone you follow - navigate to feed page with post highlighted
-      setLocation(`/feed/${notification.trendId}#post-${notification.postId}`);
-    } else if (notification.type === "new_trend_from_following" && notification.trendId) {
-      // New trend from someone you follow - navigate to instructions page
-      setLocation(`/instructions/${notification.trendId}`);
-    } else if (notification.type === "new_follower" && notification.actor?.username) {
-      // New follower - navigate to actor's profile
-      setLocation(`/profile/${notification.actor.username}`);
-    }
-
-    setOpen(false);
+  const handleDeleteNotification = (notificationId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent any parent click handlers
+    deleteNotificationMutation.mutate(notificationId);
   };
 
   const unreadCount = unreadData?.count || 0;
@@ -176,10 +143,9 @@ export default function NotificationBell() {
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => (
-                <button
+                <div
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`w-full text-left p-4 hover:bg-accent transition-colors ${
+                  className={`w-full p-4 ${
                     !notification.isRead ? "bg-accent/50" : ""
                   }`}
                   data-testid={`notification-item-${notification.id}`}
@@ -208,11 +174,23 @@ export default function NotificationBell() {
                         {notification.createdAt ? formatDistanceToNow(notification.createdAt, { addSuffix: true }) : ""}
                       </p>
                     </div>
-                    {!notification.isRead && (
-                      <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" data-testid={`indicator-unread-${notification.id}`} />
-                    )}
+                    <div className="flex items-center gap-2">
+                      {!notification.isRead && (
+                        <div className="w-2 h-2 rounded-full bg-blue-500" data-testid={`indicator-unread-${notification.id}`} />
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => handleDeleteNotification(notification.id, e)}
+                        disabled={deleteNotificationMutation.isPending}
+                        data-testid={`button-delete-notification-${notification.id}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
