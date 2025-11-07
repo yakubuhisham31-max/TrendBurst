@@ -36,6 +36,8 @@ function getNotificationMessage(notification: NotificationWithActor): string {
       const voteCount = notification.voteCount || 1;
       return `${actorName} voted ${voteCount}x on your post`;
     }
+    case "post_in_your_trend":
+      return `${actorName} posted in your trend`;
     default:
       return "New notification";
   }
