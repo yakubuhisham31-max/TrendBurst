@@ -737,6 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             actorId: req.session.userId!,
             type: 'comment_on_post',
             postId: comment.postId,
+            trendId: comment.trendId,
             commentId: comment.id,
           });
         }
@@ -752,6 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'reply_to_comment',
             commentId: comment.id,
             postId: comment.postId,
+            trendId: comment.trendId,
           });
         }
       }
