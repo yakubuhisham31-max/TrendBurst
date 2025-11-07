@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Star, Calendar, Loader2 } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import FollowButton from "@/components/FollowButton";
+import MediaLightbox from "@/components/MediaLightbox";
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, format } from "date-fns";
 import type { Trend, User } from "@shared/schema";
 
@@ -14,9 +16,17 @@ interface TrendWithCreator extends Trend {
   creator?: User;
 }
 
+// Helper function to detect media type from URL
+const getMediaType = (url: string): "image" | "video" => {
+  const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v'];
+  const lowercaseUrl = url.toLowerCase();
+  return videoExtensions.some(ext => lowercaseUrl.includes(ext)) ? 'video' : 'image';
+};
+
 export default function InstructionsPage() {
   const { id: trendId } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const [selectedMedia, setSelectedMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
   
   const { data: trend, isLoading } = useQuery<TrendWithCreator>({
     queryKey: [`/api/trends/${trendId}`],
@@ -212,11 +222,31 @@ export default function InstructionsPage() {
             <div>
               <h3 className="text-lg font-semibold mb-3">Reference Examples</h3>
               <div className="grid grid-cols-2 gap-3">
-                {trend.referenceMedia.map((media, index) => (
-                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img src={media} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
-                  </div>
-                ))}
+                {trend.referenceMedia.map((media, index) => {
+                  const mediaType = getMediaType(media);
+                  return (
+                    <div 
+                      key={index} 
+                      className="aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setSelectedMedia({ url: media, type: mediaType })}
+                      data-testid={`reference-media-${index}`}
+                    >
+                      {mediaType === "video" ? (
+                        <video 
+                          src={media} 
+                          className="w-full h-full object-cover" 
+                          muted
+                        />
+                      ) : (
+                        <img 
+                          src={media} 
+                          alt={`Reference ${index + 1}`} 
+                          className="w-full h-full object-cover" 
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -232,6 +262,15 @@ export default function InstructionsPage() {
           </div>
         </Card>
       </main>
+
+      {selectedMedia && (
+        <MediaLightbox
+          mediaUrl={selectedMedia.url}
+          mediaType={selectedMedia.type}
+          isOpen={!!selectedMedia}
+          onClose={() => setSelectedMedia(null)}
+        />
+      )}
     </div>
   );
 }
