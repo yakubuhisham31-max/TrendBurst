@@ -2,175 +2,11 @@
 
 ## Overview
 
-Mini Feed (also known as "Trendz") is a social media platform designed for creating, sharing, and engaging with trend-based content. Users can host challenges, submit posts, vote on submissions, and participate in competitive rankings. The platform caters to both creative individuals and brands, featuring tailored onboarding processes for category and role selection.
+Mini Feed (also known as "Trendz") is a social media platform for creating, sharing, and engaging with trend-based content. Users can host challenges, submit posts, vote on submissions, and participate in competitive rankings. The platform features tailored onboarding for category and role selection, targeting creative individuals and brands.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-
-## Recent Changes
-
-**November 6, 2025 - Production Deployment Fix:**
-- **Fixed Deployed App Not Loading:**
-  - Updated Vite build configuration to output frontend files to root `dist/` folder
-  - Backend server (esbuild) also outputs to `dist/index.js` in same folder
-  - Updated static file serving to correctly locate frontend files in production
-  - Both development and production now use consistent `dist/` folder structure
-  - Deployed/published app link now works correctly and displays the full application
-
-**November 5, 2025 - Trend Card Navigation to Instructions:**
-- **First-Time Trend Access:**
-  - Clicking on a trend card now navigates to the instructions page instead of the feed
-  - Applies to trend cards on both Home page and Profile page
-  - Users see trend instructions/rules before entering the feed
-  - Improves onboarding experience for new trend participants
-
-**November 5, 2025 - Feed Sorting & Ranking Page Host Display:**
-- **Feed Page Post Sorting:**
-  - Posts now sorted by time (oldest to newest) for display order
-  - Each post shows its vote-based rank/position badge
-  - Rank is calculated based on vote count (highest votes = rank #1)
-  - Posts with more votes display a higher rank number regardless of posting time
-  
-- **Rankings Page Host Display:**
-  - Added "Hosted by [username]" below trend title
-  - Backend now returns `trendHostUsername` in rankings API response
-  - Displays actual trend creator's name instead of first ranked user
-  - Consistent host identification throughout the rankings page
-
-**November 5, 2025 - Profile Picture Upload Removed from Signup:**
-- **Signup Page Simplified:**
-  - Removed profile picture upload option completely from signup flow
-  - Users now sign up with just username, email, bio, and password
-  - Profile pictures can only be added later via the Edit Profile page
-  - Simplified signup process focuses on essential account creation
-  - Avatar placeholder shows username initials only during signup
-
-**November 5, 2025 - Video Sound Controls, Signup Upload Fix, and Deployment Configuration:**
-- **Video Posts Start Unmuted:**
-  - Changed default muted state from `true` to `false` in PostCard component
-  - Videos now play with sound by default when scrolled into view
-  - Users can tap the volume button to mute, tap again to unmute
-  - Syncs muted state with video element via useEffect for reliable sound control
-
-- **Signup Profile Picture Upload Refactored (Matches Edit Profile Exactly):**
-  - Now uses identical pattern to EditProfilePage for consistency
-  - Uses `useState` for `profilePreviewUrl` and `selectedProfileFile`
-  - Uses `createPreviewURL()` helper function from uploadToR2.ts
-  - Same validation: 10MB file size limit (consistent with edit profile)
-  - Upload happens in `mutationFn` after account creation (not in onSuccess)
-  - Preview cleanup via useEffect with dependency array
-  - Shows preview indicator: "Preview - click 'Create Account' to upload"
-  - Account created → Profile picture uploaded to R2 → Profile updated → Navigate to categories
-
-- **Deployment Configuration for Published URLs:**
-  - Configured autoscale deployment with proper build and run commands
-  - Added cache-control headers to static file serving
-  - HTML files: no-cache to always fetch latest version
-  - Static assets (JS/CSS): cached for 1 hour for performance
-  - SPA routing fallback includes no-cache headers
-  - Ensures published Replit URL serves the full frontend correctly
-
-- **One Post Per Trend Enforcement:**
-  - Create post button (➕) now disappears after user posts to a trend
-  - Prevents multiple posts per user per trend
-  - Uses existing `userHasPosted` logic to hide button
-
-**November 5, 2025 - Instagram-Like Two-Step Upload Flow:**
-- **CreatePostDialog Redesigned with Two-Step Flow:**
-  - Step 1 (File Selection): User selects image/video, sees "Next" button when file chosen
-  - Step 2 (Preview + Caption): Shows media preview and caption input
-  - Upload to R2 occurs only when user clicks "Post" in Step 2
-  - "Back" button allows user to return to file selection
-  - Caption textarea has autofocus for better UX
-  - Dialog title and description change based on current step
-
-**November 4, 2025 - Local-First Upload Flow with Deferred R2 Upload:**
-- **Complete Upload Flow Redesign:**
-  - Files now held in browser memory as File objects until user confirms submission
-  - Previews shown using blob: URLs created with URL.createObjectURL
-  - No uploads to R2 occur until user clicks final submission button
-  - Memory leak prevention via proper object URL cleanup using refs
-  
-- **R2 Folder Organization:**
-  - Created organized folder structure in R2 bucket:
-    - `posts/` - User-submitted post media (images and videos)
-    - `profile-pictures/` - User profile pictures
-    - `trend-covers/` - Trend cover images
-    - `reference-media/` - Trend reference examples
-  - Updated R2StorageService with `getUploadURLWithFolder` method
-  - Backend endpoint `/api/objects/upload` accepts folder and fileExtension parameters
-
-- **New Upload Utility (client/src/lib/uploadToR2.ts):**
-  - Client-side utility for uploading files to R2 with folder specification
-  - Handles presigned URL requests and file uploads
-  - Returns public R2 URLs for database storage
-
-- **CreatePostDialog:**
-  - Files stored locally until user clicks "Post"
-  - Preview shown using object URLs
-  - Uploads to R2 `posts/` folder only on submission
-  - Proper cleanup of object URLs on dialog close
-
-- **EditProfilePage:**
-  - Profile pictures held locally until "Save Profile" clicked
-  - Preview shown with checkmark indicator
-  - Uploads to R2 `profile-pictures/` folder only on form submit
-  - Proper cleanup of object URLs
-
-- **CreateTrendPage:**
-  - Cover images and reference media held locally until trend creation
-  - Multiple reference files supported with previews
-  - Uploads to R2 `trend-covers/` and `reference-media/` folders on submission
-  - Ref-based cleanup prevents memory leaks while preserving active previews
-  - Fixed bug where adding new reference files would revoke existing preview URLs
-
-**November 4, 2025 - Cloudflare R2 Storage Integration & Upload Fixes:**
-- **Object Storage Migration:**
-  - Replaced Google Cloud Storage with Cloudflare R2 for all file uploads
-  - Configured AWS SDK S3 client to connect to R2 endpoint
-  - Created R2StorageService for generating presigned upload URLs
-  - All uploads now store files in the trendx-media R2 bucket
-
-- **Upload Endpoints Updated:**
-  - `/api/objects/upload`: Generates presigned URLs for post media (images/videos)
-  - `/api/object-storage/upload-url`: Generates presigned URLs for custom paths (trend covers, profile pictures, reference media)
-  - Both endpoints return uploadURL (for upload) and publicURL (for access)
-  - Public URLs use R2_PUBLIC_DOMAIN environment variable for proper accessibility
-
-- **Frontend Upload Handlers:**
-  - Fixed race condition: Changed from useState to useRef for storing public URLs
-  - Ensures public URL is immediately available when upload completes
-  - Resolves "failed to get upload URL" error that prevented uploads from displaying
-  - Updated CreatePostDialog to use R2 for post media uploads
-  - Updated EditProfilePage to use R2 for profile picture uploads
-  - Updated CreateTrendPage to use R2 for trend covers and reference media
-  - All handlers now save R2 public URLs to database
-
-- **Security & Configuration:**
-  - R2 credentials stored as environment secrets (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT, R2_BUCKET_NAME, R2_PUBLIC_DOMAIN)
-  - Presigned URLs expire after 15 minutes for security
-  - Path sanitization prevents directory traversal attacks
-  - CORS configuration required on R2 bucket for browser uploads
-
-**November 3, 2025 - View Tracking and Participant Count Updates:**
-- **View Tracking on Trend Cards:**
-  - Added automatic view tracking when users click/tap on trend cards
-  - View tracking records one view per user per trend (prevents duplicate counting)
-  - Tracks views via POST `/api/trends/:id/view` endpoint
-  - Updates view counts in real-time with proper cache invalidation
-
-- **Participant Count Redefined:**
-  - Changed `participants` field from "unique users" to "total posts count"
-  - Increments when a user creates a post in a trend
-  - Decrements when a user deletes a post from a trend
-  - Added `incrementTrendParticipants()` and `decrementTrendParticipants()` methods to storage interface
-  - Provides accurate count of all submissions in each trend
-
-- **Cache Invalidation Improvements:**
-  - Updated TrendCard mutations to use predicate-based cache invalidation
-  - Ensures all trend-related queries refresh after view/participant changes
-  - Supports category-filtered queries and general trend listings
 
 ## System Architecture
 
@@ -180,7 +16,7 @@ Preferred communication style: Simple, everyday language.
 
 **Design System:** Features a custom color palette with light/dark mode support, Inter font family, consistent spacing, and a component library inspired by modern social platforms. Elevated card designs with shadow transitions enhance interactivity.
 
-**Key Frontend Patterns:** Employs a component-based architecture, custom hooks for mobile detection and toast notifications, React Hook Form with Zod validation, and a mobile-first responsive design. Path aliases (`@/`, `@shared/`, `@assets/`) are used for clean imports.
+**Key Frontend Patterns:** Employs a component-based architecture, custom hooks for mobile detection and toast notifications, React Hook Form with Zod validation, and a mobile-first responsive design. Path aliases (`@/`, `@shared/`, `@assets/`) are used for clean imports. The application includes a comprehensive notification system with a bell icon, unread counts, various notification types, and smart navigation. It also features an Instagram-like two-step upload flow for posts.
 
 ### Backend Architecture
 
@@ -188,7 +24,7 @@ Preferred communication style: Simple, everyday language.
 
 **Storage Interface:** Utilizes an abstract `IStorage` interface for CRUD operations, with an in-memory implementation (`MemStorage`) for development, designed for easy migration to persistent storage. User management is username-based.
 
-**API Design:** Implements RESTful endpoints prefixed with `/api`, including request/response logging, JSON body parsing, and comprehensive error handling.
+**API Design:** Implements RESTful endpoints prefixed with `/api`, including request/response logging, JSON body parsing, and comprehensive error handling. Cloudflare R2 is integrated for object storage.
 
 ### Data Model
 
@@ -199,13 +35,14 @@ Preferred communication style: Simple, everyday language.
 *   **Posts:** Links to trends and users, contains media (image/video URL, type), optional captions, vote counts, and timestamps.
 *   **Votes:** Connects posts, users, and trends, preventing duplicate votes and supporting ranking calculations.
 *   **Comments:** Supports both post and trend-level discussions, with nested reply structures, user attribution, and timestamps.
+*   **Notifications:** Stores information about user interactions (e.g., comments, follows, votes) with types, read status, and relevant IDs.
 
 **Database Schema Patterns:** Uses PostgreSQL with `gen_random_uuid()` for primary keys, foreign key relationships, text arrays for rules, `defaultNow()` for timestamps, and integer counters with default values.
 
 ## External Dependencies
 
 **UI Component Libraries:**
-*   **Radix UI:** Unstyled, accessible components (accordion, alert-dialog, avatar, checkbox, dialog, dropdown-menu, hover-card, navigation-menu, popover, radio-group, scroll-area, select, separator, slider, switch, tabs, toast, toggle, tooltip).
+*   **Radix UI:** Unstyled, accessible components.
 *   **Shadcn/ui:** Pre-configured components built on Radix.
 *   **class-variance-authority:** Type-safe variant handling.
 *   **cmdk:** Command palette.
@@ -214,7 +51,7 @@ Preferred communication style: Simple, everyday language.
 *   **date-fns:** Date formatting and manipulation.
 *   **lucide-react & react-icons:** Icon libraries.
 *   **clsx & tailwind-merge:** Conditional class name utilities.
-*   **zod:** Schema validation with Drizzle integration.
+*   **zod:** Schema validation.
 
 **Database & ORM:**
 *   **@neondatabase/serverless:** PostgreSQL serverless driver.
@@ -225,25 +62,22 @@ Preferred communication style: Simple, everyday language.
 *   **Vite:** Frontend build tool.
 *   **esbuild:** Fast backend bundling.
 *   **tsx:** TypeScript execution.
-*   **@replit/vite-plugin-***: Replit-specific development enhancements.
 
 **Authentication & Sessions:**
 *   **connect-pg-simple:** PostgreSQL session store.
 *   **bcrypt:** Password hashing.
 *   **express-session:** Session middleware.
-*   **CORS:** Configured for Replit, Render, and Cloudflare.
+*   **CORS:** Configured for various environments.
 
 **Form Management:**
 *   **react-hook-form:** Performant form handling.
 *   **@hookform/resolvers:** Validation resolver integration.
 
 **Visualization:**
-*   **recharts:** Chart components for dashboard analytics.
+*   **recharts:** Chart components.
 
 **Carousel:**
 *   **embla-carousel-react:** Touch-friendly carousel.
 
 **File Upload:**
-*   **@uppy/core & @uppy/react:** File uploader core and React components.
-*   **@uppy/dashboard:** Dashboard UI for file uploads.
-*   **@uppy/aws-s3:** AWS S3 compatible upload support.
+*   **Cloudflare R2:** Object storage for media files (posts, profile pictures, trend covers, reference media).
