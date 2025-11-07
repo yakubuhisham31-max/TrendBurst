@@ -428,6 +428,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateUser(post.userId, {
               trendxPoints: (user.trendxPoints || 0) + bonusPoints[i],
             });
+            
+            // Create notification for bonus reward
+            await storage.createNotification({
+              userId: post.userId,
+              type: 'bonus_reward',
+              postId: post.id,
+              trendId: req.params.trendId,
+              pointsEarned: bonusPoints[i],
+            });
           }
         }
 
@@ -553,6 +562,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user) {
         await storage.updateUser(req.session.userId!, {
           trendxPoints: (user.trendxPoints || 0) + 50,
+        });
+        
+        // Create notification for earning points
+        await storage.createNotification({
+          userId: req.session.userId!,
+          type: 'earned_points',
+          postId: post.id,
+          trendId: result.data.trendId,
+          pointsEarned: 50,
         });
       }
       
