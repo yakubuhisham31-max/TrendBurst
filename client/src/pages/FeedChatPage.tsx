@@ -120,9 +120,41 @@ export default function FeedChatPage() {
     }
   };
 
-  // Auto-scroll to bottom on new messages
+  // Scroll to specific comment from notification deep link
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!comments.length) return;
+    
+    const hash = window.location.hash.slice(1); // Remove the # character
+    if (!hash) return;
+    
+    // Parse hash for comment ID
+    const commentMatch = hash.match(/comment-([a-f0-9-]+)/);
+    
+    if (commentMatch) {
+      const commentId = commentMatch[1];
+      
+      // Scroll to the comment
+      setTimeout(() => {
+        const commentElement = document.getElementById(`comment-${commentId}`);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 3000);
+        }
+      }, 500);
+      
+      // Clear hash from URL after processing
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [comments]);
+
+  // Auto-scroll to bottom on new messages (only if no hash)
+  useEffect(() => {
+    if (!window.location.hash) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [comments]);
 
   // Sort comments by createdAt (oldest first)
@@ -210,7 +242,7 @@ export default function FeedChatPage() {
               
               if (isCurrentUser) {
                 return (
-                  <div key={comment.id} className="flex justify-end group" data-testid={`comment-${comment.id}`}>
+                  <div key={comment.id} id={`comment-${comment.id}`} className="flex justify-end group transition-all" data-testid={`comment-${comment.id}`}>
                     <div className="max-w-[70%] bg-primary text-primary-foreground rounded-lg p-3 relative">
                       {isHost && (
                         <div className="flex items-center gap-1 mb-1">
@@ -248,7 +280,7 @@ export default function FeedChatPage() {
               }
               
               return (
-                <div key={comment.id} className="flex gap-3 hover-elevate p-3 rounded-lg" data-testid={`comment-${comment.id}`}>
+                <div key={comment.id} id={`comment-${comment.id}`} className="flex gap-3 hover-elevate p-3 rounded-lg transition-all" data-testid={`comment-${comment.id}`}>
                   <Avatar 
                     className="w-10 h-10 flex-shrink-0 cursor-pointer"
                     onClick={() => setLocation(`/profile/${comment.user?.username}`)}

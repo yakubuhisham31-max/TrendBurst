@@ -140,7 +140,8 @@ export default function PostCommentsDialog({
               return (
                 <div
                   key={comment.id}
-                  className="flex gap-3 group"
+                  id={`comment-${comment.id}`}
+                  className="flex gap-3 group transition-all"
                   data-testid={`comment-${comment.id}`}
                 >
                   <Avatar className="w-8 h-8 flex-shrink-0">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,54 @@ export default function FeedPage() {
     },
   });
 
+  // Scroll to specific post/comment from notification deep link
+  useEffect(() => {
+    if (!posts.length) return;
+    
+    const hash = window.location.hash.slice(1); // Remove the # character
+    if (!hash) return;
+    
+    // Parse hash for post and/or comment IDs
+    const postMatch = hash.match(/post-([a-f0-9-]+)/);
+    const commentMatch = hash.match(/comment-([a-f0-9-]+)/);
+    
+    if (postMatch) {
+      const postId = postMatch[1];
+      
+      // If there's a comment ID, open the comments dialog and scroll to comment
+      if (commentMatch) {
+        const commentId = commentMatch[1];
+        setCommentsPostId(postId);
+        
+        // Wait for dialog to open, then scroll to comment
+        setTimeout(() => {
+          const commentElement = document.getElementById(`comment-${commentId}`);
+          if (commentElement) {
+            commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            setTimeout(() => {
+              commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            }, 3000);
+          }
+        }, 500);
+      } else {
+        // Just scroll to the post
+        setTimeout(() => {
+          const postElement = document.getElementById(`post-${postId}`);
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            postElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            setTimeout(() => {
+              postElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            }, 3000);
+          }
+        }, 300);
+      }
+      
+      // Clear hash from URL after processing
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [posts]);
 
   const handleVoteUp = (postId: string) => {
     if (!user) {

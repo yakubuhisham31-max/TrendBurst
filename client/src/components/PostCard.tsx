@@ -46,6 +46,7 @@ const getRankBadge = (rank: number) => {
 };
 
 export default function PostCard({
+  id,
   rank,
   mediaUrl,
   mediaType,
@@ -106,7 +107,7 @@ export default function PostCard({
   }, [mediaType]);
 
   return (
-    <Card className="overflow-hidden" data-testid="card-post">
+    <Card id={`post-${id}`} className="overflow-hidden transition-all" data-testid="card-post">
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
