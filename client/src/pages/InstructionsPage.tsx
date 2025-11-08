@@ -220,7 +220,7 @@ export default function InstructionsPage() {
 
           {trend.referenceMedia && trend.referenceMedia.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold mb-3">Reference Examples</h3>
+              <h3 className="text-lg font-semibold mb-3">Reference / Sponsor(s)</h3>
               <div className="grid grid-cols-2 gap-3">
                 {trend.referenceMedia.map((media, index) => {
                   const mediaType = getMediaType(media);

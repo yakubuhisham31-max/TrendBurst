@@ -416,7 +416,7 @@ export default function CreateTrendPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Reference (Images/Videos)</Label>
+              <Label>Reference / Sponsor(s)</Label>
               <p className="text-sm text-muted-foreground">
                 Upload examples for participants to reference
               </p>
