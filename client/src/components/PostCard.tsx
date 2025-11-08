@@ -14,6 +14,11 @@ import { formatDistanceToNow } from "date-fns";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import FollowButton from "./FollowButton";
+import ShareDialog from "./ShareDialog";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/hooks/use-user";
 
 interface PostCardProps {
   id: string;
@@ -70,8 +75,80 @@ export default function PostCard({
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lastTapRef = useRef<number>(0);
+  const { toast } = useToast();
+  const { user } = useUser();
+
+  // Check if post is saved
+  const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
+    queryKey: ["/api/saved/posts", id, "status"],
+    enabled: !!user,
+  });
+
+  const isSaved = savedStatus?.isSaved || false;
+
+  // Save post mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (isSaved) {
+        await apiRequest("DELETE", `/api/saved/posts/${id}`);
+      } else {
+        await apiRequest("POST", `/api/saved/posts/${id}`, {});
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts", id, "status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/posts"] });
+      toast({
+        title: isSaved ? "Post unsaved" : "Post saved",
+        description: isSaved ? "Post removed from your saved collection" : "Post added to your saved collection",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    saveMutation.mutate();
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShareDialogOpen(true);
+  };
+
+  // Handle video tap: single tap to mute/unmute, double tap to like
+  const handleVideoTap = () => {
+    if (mediaType !== 'video') return;
+
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+
+    if (timeSinceLastTap < 300) {
+      // Double tap - like/unlike
+      if (onVoteUp && !isDisqualified && !isTrendEnded) {
+        if (userVoted && onVoteDown) {
+          onVoteDown();
+        } else {
+          onVoteUp();
+        }
+      }
+      lastTapRef.current = 0;
+    } else {
+      // Single tap - toggle mute
+      setIsMuted(!isMuted);
+      lastTapRef.current = now;
+    }
+  };
 
   // Sync muted state with video element
   useEffect(() => {
@@ -79,9 +156,9 @@ export default function PostCard({
     videoRef.current.muted = isMuted;
   }, [isMuted, mediaType]);
 
-  // Auto-play video when in view (Instagram style)
+  // Auto-play video when in view (Instagram style), but NOT for disqualified posts
   useEffect(() => {
-    if (mediaType !== 'video' || !videoRef.current) return;
+    if (mediaType !== 'video' || !videoRef.current || isDisqualified) return;
 
     const video = videoRef.current;
     const observer = new IntersectionObserver(
@@ -104,7 +181,7 @@ export default function PostCard({
     return () => {
       observer.disconnect();
     };
-  }, [mediaType]);
+  }, [mediaType, isDisqualified]);
 
   return (
     <Card id={`post-${id}`} className="overflow-hidden transition-all" data-testid="card-post">
@@ -151,13 +228,13 @@ export default function PostCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" data-testid="menu-post-options">
-              <DropdownMenuItem data-testid="menu-item-share">
+              <DropdownMenuItem onClick={handleShare} data-testid="menu-item-share">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </DropdownMenuItem>
-              <DropdownMenuItem data-testid="menu-item-save">
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save
+              <DropdownMenuItem onClick={handleSave} data-testid="menu-item-save">
+                <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                {isSaved ? 'Unsave' : 'Save'}
               </DropdownMenuItem>
               {(isCreator || isUserTrendHost) && <DropdownMenuSeparator />}
               {isCreator && (
@@ -207,26 +284,21 @@ export default function PostCard({
               <video
                 ref={videoRef}
                 src={mediaUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer"
                 loop
                 muted={isMuted}
                 playsInline
+                onClick={handleVideoTap}
                 data-testid="video-post"
               />
-              {/* Mute/Unmute button */}
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg hover-elevate"
-                onClick={() => setIsMuted(!isMuted)}
-                data-testid="button-toggle-mute"
-              >
+              {/* Mute/Unmute indicator */}
+              <div className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center pointer-events-none">
                 {isMuted ? (
-                  <VolumeX className="w-5 h-5" />
+                  <VolumeX className="w-5 h-5 text-white" />
                 ) : (
-                  <Volume2 className="w-5 h-5" />
+                  <Volume2 className="w-5 h-5 text-white" />
                 )}
-              </Button>
+              </div>
             </>
           ) : (
             <img
@@ -296,6 +368,14 @@ export default function PostCard({
           </div>
         )}
       </div>
+
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        url={`/post/${id}`}
+        title={`Check out this post by ${username}`}
+        description={caption}
+      />
     </Card>
   );
 }
