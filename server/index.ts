@@ -18,7 +18,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL, // Production frontend URL (e.g., https://yourdomain.com)
   process.env.RENDER_EXTERNAL_URL, // Render's automatic URL
   /\.replit\.dev$/, // Replit preview URLs
-  /\.repl\.co$/, // Replit URLs
+  /\.repl\.co$/, // Replit URLs  
+  /\.replit\.app$/, // Replit published app URLs
   /localhost:\d+$/, // Local development
 ];
 
