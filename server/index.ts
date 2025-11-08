@@ -15,6 +15,8 @@ app.set("trust proxy", 1);
 
 // CORS configuration - MUST come before session middleware
 const allowedOrigins = [
+  'https://trendx.social', // Custom domain
+  'https://www.trendx.social', // Custom domain with www
   process.env.FRONTEND_URL, // Production frontend URL (e.g., https://yourdomain.com)
   process.env.RENDER_EXTERNAL_URL, // Render's automatic URL
   /\.replit\.dev$/, // Replit preview URLs
