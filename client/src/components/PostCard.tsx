@@ -18,7 +18,7 @@ import ShareDialog from "./ShareDialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PostCardProps {
   id: string;
@@ -79,8 +79,9 @@ export default function PostCard({
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTapRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user } = useAuth();
 
   // Check if post is saved
   const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
@@ -134,7 +135,13 @@ export default function PostCard({
     const timeSinceLastTap = now - lastTapRef.current;
 
     if (timeSinceLastTap < 300) {
-      // Double tap - like/unlike
+      // Double tap detected - clear pending single tap action and execute like/unlike
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+      
+      // Execute like/unlike
       if (onVoteUp && !isDisqualified && !isTrendEnded) {
         if (userVoted && onVoteDown) {
           onVoteDown();
@@ -144,11 +151,46 @@ export default function PostCard({
       }
       lastTapRef.current = 0;
     } else {
-      // Single tap - toggle mute
-      setIsMuted(!isMuted);
+      // Potential single tap - defer mute toggle to check for double tap
       lastTapRef.current = now;
+      
+      // Clear any existing timeout
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+      }
+      
+      // Set timeout to toggle mute after double-tap window
+      tapTimeoutRef.current = setTimeout(() => {
+        // Only toggle mute if still a video and not disqualified
+        if (mediaType === 'video' && !isDisqualified) {
+          setIsMuted((prev) => !prev);
+        }
+        tapTimeoutRef.current = null;
+      }, 300);
     }
   };
+
+  // Clean up tap timeout when mediaType or isDisqualified changes
+  useEffect(() => {
+    // Clear timeout immediately when dependencies change
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = null;
+    }
+    
+    // Pause video if disqualified
+    if (isDisqualified && mediaType === 'video' && videoRef.current) {
+      videoRef.current.pause();
+    }
+    
+    // Also clear on unmount
+    return () => {
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+    };
+  }, [mediaType, isDisqualified]);
 
   // Sync muted state with video element
   useEffect(() => {
@@ -180,6 +222,10 @@ export default function PostCard({
 
     return () => {
       observer.disconnect();
+      // Clean up any pending tap timeout
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+      }
     };
   }, [mediaType, isDisqualified]);
 
