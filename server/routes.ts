@@ -1232,8 +1232,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (post.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own posts" });
       }
+      
       // Decrement trend participants count (total posts)
       await storage.decrementTrendParticipants(post.trendId);
+      
+      // Remove 50 TrendX points only if the post was not already disqualified
+      if (!post.isDisqualified) {
+        const user = await storage.getUser(post.userId);
+        if (user) {
+          await storage.updateUser(post.userId, {
+            trendxPoints: Math.max(0, (user.trendxPoints || 0) - 50),
+          });
+        }
+      }
       
       await storage.deletePost(req.params.id);
       res.json({ message: "Post deleted successfully" });
