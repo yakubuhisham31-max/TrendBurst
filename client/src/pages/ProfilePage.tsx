@@ -310,8 +310,8 @@ export default function ProfilePage() {
                                     id={trend.id}
                                     coverImage={trend.coverPicture || undefined}
                                     trendName={trend.name}
-                                    username={trend.creator?.username || "Unknown"}
-                                    userAvatar={trend.creator?.profilePicture || undefined}
+                                    username={(trend as any).creator?.username || "Unknown"}
+                                    userAvatar={(trend as any).creator?.profilePicture || undefined}
                                     category={trend.category}
                                     views={trend.views || 0}
                                     participants={trend.participants || 0}
