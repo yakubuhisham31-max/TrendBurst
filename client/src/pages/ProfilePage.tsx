@@ -41,6 +41,18 @@ export default function ProfilePage() {
     enabled: !!profileUser?.id,
   });
 
+  // Fetch saved trends (only for own profile)
+  const { data: savedTrends = [], isLoading: savedTrendsLoading } = useQuery<Trend[]>({
+    queryKey: ["/api/saved/trends"],
+    enabled: !!currentUser && isOwnProfile,
+  });
+
+  // Fetch saved posts (only for own profile)
+  const { data: savedPosts = [], isLoading: savedPostsLoading } = useQuery<any[]>({
+    queryKey: ["/api/saved/posts"],
+    enabled: !!currentUser && isOwnProfile,
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -220,7 +232,7 @@ export default function ProfilePage() {
                             userAvatar={profileUser.profilePicture || undefined}
                             category={trend.category}
                             views={trend.views || 0}
-                            participants={trend.participants || 0}
+                            participants={(trend as any).postCount || trend.participants || 0}
                             chatCount={trend.chatCount || 0}
                             createdAt={new Date(trend.createdAt!)}
                             endDate={trend.endDate ? new Date(trend.endDate) : undefined}
@@ -253,11 +265,19 @@ export default function ProfilePage() {
                             onClick={() => setLocation(`/feed/${post.trendId}`)}
                             data-testid={`post-${post.id}`}
                           >
-                            <img
-                              src={post.imageUrl}
-                              alt={post.caption || "Post"}
-                              className="w-full h-full object-cover"
-                            />
+                            {post.mediaType === 'video' ? (
+                              <video
+                                src={post.mediaUrl || post.imageUrl}
+                                className="w-full h-full object-cover"
+                                muted
+                              />
+                            ) : (
+                              <img
+                                src={post.mediaUrl || post.imageUrl}
+                                alt={post.caption || "Post"}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                           </div>
                         ))}
@@ -267,9 +287,78 @@ export default function ProfilePage() {
 
                   {isOwnProfile && (
                     <TabsContent value="saved" className="mt-6">
-                      <div className="text-center py-12 text-muted-foreground">
-                        No saved items yet
-                      </div>
+                      {savedTrendsLoading || savedPostsLoading ? (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Skeleton className="h-64" />
+                            <Skeleton className="h-64" />
+                          </div>
+                        </div>
+                      ) : savedTrends.length === 0 && savedPosts.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          No saved items yet
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {savedTrends.length > 0 && (
+                            <div>
+                              <h3 className="font-semibold mb-4">Saved Trends</h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {savedTrends.map((trend) => (
+                                  <TrendCard
+                                    key={trend.id}
+                                    id={trend.id}
+                                    coverImage={trend.coverPicture || undefined}
+                                    trendName={trend.name}
+                                    username={trend.creator?.username || "Unknown"}
+                                    userAvatar={trend.creator?.profilePicture || undefined}
+                                    category={trend.category}
+                                    views={trend.views || 0}
+                                    participants={trend.participants || 0}
+                                    chatCount={trend.chatCount || 0}
+                                    createdAt={new Date(trend.createdAt!)}
+                                    endDate={trend.endDate ? new Date(trend.endDate) : undefined}
+                                    description={trend.description || undefined}
+                                    isHost={false}
+                                    onClick={() => setLocation(`/instructions/${trend.id}`)}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {savedPosts.length > 0 && (
+                            <div>
+                              <h3 className="font-semibold mb-4">Saved Posts</h3>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {savedPosts.map((post) => (
+                                  <div
+                                    key={post.id}
+                                    className="aspect-square bg-muted rounded-lg cursor-pointer hover-elevate overflow-hidden relative group"
+                                    onClick={() => setLocation(`/feed/${post.trendId}`)}
+                                    data-testid={`saved-post-${post.id}`}
+                                  >
+                                    {post.mediaType === 'video' ? (
+                                      <video
+                                        src={post.mediaUrl || post.imageUrl}
+                                        className="w-full h-full object-cover"
+                                        muted
+                                      />
+                                    ) : (
+                                      <img
+                                        src={post.mediaUrl || post.imageUrl}
+                                        alt={post.caption || "Post"}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    )}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </TabsContent>
                   )}
                 </Tabs>

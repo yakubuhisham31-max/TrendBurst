@@ -254,7 +254,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/trends/user/:userId", async (req, res) => {
     try {
       const trends = await storage.getTrendsByUser(req.params.userId);
-      res.json(trends);
+      
+      // Include post count for each trend
+      const trendsWithPostCount = await Promise.all(
+        trends.map(async (trend) => {
+          const posts = await storage.getPostsByTrend(trend.id);
+          return {
+            ...trend,
+            postCount: posts.length,
+          };
+        })
+      );
+      
+      res.json(trendsWithPostCount);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -272,7 +284,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userTrends = await storage.getTrendsByUser(userId);
       const trendsCreated = userTrends.length;
-      const activeTrends = userTrends.filter(t => !t.endDate).length;
+      const now = new Date();
+      const activeTrends = userTrends.filter(t => !t.endDate || (t.endDate && new Date(t.endDate) > now)).length;
 
       let totalPosts = 0;
       let uniqueParticipants = new Set<string>();
@@ -1143,7 +1156,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/saved/trends", requireAuth, async (req, res) => {
     try {
       const trends = await storage.getSavedTrends(req.session.userId!);
-      res.json(trends);
+      
+      // Include creator info and calculate unique participants for each trend
+      const trendsWithCreators = await Promise.all(
+        trends.map(async (trend) => {
+          const creator = await storage.getUser(trend.userId);
+          const posts = await storage.getPostsByTrend(trend.id);
+          const uniqueParticipants = new Set(posts.map(p => p.userId)).size;
+          
+          return {
+            ...trend,
+            participants: uniqueParticipants,
+            creator: creator ? sanitizeUser(creator) : null,
+          };
+        })
+      );
+      
+      res.json(trendsWithCreators);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

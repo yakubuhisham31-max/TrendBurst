@@ -76,6 +76,12 @@ export default function NavigationMenu({
             Log Out
           </Button>
         </div>
+
+        <div className="absolute bottom-4 left-0 right-0 px-6">
+          <p className="text-xs text-center text-muted-foreground" data-testid="text-copyright">
+            © 2025 TrendX. All rights reserved.
+          </p>
+        </div>
       </SheetContent>
     </Sheet>
   );
