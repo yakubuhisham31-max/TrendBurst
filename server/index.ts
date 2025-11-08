@@ -63,20 +63,33 @@ app.use(express.urlencoded({ extended: false }));
 const PgStore = connectPgSimple(session);
 
 // Fix malformed DATABASE_URL (remove 'psql ' prefix and trailing quotes if present)
-let databaseUrl = process.env.DATABASE_URL!;
-if (databaseUrl.startsWith("psql '")) {
-  log("⚠️  Fixing malformed DATABASE_URL - removing 'psql ' prefix");
-  databaseUrl = databaseUrl.replace(/^psql '/, '').replace(/'$/, '');
+let databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.error('❌ DATABASE_URL environment variable is not set!');
+  process.exit(1);
 }
+
+// Handle various malformed formats
+if (databaseUrl.startsWith("psql '") || databaseUrl.startsWith("'psql ")) {
+  log("⚠️  Fixing malformed DATABASE_URL - removing 'psql ' prefix");
+  databaseUrl = databaseUrl.replace(/^'?psql '?/, '').replace(/'$/, '');
+}
+
+// Trim any extra whitespace or quotes
+databaseUrl = databaseUrl.trim().replace(/^['"]|['"]$/g, '');
+
+log(`📊 Database connection string format: ${databaseUrl.substring(0, 30)}...`);
 
 const pool = new Pool({ connectionString: databaseUrl });
 
-// Test database connection
+// Test database connection with better error handling
 pool.query('SELECT NOW()').then(() => {
   log('✅ Database connected successfully');
 }).catch((error) => {
-  console.error('❌ Database connection failed:', error);
-  console.error('DATABASE_URL format:', databaseUrl?.substring(0, 30) + '...');
+  console.error('❌ Database connection failed:', error.message);
+  console.error('DATABASE_URL format:', databaseUrl?.substring(0, 50) + '...');
+  console.error('⚠️  Server will continue but features requiring database will fail');
 });
 
 // Validate required environment variables
