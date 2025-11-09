@@ -8,6 +8,21 @@ Mini Feed (also known as "Trendz") is a social media platform for creating, shar
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### November 9, 2025
+- **Notification Sound Effect:** Implemented Web Audio API-based notification sound that plays when new notifications arrive. Sound preference is saved in localStorage and can be enabled/disabled per user.
+- **Verification Badge System:** Added blue verification badge feature for authenticated accounts. The `verified` field (integer, 0=not verified, 1=verified) has been added to the users table. Verification badges display next to usernames on ProfilePage. The "Trendx" account has been verified.
+- **Custom Domain Support:** Added CORS configuration for custom domains https://trendx.social and https://www.trendx.social.
+
+### Verification Badge Integration Status
+- ✅ ProfilePage: Shows verification badge next to username
+- ⏳ Future: Add badges to TrendCard, PostCard, Comments, Notifications
+
+### Production Deployment Notes
+- The "Trendx" account must be manually verified in the production database using: `UPDATE users SET verified = 1 WHERE username = 'Trendx';`
+- For www.trendx.social subdomain: Add an A record with hostname "www" pointing to the same IP address as the root domain in your DNS registrar settings. Replit handles SSL certificates automatically.
+
 ## System Architecture
 
 ### Frontend Architecture
