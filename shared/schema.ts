@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   followers: integer("followers").default(0),
   following: integer("following").default(0),
   trendxPoints: integer("trendx_points").default(0),
+  verified: integer("verified").default(0),
   instagramUrl: text("instagram_url"),
   tiktokUrl: text("tiktok_url"),
   twitterUrl: text("twitter_url"),

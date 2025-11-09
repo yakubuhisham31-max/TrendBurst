@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProfileStats from "@/components/ProfileStats";
 import TrendCard from "@/components/TrendCard";
 import FollowButton from "@/components/FollowButton";
+import VerificationBadge from "@/components/VerificationBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User, Trend } from "@shared/schema";
 
@@ -100,8 +101,9 @@ export default function ProfilePage() {
 
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold" data-testid="text-username">
+                  <h2 className="text-2xl font-bold flex items-center gap-2" data-testid="text-username">
                     {profileUser.username}
+                    <VerificationBadge verified={profileUser.verified} size="lg" />
                   </h2>
                   {profileUser.bio && (
                     <p className="text-muted-foreground mt-1" data-testid="text-bio">

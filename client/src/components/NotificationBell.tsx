@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
 import type { Notification, User } from "@shared/schema";
+import { notificationSound } from "@/lib/notificationSound";
 
 type NotificationWithActor = Notification & {
   actor: Pick<User, "id" | "username" | "profilePicture"> | null;
@@ -55,12 +56,25 @@ function getNotificationMessage(notification: NotificationWithActor): string {
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const previousUnreadCount = useRef<number | null>(null);
 
   // Fetch unread count
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
     refetchInterval: 10000, // Refetch every 10 seconds
   });
+
+  // Play sound when new notifications arrive
+  useEffect(() => {
+    const currentCount = unreadData?.count || 0;
+    
+    // Only play sound if count increased (not on initial load)
+    if (previousUnreadCount.current !== null && currentCount > previousUnreadCount.current) {
+      notificationSound.play();
+    }
+    
+    previousUnreadCount.current = currentCount;
+  }, [unreadData?.count]);
 
   // Fetch notifications
   const { data: notifications = [] } = useQuery<NotificationWithActor[]>({
