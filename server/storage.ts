@@ -101,6 +101,8 @@ export interface IStorage {
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
   deleteNotification(notificationId: string): Promise<void>;
+  getNotificationTracking(userId: string, type: string): Promise<any>;
+  recordNotificationSent(userId: string, type: string, variant?: number): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -601,6 +603,45 @@ export class DbStorage implements IStorage {
 
   async deleteNotification(notificationId: string): Promise<void> {
     await db.delete(schema.notifications).where(eq(schema.notifications.id, notificationId));
+  }
+
+  async getNotificationTracking(userId: string, type: string): Promise<any> {
+    try {
+      const result = await db
+        .select()
+        .from(schema.notificationTracking)
+        .where(and(eq(schema.notificationTracking.userId, userId), eq(schema.notificationTracking.type, type)));
+      return result[0];
+    } catch {
+      return null;
+    }
+  }
+
+  async recordNotificationSent(userId: string, type: string, variant: number = 0): Promise<void> {
+    try {
+      const existing = await this.getNotificationTracking(userId, type);
+      const now = new Date();
+
+      if (existing) {
+        const lastSent = new Date(existing.lastSentAt);
+        const daysDiff = Math.floor((now.getTime() - lastSent.getTime()) / (1000 * 60 * 60 * 24));
+        const newCount = daysDiff >= 1 ? 1 : (existing.countToday || 0) + 1;
+
+        await db.update(schema.notificationTracking)
+          .set({ lastSentAt: now, countToday: newCount, lastVariant: variant })
+          .where(and(eq(schema.notificationTracking.userId, userId), eq(schema.notificationTracking.type, type)));
+      } else {
+        await db.insert(schema.notificationTracking).values({
+          userId,
+          type,
+          lastSentAt: now,
+          countToday: 1,
+          lastVariant: variant,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to record notification sent:", error);
+    }
   }
 }
 

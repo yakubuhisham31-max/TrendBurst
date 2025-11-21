@@ -15,6 +15,7 @@ import { ObjectPermission } from "./objectAcl";
 import { R2StorageService } from "./r2Storage";
 import { extractMentions } from "@/lib/mentions";
 import { sendPushNotification } from "./onesignal";
+import * as notificationService from "./notificationService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -65,6 +66,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       req.session.userId = user.id;
+
+      // Send welcome notification
+      await notificationService.sendWelcomeNotification(user.id);
 
       res.status(201).json({ user: sanitizeUser(user) });
     } catch (error) {
