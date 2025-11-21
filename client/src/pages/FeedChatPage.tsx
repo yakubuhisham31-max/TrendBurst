@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { parseMentions } from "@/lib/mentions";
 import type { Comment, Trend, User } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
@@ -257,7 +258,15 @@ export default function FeedChatPage() {
                         </div>
                       )}
                       <p className="text-sm" data-testid={`text-message-${comment.id}`}>
-                        {comment.text}
+                        {parseMentions(comment.text).map((part, idx) => 
+                          typeof part === "string" ? (
+                            <span key={idx}>{part}</span>
+                          ) : (
+                            <span key={idx} className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1">
+                              @{part.username}
+                            </span>
+                          )
+                        )}
                       </p>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-xs opacity-80" data-testid={`text-time-${comment.id}`}>
@@ -311,7 +320,15 @@ export default function FeedChatPage() {
                       </div>
                     )}
                     <p className="text-sm text-foreground" data-testid={`text-message-${comment.id}`}>
-                      {comment.text}
+                      {parseMentions(comment.text).map((part, idx) => 
+                        typeof part === "string" ? (
+                          <span key={idx}>{part}</span>
+                        ) : (
+                          <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
+                            @{part.username}
+                          </span>
+                        )
+                      )}
                     </p>
                     <Button
                       variant="ghost"

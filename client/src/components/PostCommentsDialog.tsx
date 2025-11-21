@@ -194,7 +194,15 @@ export default function PostCommentsDialog({
                       </div>
                     )}
                     <p className="text-sm" data-testid="text-comment">
-                      {comment.text}
+                      {parseMentions(comment.text).map((part, idx) => 
+                        typeof part === "string" ? (
+                          <span key={idx}>{part}</span>
+                        ) : (
+                          <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
+                            @{part.username}
+                          </span>
+                        )
+                      )}
                     </p>
                     <div className="flex items-center gap-2">
                       <Button
