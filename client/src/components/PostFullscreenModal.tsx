@@ -239,14 +239,36 @@ export default function PostFullscreenModal({
                     <span className="text-xs text-white font-medium">Playing</span>
                   </div>
                 )}
+
+                {/* Remaining votes badge */}
+                {remainingVotes !== null && (
+                  <div className="absolute top-4 right-4 bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-md px-3 py-2 rounded-full border border-primary/40 shadow-lg" data-testid="badge-remaining-votes">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white">{remainingVotes}</span>
+                      <span className="text-xs text-white/80">votes left</span>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
-              <img
-                src={mediaUrl}
-                alt="Post"
-                className="w-full h-full object-contain"
-                data-testid="img-fullscreen"
-              />
+              <>
+                <img
+                  src={mediaUrl}
+                  alt="Post"
+                  className="w-full h-full object-contain"
+                  data-testid="img-fullscreen"
+                />
+                {/* Remaining votes badge for images */}
+                {remainingVotes !== null && (
+                  <div className="absolute top-4 right-4 bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-md px-3 py-2 rounded-full border border-primary/40 shadow-lg" data-testid="badge-remaining-votes">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white">{remainingVotes}</span>
+                      <span className="text-xs text-white/80">votes left</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            
             )}
           </div>
 
@@ -292,12 +314,6 @@ export default function PostFullscreenModal({
                 <ThumbsUp className="w-4 h-4" />
                 <span className="text-xs">{post.votes}</span>
               </Button>
-
-              {remainingVotes !== null && (
-                <span className="text-xs text-muted-foreground ml-1" data-testid="text-remaining-votes">
-                  {remainingVotes} votes left
-                </span>
-              )}
 
               <Button
                 size="sm"
