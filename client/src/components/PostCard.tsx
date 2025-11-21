@@ -396,14 +396,22 @@ export default function PostCard({
                 </button>
               )}
 
-              {/* Mute/Unmute indicator - bottom right */}
-              <div className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+              {/* Mute/Unmute button - bottom right */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMuted(!isMuted);
+                }}
+                className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+                data-testid="button-video-mute"
+                aria-label={isMuted ? "Unmute" : "Mute"}
+              >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5 text-white" />
                 ) : (
                   <Volume2 className="w-5 h-5 text-white" />
                 )}
-              </div>
+              </button>
             </>
           ) : (
             <img
