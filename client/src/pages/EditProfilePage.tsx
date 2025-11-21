@@ -21,6 +21,8 @@ export default function EditProfilePage() {
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
+    email: "",
+    fullName: "",
     bio: "",
     instagram: "",
     tiktok: "",
@@ -33,6 +35,8 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (user) {
       setFormData({
+        email: user.email || "",
+        fullName: user.fullName || "",
         bio: user.bio || "",
         instagram: user.instagramUrl || "",
         tiktok: user.tiktokUrl || "",
@@ -128,6 +132,8 @@ export default function EditProfilePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const updateData: Partial<User> & { profileFile?: File } = {
+      email: formData.email,
+      fullName: formData.fullName,
       bio: formData.bio,
       instagramUrl: formData.instagram,
       tiktokUrl: formData.tiktok,
@@ -230,6 +236,33 @@ export default function EditProfilePage() {
                   disabled
                   placeholder="Enter username"
                   data-testid="input-username"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder="Enter your email"
+                  data-testid="input-email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
+                  placeholder="Enter your full name"
+                  data-testid="input-fullName"
                 />
               </div>
 

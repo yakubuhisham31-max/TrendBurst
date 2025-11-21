@@ -1055,9 +1055,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PATCH /api/users/profile - Update current user profile (protected)
   app.patch("/api/users/profile", requireAuth, async (req, res) => {
     try {
-      const { bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
+      const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
 
       const updatedUser = await storage.updateUser(req.session.userId!, {
+        email,
+        fullName,
         bio,
         profilePicture,
         instagramUrl,
