@@ -1295,21 +1295,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Decrement trend participants count (total posts)
-      await storage.decrementTrendParticipants(post.trendId);
+      try {
+        await storage.decrementTrendParticipants(post.trendId);
+      } catch (e) {
+        console.error("Failed to decrement trend participants:", e);
+      }
       
       // Remove 50 TrendX points only if the post was not already disqualified
       if (!post.isDisqualified) {
-        const user = await storage.getUser(post.userId);
-        if (user) {
-          await storage.updateUser(post.userId, {
-            trendxPoints: Math.max(0, (user.trendxPoints || 0) - 50),
-          });
+        try {
+          const user = await storage.getUser(post.userId);
+          if (user) {
+            await storage.updateUser(post.userId, {
+              trendxPoints: Math.max(0, (user.trendxPoints || 0) - 50),
+            });
+          }
+        } catch (e) {
+          console.error("Failed to update user points:", e);
         }
       }
       
       await storage.deletePost(req.params.id);
       res.json({ message: "Post deleted successfully" });
     } catch (error) {
+      console.error("Delete post error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
