@@ -320,7 +320,11 @@ export default function HomePage() {
                 endDate={trend.endDate || undefined}
                 isTrending={selectedSubcategory === "Trending"}
                 onClick={() => {
-                  setLocation(`/feed/${trend.id}`);
+                  if (!user) {
+                    setLocation(`/instructions/${trend.id}`);
+                  } else {
+                    setLocation(`/feed/${trend.id}`);
+                  }
                 }}
               />
             ))}
