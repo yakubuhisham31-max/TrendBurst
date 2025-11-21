@@ -352,7 +352,8 @@ export default function PostCard({
             <img
               src={mediaUrl}
               alt="Post"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={onFullscreen}
               data-testid="img-post"
             />
           )}

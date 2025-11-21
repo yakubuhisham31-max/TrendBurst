@@ -123,13 +123,13 @@ export default function PostFullscreenModal({
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage src={post.user?.profilePicture} alt={post.user?.username} />
+                  <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
                   <AvatarFallback>{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white truncate">{post.user?.username}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                    {post.createdAt && formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                   </p>
                 </div>
               </div>
@@ -201,7 +201,13 @@ export default function PostFullscreenModal({
         </div>
       </div>
 
-      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} postId={post.id} />
+      <ShareDialog 
+        open={shareOpen} 
+        onOpenChange={setShareOpen} 
+        url={`/feed/${post.trendId || ""}#post-${post.id}`}
+        title={`Check out this post by ${post.user?.username}`}
+        description={post.caption}
+      />
     </>
   );
 }

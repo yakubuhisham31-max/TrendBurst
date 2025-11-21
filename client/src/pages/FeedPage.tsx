@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
 import PostCommentsDialog from "@/components/PostCommentsDialog";
+import PostFullscreenModal from "@/components/PostFullscreenModal";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -24,6 +25,7 @@ export default function FeedPage() {
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const [highlightCommentId, setHighlightCommentId] = useState<string | null>(null);
+  const [fullscreenPostId, setFullscreenPostId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
