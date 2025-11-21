@@ -2,10 +2,8 @@ import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Trophy, Loader2, Star, Play } from "lucide-react";
+import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import PostFullscreenModal from "@/components/PostFullscreenModal";
 import type { Post, User } from "@shared/schema";
@@ -45,10 +43,14 @@ export default function RankingsPage() {
     return `${rank}${suffix}`;
   };
 
+  const getMaxVotes = () => {
+    return Math.max(...(rankingsData?.rankings.map(e => e.post.votes || 0) || [0]));
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -63,42 +65,46 @@ export default function RankingsPage() {
 
   const topThree = rankingsData.rankings.slice(0, 3);
   const restOfRankings = rankingsData.rankings.slice(3);
+  const maxVotes = getMaxVotes();
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center gap-4">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
           <Button
             size="icon"
             variant="ghost"
             onClick={() => window.history.back()}
             data-testid="button-back"
+            className="text-muted-foreground hover:text-white"
           >
             <ChevronLeft className="w-6 h-6" />
           </Button>
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-1">
             <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-primary" />
-              <h1 className="text-lg font-semibold">{rankingsData.trendName}</h1>
+              <Trophy className="w-5 h-5 text-yellow-500" />
+              <h1 className="text-lg font-bold text-white">{rankingsData.trendName}</h1>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Hosted by {rankingsData.trendHostUsername}
-            </p>
+            <p className="text-xs text-muted-foreground">Hosted by {rankingsData.trendHostUsername}</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        {/* Your Entry */}
         {currentUserPost && (
-          <Card className="p-4 border-2 border-primary bg-primary/5">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Your Entry</p>
-            <div className="flex items-center gap-4">
-              <Badge
-                className="w-12 h-12 rounded-full flex items-center justify-center font-bold bg-gradient-to-br from-primary to-chart-2 text-primary-foreground"
-                data-testid="badge-user-rank"
-              >
-                {getRankBadge(currentUserPost.rank)}
-              </Badge>
+          <div className="rank-item-card rounded-lg p-4 border-2 border-primary/50">
+            <div className="flex items-start gap-4">
+              <div className="relative">
+                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-primary/60 to-primary/40 flex items-center justify-center">
+                  <span className="text-lg font-bold text-white">{currentUserPost.rank}</span>
+                </div>
+                <div className="absolute -top-2 -right-2 bg-primary/80 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  YOU
+                </div>
+              </div>
+
               {(currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl) && (
                 currentUserPost.post.mediaType === "video" && currentUserPost.post.mediaUrl ? (
                   <div className="relative">
@@ -108,10 +114,8 @@ export default function RankingsPage() {
                       muted
                       data-testid="video-user-post"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-lg">
-                      <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                        <Play className="w-4 h-4 text-white fill-white" />
-                      </div>
+                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
+                      <Play className="w-4 h-4 text-white fill-white" />
                     </div>
                   </div>
                 ) : (
@@ -123,82 +127,122 @@ export default function RankingsPage() {
                   />
                 )
               )}
-              <div className="flex-1">
-                <p className="font-medium">{currentUserPost.post.user?.username}</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{currentUserPost.post.caption}</p>
-                <p className="text-sm font-bold text-primary mt-1">{currentUserPost.post.votes} votes</p>
+
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-white">{currentUserPost.post.user?.username}</p>
+                <p className="text-sm text-muted-foreground line-clamp-1">{currentUserPost.post.caption}</p>
+                <div className="mt-3 space-y-2">
+                  <div className="vote-progress-bar">
+                    <div
+                      className="vote-progress-fill transition-all duration-500"
+                      style={{ width: `${((currentUserPost.post.votes || 0) / maxVotes) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-sm font-bold text-primary">{currentUserPost.post.votes || 0} votes</p>
+                </div>
               </div>
             </div>
-          </Card>
+          </div>
         )}
-        
+
+        {/* Top 3 Podium */}
         {topThree.length > 0 && (
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-3 gap-4 items-end">
             {topThree.map((entry, index) => {
-              const heights = ["h-32", "h-40", "h-28"];
+              const heights = ["160px", "200px", "140px"];
               const orders = [1, 0, 2];
-              
+              const badges = ["gold", "silver", "bronze"];
+              const badge = badges[index];
+
               return (
                 <div
                   key={entry.post.id}
-                  className="flex flex-col items-center gap-2"
+                  className="podium-column"
                   style={{ order: orders[index] }}
                   data-testid={`podium-${entry.rank}`}
                 >
-                  <Avatar className="w-16 h-16 ring-4 ring-primary/20">
+                  {/* Crown for 1st */}
+                  {entry.rank === 1 && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
+                      <Crown className="w-6 h-6 text-yellow-400" />
+                    </div>
+                  )}
+
+                  {/* Avatar */}
+                  <Avatar className={`w-16 h-16 border-2 ring-4 ${
+                    badge === "gold" ? "border-yellow-500 ring-yellow-500/20" :
+                    badge === "silver" ? "border-gray-400 ring-gray-400/20" :
+                    "border-orange-500 ring-orange-500/20"
+                  }`}>
                     <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
-                    <AvatarFallback>
-                      {entry.post.user?.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
+                    <AvatarFallback>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <Badge className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    entry.rank === 1 ? "bg-gradient-to-br from-yellow-400 to-yellow-600" :
-                    entry.rank === 2 ? "bg-gradient-to-br from-gray-300 to-gray-500" :
-                    "bg-gradient-to-br from-orange-400 to-orange-600"
-                  } text-white font-bold`}>
+
+                  {/* Rank Badge */}
+                  <div className={`rank-badge-${badge} w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border border-white/20`}>
                     {entry.rank}
-                  </Badge>
-                  <div className="flex items-center gap-1 justify-center">
-                    <p className="text-xs font-medium text-center">{entry.post.user?.username}</p>
-                    {entry.post.user?.id === rankingsData?.trendHostId && (
-                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
-                    )}
                   </div>
-                  <p className="text-sm font-bold text-primary">{entry.post.votes} votes</p>
-                  <div className={`w-full ${heights[index]} bg-gradient-to-t ${
-                    entry.rank === 1 ? "from-primary/30 to-primary/10" :
-                    entry.rank === 2 ? "from-chart-2/30 to-chart-2/10" :
-                    "from-chart-4/30 to-chart-4/10"
-                  } rounded-t-lg`} />
+
+                  {/* Username */}
+                  <p className="text-sm font-semibold text-white text-center line-clamp-1 max-w-[140px]">
+                    {entry.post.user?.username}
+                  </p>
+
+                  {/* Host indicator */}
+                  {entry.post.user?.id === rankingsData?.trendHostId && (
+                    <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                  )}
+
+                  {/* Votes */}
+                  <p className={`text-xs font-bold ${
+                    badge === "gold" ? "text-yellow-400" :
+                    badge === "silver" ? "text-gray-300" :
+                    "text-orange-400"
+                  }`}>
+                    {entry.post.votes} votes
+                  </p>
+
+                  {/* Podium Base */}
+                  <div
+                    className={`w-full podium-base ${
+                      badge === "gold" ? "rank-card-gold" :
+                      badge === "silver" ? "rank-card-silver" :
+                      "rank-card-bronze"
+                    }`}
+                    style={{ height: heights[index] }}
+                  />
                 </div>
               );
             })}
           </div>
         )}
 
+        {/* Rankings List */}
         {restOfRankings.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">More Rankings</h2>
             {restOfRankings.map((entry) => (
-              <Card
+              <div
                 key={entry.post.id}
-                className={`p-4 flex items-center gap-4 cursor-pointer hover-elevate ${
-                  entry.post.userId === currentUser?.id ? 'border-primary bg-primary/5' : ''
+                className={`rank-item-card rounded-lg p-4 flex items-center gap-4 cursor-pointer group ${
+                  entry.post.userId === currentUser?.id ? 'border-primary/50' : ''
                 }`}
                 onClick={() => setFullscreenPostId(entry.post.id)}
                 data-testid={`ranking-item-${entry.rank}`}
               >
-                <Badge
-                  variant="secondary"
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
-                >
-                  {getRankBadge(entry.rank)}
-                </Badge>
+                {/* Rank Number */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-white/5 flex flex-col items-center justify-center group-hover:bg-white/10 transition-colors">
+                  <span className="text-lg font-bold text-white">{entry.rank}</span>
+                  <span className="text-xs text-muted-foreground">{getRankBadge(entry.rank)}</span>
+                </div>
+
+                {/* Media */}
                 {(entry.post.imageUrl || entry.post.mediaUrl) && (
                   entry.post.mediaType === "video" && entry.post.mediaUrl ? (
-                    <div className="relative">
+                    <div className="relative flex-shrink-0">
                       <video
                         src={entry.post.mediaUrl}
-                        className="w-16 h-16 rounded-lg object-cover cursor-pointer"
+                        className="w-20 h-20 rounded-lg object-cover"
                         muted
                         onClick={(e) => {
                           e.stopPropagation();
@@ -206,17 +250,15 @@ export default function RankingsPage() {
                         }}
                         data-testid={`video-rank-${entry.rank}`}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-lg">
-                        <div className="w-6 h-6 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                          <Play className="w-3 h-3 text-white fill-white" />
-                        </div>
+                      <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/20">
+                        <Play className="w-4 h-4 text-white fill-white" />
                       </div>
                     </div>
                   ) : (
                     <img
                       src={entry.post.imageUrl || entry.post.mediaUrl || ""}
                       alt={entry.post.user?.username}
-                      className="w-16 h-16 rounded-lg object-cover cursor-pointer"
+                      className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         setFullscreenPostId(entry.post.id);
@@ -225,23 +267,44 @@ export default function RankingsPage() {
                     />
                   )
                 )}
-                <div className="flex-1">
-                  <div className="flex items-center gap-1">
-                    <p className="font-medium" data-testid="text-username">
-                      {entry.post.user?.username}
-                    </p>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Avatar className="w-5 h-5 flex-shrink-0">
+                      <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
+                      <AvatarFallback className="text-xs">{entry.post.user?.username.slice(0, 1).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm font-semibold text-white truncate">{entry.post.user?.username}</p>
                     {entry.post.user?.id === rankingsData?.trendHostId && (
-                      <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500 flex-shrink-0" data-testid="icon-host" />
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-1">
-                    {entry.post.caption}
+
+                  <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                    {entry.post.caption || "No caption"}
                   </p>
-                  <p className="text-sm font-bold text-primary">
-                    {entry.post.votes} votes
-                  </p>
+
+                  {/* Vote Progress */}
+                  <div className="space-y-1">
+                    <div className="vote-progress-bar">
+                      <div
+                        className="vote-progress-fill transition-all duration-500"
+                        style={{ width: `${(((entry.post.votes || 0) / maxVotes) || 0) * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-primary">{entry.post.votes || 0} votes</p>
+                      <p className="text-xs text-muted-foreground">{Math.round((((entry.post.votes || 0) / maxVotes) || 0) * 100)}%</p>
+                    </div>
+                  </div>
                 </div>
-              </Card>
+
+                {/* Momentum Indicator */}
+                {entry.rank <= 3 && (
+                  <Flame className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                )}
+              </div>
             ))}
           </div>
         )}
