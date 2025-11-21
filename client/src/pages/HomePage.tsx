@@ -337,6 +337,7 @@ export default function HomePage() {
           await logout();
           setLocation("/login");
         }}
+        onAuthModalOpen={() => setAuthModalOpen(true)}
       />
 
       <AuthModal
