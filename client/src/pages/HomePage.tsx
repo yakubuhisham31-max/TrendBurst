@@ -308,11 +308,7 @@ export default function HomePage() {
                 endDate={trend.endDate || undefined}
                 isTrending={selectedSubcategory === "Trending"}
                 onClick={() => {
-                  if (!user) {
-                    setAuthModalOpen(true);
-                  } else {
-                    setLocation(`/instructions/${trend.id}`);
-                  }
+                  setLocation(`/feed/${trend.id}`);
                 }}
               />
             ))}
