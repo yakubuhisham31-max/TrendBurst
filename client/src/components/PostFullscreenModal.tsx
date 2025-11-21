@@ -69,6 +69,14 @@ export default function PostFullscreenModal({
 
   const isSaved = savedStatus?.isSaved || false;
 
+  // Get user's remaining votes for this trend
+  const { data: voteCountData } = useQuery<{ count: number }>({
+    queryKey: ["/api/votes/trend", post.trendId, "count"],
+    enabled: !!user && isOpen && !!post.trendId,
+  });
+
+  const remainingVotes = voteCountData ? 10 - voteCountData.count : null;
+
   // Save post mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -284,6 +292,12 @@ export default function PostFullscreenModal({
                 <ThumbsUp className="w-4 h-4" />
                 <span className="text-xs">{post.votes}</span>
               </Button>
+
+              {remainingVotes !== null && (
+                <span className="text-xs text-muted-foreground ml-1" data-testid="text-remaining-votes">
+                  {remainingVotes} votes left
+                </span>
+              )}
 
               <Button
                 size="sm"
