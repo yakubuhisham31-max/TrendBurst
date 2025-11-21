@@ -43,6 +43,7 @@ interface PostCardProps {
   onDelete?: () => void;
   onDisqualify?: () => void;
   onFullscreen?: () => void;
+  onAuthModalOpen?: () => void;
 }
 
 const getRankBadge = (rank: number) => {
@@ -74,6 +75,7 @@ export default function PostCard({
   onDelete,
   onDisqualify,
   onFullscreen,
+  onAuthModalOpen,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -275,7 +277,13 @@ export default function PostCard({
             <Avatar 
               className="w-10 h-10 flex-shrink-0 cursor-pointer hover-elevate" 
               data-testid="avatar-user"
-              onClick={() => setLocation(`/profile/${username}`)}
+              onClick={() => {
+                if (!user) {
+                  onAuthModalOpen?.();
+                  return;
+                }
+                setLocation(`/profile/${username}`);
+              }}
             >
               <AvatarImage src={userAvatar} alt={username} />
               <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -285,7 +293,13 @@ export default function PostCard({
                 <span 
                   className="font-semibold truncate cursor-pointer hover:underline" 
                   data-testid="text-username"
-                  onClick={() => setLocation(`/profile/${username}`)}
+                  onClick={() => {
+                    if (!user) {
+                      onAuthModalOpen?.();
+                      return;
+                    }
+                    setLocation(`/profile/${username}`);
+                  }}
                 >
                   {username}
                 </span>

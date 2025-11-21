@@ -413,6 +413,7 @@ export default function FeedPage() {
                     onDelete={() => handleDeletePost(post.id)}
                     onDisqualify={() => handleDisqualify(post.id)}
                     onFullscreen={() => setFullscreenPostId(post.id)}
+                    onAuthModalOpen={() => setAuthModalOpen(true)}
                   />
                 </div>
                 
