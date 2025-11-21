@@ -413,7 +413,7 @@ export default function FeedPage() {
 
       {fullscreenPostId && (
         <PostFullscreenModal
-          post={posts.find((p) => p.id === fullscreenPostId)!}
+          post={posts.find((p) => p.id === fullscreenPostId)! as Post & { user?: User }}
           isOpen={!!fullscreenPostId}
           onClose={() => setFullscreenPostId(null)}
           onComment={setCommentsPostId}
@@ -421,7 +421,7 @@ export default function FeedPage() {
           onVoteDown={() => handleVoteDown(fullscreenPostId)}
           userVoted={posts.find((p) => p.id === fullscreenPostId)?.userVoted}
           rank={voteRankMap.get(fullscreenPostId)}
-          allPosts={posts}
+          allPosts={posts as (Post & { user?: User })[]}
         />
       )}
     </div>
