@@ -433,13 +433,27 @@ export default function PostCard({
                 )}
               </button>
 
-              {/* Progress bar - bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
-                <div 
-                  className="h-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                  data-testid="video-progress-bar"
-                />
+              {/* Play/Pause button and progress bar - bottom */}
+              <div className="absolute bottom-0 left-0 right-0 flex items-center gap-1.5 bg-black/20 px-1.5 py-1">
+                <button
+                  onClick={handlePlayPause}
+                  className="flex-shrink-0 w-6 h-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+                  data-testid="button-video-play-pause"
+                  aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? (
+                    <div className="w-1 h-2 bg-white mx-0.5" />
+                  ) : (
+                    <Play className="w-3 h-3 text-white fill-white" />
+                  )}
+                </button>
+                <div className="flex-1 h-1 bg-black/40 rounded-full">
+                  <div 
+                    className="h-full bg-primary transition-all rounded-full"
+                    style={{ width: `${progress}%` }}
+                    data-testid="video-progress-bar"
+                  />
+                </div>
               </div>
             </>
           ) : (
