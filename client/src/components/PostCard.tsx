@@ -489,6 +489,10 @@ export default function PostCard({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!user) {
+                        onAuthModalOpen?.();
+                        return;
+                      }
                       onFullscreen?.();
                     }}
                     className="flex-shrink-0 w-6 h-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"

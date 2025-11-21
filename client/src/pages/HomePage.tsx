@@ -322,6 +322,7 @@ export default function HomePage() {
                 onClick={() => {
                   setLocation(`/instructions/${trend.id}`);
                 }}
+                onAuthModalOpen={() => setAuthModalOpen(true)}
               />
             ))}
           </div>
