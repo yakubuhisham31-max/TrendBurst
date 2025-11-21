@@ -30,7 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading, refetch } = useQuery<{ user: User } | null>({
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   useEffect(() => {
