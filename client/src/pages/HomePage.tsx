@@ -170,7 +170,19 @@ export default function HomePage() {
             className="h-16 sm:h-18 md:h-20 object-contain"
             data-testid="img-logo"
           />
-          <NotificationBell />
+          {user ? (
+            <NotificationBell />
+          ) : (
+            <Button
+              variant="default"
+              onClick={() => setAuthModalOpen(true)}
+              className="gap-2"
+              data-testid="button-sign-in"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </Button>
+          )}
         </div>
 
         <div className="max-w-7xl mx-auto px-4 pb-3 space-y-3">
