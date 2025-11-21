@@ -29,6 +29,7 @@ export default function CreateTrendPage() {
   const [endDate, setEndDate] = useState("");
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const [referencePreviewUrls, setReferencePreviewUrls] = useState<string[]>([]);
+  const [includePrizes, setIncludePrizes] = useState(false);
   const [prizeFirst, setPrizeFirst] = useState("");
   const [prizeSecond, setPrizeSecond] = useState("");
   const [prizeThird, setPrizeThird] = useState("");
@@ -421,40 +422,73 @@ export default function CreateTrendPage() {
               )}
             </div>
 
-            <div>
-              <h3 className="font-semibold mb-3">Prizes (Optional)</h3>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="prize-first">1st Place Prize</Label>
-                  <Input
-                    id="prize-first"
-                    placeholder="e.g., $100 or Trophy"
-                    value={prizeFirst}
-                    onChange={(e) => setPrizeFirst(e.target.value)}
-                    data-testid="input-prize-first"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prize-second">2nd Place Prize</Label>
-                  <Input
-                    id="prize-second"
-                    placeholder="e.g., $50 or Certificate"
-                    value={prizeSecond}
-                    onChange={(e) => setPrizeSecond(e.target.value)}
-                    data-testid="input-prize-second"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prize-third">3rd Place Prize</Label>
-                  <Input
-                    id="prize-third"
-                    placeholder="e.g., $25 or Badge"
-                    value={prizeThird}
-                    onChange={(e) => setPrizeThird(e.target.value)}
-                    data-testid="input-prize-third"
-                  />
+            <div className="space-y-3">
+              <div>
+                <Label className="mb-3 block">Include Prizes?</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={includePrizes ? "default" : "outline"}
+                    onClick={() => {
+                      setIncludePrizes(true);
+                    }}
+                    data-testid="button-include-prizes-yes"
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={!includePrizes ? "default" : "outline"}
+                    onClick={() => {
+                      setIncludePrizes(false);
+                      setPrizeFirst("");
+                      setPrizeSecond("");
+                      setPrizeThird("");
+                    }}
+                    data-testid="button-include-prizes-no"
+                  >
+                    No
+                  </Button>
                 </div>
               </div>
+
+              {includePrizes && (
+                <div>
+                  <h3 className="font-semibold mb-3">Prizes</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="prize-first">1st Place Prize</Label>
+                      <Input
+                        id="prize-first"
+                        placeholder="e.g., $100 or Trophy"
+                        value={prizeFirst}
+                        onChange={(e) => setPrizeFirst(e.target.value)}
+                        data-testid="input-prize-first"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prize-second">2nd Place Prize</Label>
+                      <Input
+                        id="prize-second"
+                        placeholder="e.g., $50 or Certificate"
+                        value={prizeSecond}
+                        onChange={(e) => setPrizeSecond(e.target.value)}
+                        data-testid="input-prize-second"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prize-third">3rd Place Prize</Label>
+                      <Input
+                        id="prize-third"
+                        placeholder="e.g., $25 or Badge"
+                        value={prizeThird}
+                        onChange={(e) => setPrizeThird(e.target.value)}
+                        data-testid="input-prize-third"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
