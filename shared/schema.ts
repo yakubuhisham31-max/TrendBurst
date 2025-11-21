@@ -219,23 +219,10 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-export type InsertTrend = z.input<typeof insertTrendSchema>;
-export type Trend = typeof trends.$inferSelect;
-export type InsertPost = z.infer<typeof insertPostSchema>;
-export type Post = typeof posts.$inferSelect;
-export type InsertVote = z.infer<typeof insertVoteSchema>;
-export type Vote = typeof votes.$inferSelect;
-export type InsertComment = z.infer<typeof insertCommentSchema>;
-export type Comment = typeof comments.$inferSelect;
-export type InsertFollow = z.infer<typeof insertFollowSchema>;
-export type Follow = typeof follows.$inferSelect;
-export type InsertViewTracking = z.infer<typeof insertViewTrackingSchema>;
-export type ViewTracking = typeof viewTracking.$inferSelect;
 export type InsertSavedTrend = z.infer<typeof insertSavedTrendSchema>;
-export type SavedTrend = typeof savedTrends.$inferSelect;
 export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
-export type SavedPost = typeof savedPosts.$inferSelect;
-export type InsertNotification = z.infer<typeof insertNotificationSchema>;
-export type Notification = typeof notifications.$inferSelect;
+export type NotificationTracking = typeof notificationTracking.$inferSelect;
+export const insertNotificationTrackingSchema = createInsertSchema(notificationTracking).omit({
+  id: true,
+  lastSentAt: true,
+});
