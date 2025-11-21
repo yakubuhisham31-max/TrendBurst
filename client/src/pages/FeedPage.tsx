@@ -364,33 +364,52 @@ export default function FeedPage() {
             No posts yet. Be the first to post!
           </div>
         ) : (
-          sortedPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              id={post.id}
-              rank={voteRankMap.get(post.id) || 0}
-              mediaUrl={post.mediaUrl || post.imageUrl || ""}
-              mediaType={(post.mediaType as 'image' | 'video') || 'image'}
-              caption={post.caption || ""}
-              username={post.user?.username || "Unknown"}
-              userAvatar={post.user?.profilePicture || undefined}
-              votes={post.votes || 0}
-              createdAt={new Date(post.createdAt!)}
-              userVoted={post.userVoted}
-              commentsCount={post.commentCount || 0}
-              isTrendHost={post.userId === trend?.userId}
-              isUserTrendHost={user?.id === trend?.userId}
-              isCreator={user?.id === post.userId}
-              isDisqualified={!!post.isDisqualified}
-              isTrendEnded={isTrendEnded}
-              onVoteUp={() => handleVoteUp(post.id)}
-              onVoteDown={() => handleVoteDown(post.id)}
-              onComment={() => setCommentsPostId(post.id)}
-              onDelete={() => handleDeletePost(post.id)}
-              onDisqualify={() => handleDisqualify(post.id)}
-              onFullscreen={() => setFullscreenPostId(post.id)}
-            />
-          ))
+          sortedPosts.map((post, index) => {
+            const isBlurred = !user && index >= 3;
+            return (
+              <div
+                key={post.id}
+                className={`relative ${isBlurred ? 'blur-sm pointer-events-none' : ''}`}
+              >
+                <PostCard
+                  id={post.id}
+                  rank={voteRankMap.get(post.id) || 0}
+                  mediaUrl={post.mediaUrl || post.imageUrl || ""}
+                  mediaType={(post.mediaType as 'image' | 'video') || 'image'}
+                  caption={post.caption || ""}
+                  username={post.user?.username || "Unknown"}
+                  userAvatar={post.user?.profilePicture || undefined}
+                  votes={post.votes || 0}
+                  createdAt={new Date(post.createdAt!)}
+                  userVoted={post.userVoted}
+                  commentsCount={post.commentCount || 0}
+                  isTrendHost={post.userId === trend?.userId}
+                  isUserTrendHost={user?.id === trend?.userId}
+                  isCreator={user?.id === post.userId}
+                  isDisqualified={!!post.isDisqualified}
+                  isTrendEnded={isTrendEnded}
+                  onVoteUp={() => handleVoteUp(post.id)}
+                  onVoteDown={() => handleVoteDown(post.id)}
+                  onComment={() => setCommentsPostId(post.id)}
+                  onDelete={() => handleDeletePost(post.id)}
+                  onDisqualify={() => handleDisqualify(post.id)}
+                  onFullscreen={() => setFullscreenPostId(post.id)}
+                />
+                
+                {isBlurred && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30 backdrop-blur-sm cursor-pointer"
+                    onClick={() => setAuthModalOpen(true)}
+                  >
+                    <div className="text-center space-y-2">
+                      <p className="text-white font-semibold text-lg">Sign in to view more posts</p>
+                      <p className="text-white/80 text-sm">Tap to continue</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </main>
 
