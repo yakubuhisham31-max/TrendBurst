@@ -85,7 +85,7 @@ export async function sendRankGainedNotification(userId: string, trendName: stri
     userId,
     heading: variant.title,
     content: `${variant.content} in ${trendName}`,
-    data: { type: "rank_gained", trendId, variant: variantIndex },
+    data: { type: "rank_gained", trendId, variant: String(variantIndex) },
   });
 
   await recordNotificationSent(userId, "rank_gained", variantIndex);
@@ -103,7 +103,7 @@ export async function sendRankLostNotification(userId: string, trendName: string
     userId,
     heading: variant.title,
     content: `${variant.content} in ${trendName}`,
-    data: { type: "rank_lost", trendId, variant: variantIndex },
+    data: { type: "rank_lost", trendId, variant: String(variantIndex) },
   });
 
   await recordNotificationSent(userId, "rank_lost", variantIndex);
