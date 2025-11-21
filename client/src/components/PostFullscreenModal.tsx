@@ -305,7 +305,7 @@ export default function PostFullscreenModal({
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-4">
               <Button
                 size="sm"
                 variant="ghost"
@@ -316,7 +316,7 @@ export default function PostFullscreenModal({
                 <ThumbsUp className="w-4 h-4" />
               </Button>
 
-              <span className="text-sm font-bold text-white" data-testid="text-votes-fullscreen">
+              <span className="text-sm font-bold text-white flex-1 text-center" data-testid="text-votes-fullscreen">
                 {post.votes}
               </span>
 
