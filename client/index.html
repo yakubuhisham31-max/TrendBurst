@@ -12,6 +12,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/core@4/dist/style.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@4/dist/style.min.css">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9",
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
