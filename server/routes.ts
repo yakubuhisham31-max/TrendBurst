@@ -585,66 +585,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.incrementTrendParticipants(result.data.trendId);
       
       // Create notification for followers
-      const followers = await storage.getFollowers(req.session.userId!);
-      const postAuthor = await storage.getUser(req.session.userId!);
-      for (const follow of followers) {
-        await storage.createNotification({
-          userId: follow.followerId,
-          actorId: req.session.userId!,
-          type: 'new_post_from_following',
-          postId: post.id,
-          trendId: result.data.trendId,
-        });
-        // Send push notification
-        await sendPushNotification({
-          userId: follow.followerId,
-          heading: "New Post",
-          content: `${postAuthor?.username} posted in a trend you follow`,
-          data: { postId: post.id, trendId: result.data.trendId },
-        });
+      try {
+        const followers = await storage.getFollowers(req.session.userId!);
+        const postAuthor = await storage.getUser(req.session.userId!);
+        for (const follow of followers) {
+          await storage.createNotification({
+            userId: follow.followerId,
+            actorId: req.session.userId!,
+            type: 'new_post_from_following',
+            postId: post.id,
+            trendId: result.data.trendId,
+          });
+          // Send push notification (wrapped to not break post creation)
+          try {
+            await sendPushNotification({
+              userId: follow.followerId,
+              heading: "New Post",
+              content: `${postAuthor?.username} posted in a trend you follow`,
+              data: { postId: post.id, trendId: result.data.trendId },
+            });
+          } catch (err) {
+            console.error("Failed to send follower push notification:", err);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to process follower notifications:", err);
       }
       
       // Create notification for trend host (if not posting in their own trend)
-      const trend = await storage.getTrend(result.data.trendId);
-      if (trend && trend.userId !== req.session.userId) {
-        await storage.createNotification({
-          userId: trend.userId,
-          actorId: req.session.userId!,
-          type: 'post_in_your_trend',
-          postId: post.id,
-          trendId: result.data.trendId,
-        });
-        // Send push notification
-        await sendPushNotification({
-          userId: trend.userId,
-          heading: "New Submission",
-          content: `${postAuthor?.username} posted in your trend`,
-          data: { postId: post.id, trendId: result.data.trendId },
-        });
+      try {
+        const trend = await storage.getTrend(result.data.trendId);
+        if (trend && trend.userId !== req.session.userId) {
+          await storage.createNotification({
+            userId: trend.userId,
+            actorId: req.session.userId!,
+            type: 'post_in_your_trend',
+            postId: post.id,
+            trendId: result.data.trendId,
+          });
+          // Send push notification
+          try {
+            const postAuthor = await storage.getUser(req.session.userId!);
+            await sendPushNotification({
+              userId: trend.userId,
+              heading: "New Submission",
+              content: `${postAuthor?.username} posted in your trend`,
+              data: { postId: post.id, trendId: result.data.trendId },
+            });
+          } catch (err) {
+            console.error("Failed to send host push notification:", err);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to process host notifications:", err);
       }
       
       // Award 50 TrendX points for creating a post
-      const user = await storage.getUser(req.session.userId!);
-      if (user) {
-        await storage.updateUser(req.session.userId!, {
-          trendxPoints: (user.trendxPoints || 0) + 50,
-        });
-        
-        // Create notification for earning points
-        await storage.createNotification({
-          userId: req.session.userId!,
-          type: 'earned_points',
-          postId: post.id,
-          trendId: result.data.trendId,
-          pointsEarned: 50,
-        });
-        // Send push notification
-        await sendPushNotification({
-          userId: req.session.userId!,
-          heading: "Points Earned",
-          content: "You earned 50 TrendX points for posting!",
-          data: { postId: post.id, trendId: result.data.trendId },
-        });
+      try {
+        const user = await storage.getUser(req.session.userId!);
+        if (user) {
+          await storage.updateUser(req.session.userId!, {
+            trendxPoints: (user.trendxPoints || 0) + 50,
+          });
+          
+          // Create notification for earning points
+          await storage.createNotification({
+            userId: req.session.userId!,
+            type: 'earned_points',
+            postId: post.id,
+            trendId: result.data.trendId,
+            pointsEarned: 50,
+          });
+          // Send push notification
+          try {
+            await sendPushNotification({
+              userId: req.session.userId!,
+              heading: "Points Earned",
+              content: "You earned 50 TrendX points for posting!",
+              data: { postId: post.id, trendId: result.data.trendId },
+            });
+          } catch (err) {
+            console.error("Failed to send points push notification:", err);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to process points notifications:", err);
       }
       
       res.status(201).json(post);
