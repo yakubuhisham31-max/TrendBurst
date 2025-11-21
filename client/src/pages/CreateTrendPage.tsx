@@ -457,7 +457,21 @@ export default function CreateTrendPage() {
                   <h3 className="font-semibold mb-3">Prizes</h3>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="prize-first">1st Place Prize</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label htmlFor="prize-first" className="flex-1">1st Place Prize</Label>
+                        {prizeFirst && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setPrizeFirst("")}
+                            className="h-8 w-8"
+                            data-testid="button-clear-prize-first"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
                       <Input
                         id="prize-first"
                         placeholder="e.g., $100 or Trophy"
@@ -467,7 +481,21 @@ export default function CreateTrendPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="prize-second">2nd Place Prize</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label htmlFor="prize-second" className="flex-1">2nd Place Prize</Label>
+                        {prizeSecond && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setPrizeSecond("")}
+                            className="h-8 w-8"
+                            data-testid="button-clear-prize-second"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
                       <Input
                         id="prize-second"
                         placeholder="e.g., $50 or Certificate"
@@ -477,7 +505,21 @@ export default function CreateTrendPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="prize-third">3rd Place Prize</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label htmlFor="prize-third" className="flex-1">3rd Place Prize</Label>
+                        {prizeThird && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setPrizeThird("")}
+                            className="h-8 w-8"
+                            data-testid="button-clear-prize-third"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
                       <Input
                         id="prize-third"
                         placeholder="e.g., $25 or Badge"
@@ -618,7 +660,7 @@ export default function CreateTrendPage() {
                         <Button
                           size="icon"
                           variant="destructive"
-                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 h-6 w-6 z-10"
                           onClick={() => removeReferenceFile(index)}
                           data-testid={`button-remove-reference-${index}`}
                         >
