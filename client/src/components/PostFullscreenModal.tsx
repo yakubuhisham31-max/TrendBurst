@@ -314,8 +314,11 @@ export default function PostFullscreenModal({
                 data-testid="button-vote-up-fullscreen"
               >
                 <ThumbsUp className="w-4 h-4" />
-                <span className="text-xs">{post.votes}</span>
               </Button>
+
+              <span className="text-sm font-bold text-white" data-testid="text-votes-fullscreen">
+                {post.votes}
+              </span>
 
               <Button
                 size="sm"
