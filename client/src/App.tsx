@@ -75,7 +75,7 @@ function Router() {
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />
-      <Route path="/feed/:id" component={(props) => <ProtectedRoute component={FeedPage} {...props} />} />
+      <Route path="/feed/:id" component={FeedPage} />
       <Route path="/profile" component={(props) => <ProtectedRoute component={ProfilePage} {...props} />} />
       <Route path="/profile/:username" component={(props) => <ProtectedRoute component={ProfilePage} {...props} />} />
       <Route path="/edit-profile" component={(props) => <ProtectedRoute component={EditProfilePage} {...props} />} />
