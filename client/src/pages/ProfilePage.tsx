@@ -12,6 +12,7 @@ import TrendCard from "@/components/TrendCard";
 import FollowButton from "@/components/FollowButton";
 import VerificationBadge from "@/components/VerificationBadge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import type { User, Trend } from "@shared/schema";
 
 export default function ProfilePage() {
@@ -19,10 +20,29 @@ export default function ProfilePage() {
   const params = useParams();
   const [activeTab, setActiveTab] = useState("trends");
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   // Get username from URL params or use current user
   const viewingUsername = params.username || currentUser?.username;
   const isOwnProfile = !params.username || params.username === currentUser?.username;
+
+  const handleShareProfile = () => {
+    if (!viewingUsername) return;
+    
+    const profileUrl = `${window.location.origin}/profile/${viewingUsername}`;
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      toast({
+        title: "Copied to clipboard",
+        description: "Profile link copied successfully.",
+      });
+    }).catch(() => {
+      toast({
+        title: "Error",
+        description: "Failed to copy link to clipboard.",
+        variant: "destructive",
+      });
+    });
+  };
 
   // Fetch user data
   const { data: profileUser, isLoading: userLoading } = useQuery<User>({
@@ -173,7 +193,7 @@ export default function ProfilePage() {
                         <Edit className="w-4 h-4" />
                         Edit Profile
                       </Button>
-                      <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
+                      <Button variant="outline" className="flex-1 gap-2" onClick={handleShareProfile} data-testid="button-share-profile">
                         <Share2 className="w-4 h-4" />
                         Share Profile
                       </Button>
@@ -181,7 +201,7 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <FollowButton username={viewingUsername!} className="flex-1" />
-                      <Button variant="outline" className="flex-1 gap-2" data-testid="button-share-profile">
+                      <Button variant="outline" className="flex-1 gap-2" onClick={handleShareProfile} data-testid="button-share-profile">
                         <Share2 className="w-4 h-4" />
                         Share Profile
                       </Button>
