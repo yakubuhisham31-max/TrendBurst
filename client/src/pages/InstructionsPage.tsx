@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Star, Calendar, Loader2, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Calendar, Loader2, Play } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import FollowButton from "@/components/FollowButton";
 import MediaLightbox from "@/components/MediaLightbox";
@@ -27,11 +27,43 @@ export default function InstructionsPage() {
   const { id: trendId } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [selectedMedia, setSelectedMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
+  const [currentRefMediaIndex, setCurrentRefMediaIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const refMediaContainerRef = useRef<HTMLDivElement>(null);
   
   const { data: trend, isLoading } = useQuery<TrendWithCreator>({
     queryKey: [`/api/trends/${trendId}`],
     enabled: !!trendId,
   });
+
+  // Handle swipe for reference media carousel
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setTouchEnd(e.changedTouches[0].clientX);
+    
+    if (touchStart === null || !trend?.referenceMedia) return;
+    
+    const distance = touchStart - e.changedTouches[0].clientX;
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(distance) < minSwipeDistance) return;
+    
+    if (distance > 0) {
+      // Swiped left - go to next
+      setCurrentRefMediaIndex(prev => 
+        (prev + 1) % trend.referenceMedia!.length
+      );
+    } else {
+      // Swiped right - go to previous
+      setCurrentRefMediaIndex(prev => 
+        prev === 0 ? trend.referenceMedia!.length - 1 : prev - 1
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -221,54 +253,137 @@ export default function InstructionsPage() {
           {trend.referenceMedia && trend.referenceMedia.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-3">Reference / Sponsor(s)</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {trend.referenceMedia.map((media, index) => {
-                  const mediaType = getMediaType(media);
-                  return (
-                    <div 
-                      key={index} 
-                      className="aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity relative group"
-                      onClick={() => setSelectedMedia({ url: media, type: mediaType })}
-                      data-testid={`reference-media-${index}`}
-                    >
-                      {mediaType === "video" ? (
-                        <video 
-                          src={media} 
-                          className="w-full h-full object-cover pointer-events-none" 
-                          muted
-                        />
-                      ) : (
-                        <img 
-                          src={media} 
-                          alt={`Reference ${index + 1}`} 
-                          className="w-full h-full object-cover pointer-events-none" 
-                        />
-                      )}
-                      {mediaType === "video" && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
-                          <div className="w-16 h-16 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
-                            <Play className="w-8 h-8 text-white fill-white ml-1" />
+              {trend.referenceMedia.length === 1 ? (
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity group">
+                  {(() => {
+                    const media = trend.referenceMedia[0];
+                    const mediaType = getMediaType(media);
+                    return (
+                      <>
+                        {mediaType === "video" ? (
+                          <video 
+                            src={media} 
+                            className="w-full h-full object-cover pointer-events-none" 
+                            muted
+                          />
+                        ) : (
+                          <img 
+                            src={media} 
+                            alt="Reference 1" 
+                            className="w-full h-full object-cover pointer-events-none" 
+                          />
+                        )}
+                        {mediaType === "video" && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
+                            <div className="w-16 h-16 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
+                              <Play className="w-8 h-8 text-white fill-white ml-1" />
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        <div 
+                          className="absolute inset-0 cursor-pointer"
+                          onClick={() => setSelectedMedia({ url: media, type: mediaType })}
+                          data-testid="reference-media-0"
+                        />
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div
+                    ref={refMediaContainerRef}
+                    className="relative aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer group"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    {(() => {
+                      const media = trend.referenceMedia[currentRefMediaIndex];
+                      const mediaType = getMediaType(media);
+                      return (
+                        <>
+                          {mediaType === "video" ? (
+                            <video 
+                              src={media} 
+                              className="w-full h-full object-cover pointer-events-none" 
+                              muted
+                            />
+                          ) : (
+                            <img 
+                              src={media} 
+                              alt={`Reference ${currentRefMediaIndex + 1}`} 
+                              className="w-full h-full object-cover pointer-events-none" 
+                            />
+                          )}
+                          {mediaType === "video" && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
+                              <div className="w-16 h-16 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
+                                <Play className="w-8 h-8 text-white fill-white ml-1" />
+                              </div>
+                            </div>
+                          )}
+                          <div 
+                            className="absolute inset-0 cursor-pointer"
+                            onClick={() => setSelectedMedia({ url: media, type: mediaType })}
+                            data-testid={`reference-media-${currentRefMediaIndex}`}
+                          />
+                        </>
+                      );
+                    })()}
+                    
+                    {trend.referenceMedia.length > 1 && (
+                      <>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white pointer-events-auto"
+                          onClick={() => setCurrentRefMediaIndex(prev => prev === 0 ? trend.referenceMedia!.length - 1 : prev - 1)}
+                          data-testid="button-prev-ref-media"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white pointer-events-auto"
+                          onClick={() => setCurrentRefMediaIndex(prev => (prev + 1) % trend.referenceMedia!.length)}
+                          data-testid="button-next-ref-media"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  {trend.referenceMedia.length > 1 && (
+                    <div className="flex justify-center gap-1">
+                      {trend.referenceMedia.map((_, index) => (
+                        <button
+                          key={index}
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            index === currentRefMediaIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                          }`}
+                          onClick={() => setCurrentRefMediaIndex(index)}
+                          data-testid={`indicator-ref-media-${index}`}
+                        />
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
-
-          <div className="pt-4">
-            <Button
-              className="w-full"
-              onClick={() => setLocation(`/feed/${trendId}`)}
-              data-testid="button-back-to-feed"
-            >
-              Continue to Feed
-            </Button>
-          </div>
         </Card>
       </main>
+
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t px-4 py-3 max-w-2xl mx-auto w-full">
+        <Button
+          className="w-full"
+          onClick={() => setLocation(`/feed/${trendId}`)}
+          data-testid="button-back-to-feed"
+        >
+          Continue to Feed
+        </Button>
+      </div>
 
       {selectedMedia && (
         <MediaLightbox
