@@ -369,20 +369,9 @@ export default function FeedPage() {
             return (
               <div
                 key={post.id}
-                className={`relative w-full ${isBlurred ? 'blur-xl' : ''}`}
+                className="relative w-full"
               >
-                {isBlurred && (
-                  <div 
-                    className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 backdrop-blur-md cursor-pointer z-10"
-                    onClick={() => setAuthModalOpen(true)}
-                  >
-                    <div className="text-center space-y-2">
-                      <p className="text-white font-bold text-lg">Tap to view</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className={isBlurred ? 'pointer-events-none' : ''}>
+                <div className={isBlurred ? 'blur-xl' : ''}>
                   <PostCard
                     id={post.id}
                     rank={voteRankMap.get(post.id) || 0}
@@ -408,6 +397,17 @@ export default function FeedPage() {
                     onFullscreen={() => setFullscreenPostId(post.id)}
                   />
                 </div>
+                
+                {isBlurred && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center rounded-lg cursor-pointer z-20"
+                    onClick={() => setAuthModalOpen(true)}
+                  >
+                    <div className="text-center space-y-3 bg-black/70 px-8 py-4 rounded-lg backdrop-blur-sm">
+                      <p className="text-white font-bold text-xl">Tap to view</p>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })
