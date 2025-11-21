@@ -29,6 +29,9 @@ export default function CreateTrendPage() {
   const [endDate, setEndDate] = useState("");
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const [referencePreviewUrls, setReferencePreviewUrls] = useState<string[]>([]);
+  const [prizeFirst, setPrizeFirst] = useState("");
+  const [prizeSecond, setPrizeSecond] = useState("");
+  const [prizeThird, setPrizeThird] = useState("");
   
   // Track preview URLs in refs for cleanup without triggering re-renders
   const coverPreviewRef = useRef<string>("");
@@ -229,6 +232,9 @@ export default function CreateTrendPage() {
       coverFile: coverFile || undefined,
       referenceFiles: referenceFiles.length > 0 ? referenceFiles : undefined,
       endDate: endDate, // Send as string, schema will transform to Date
+      prizeFirst: prizeFirst.trim() || undefined,
+      prizeSecond: prizeSecond.trim() || undefined,
+      prizeThird: prizeThird.trim() || undefined,
     };
 
     createTrendMutation.mutate(trendData);
