@@ -149,7 +149,8 @@ export default function RankingsPage() {
         {topThree.length > 0 && (
           <div className="grid grid-cols-3 gap-4 items-end">
             {topThree.map((entry, index) => {
-              const heights = ["160px", "200px", "140px"];
+              const isFirst = entry.rank === 1;
+              const heights = isFirst ? ["240px", "280px", "160px"] : ["160px", "200px", "140px"];
               const orders = [1, 0, 2];
               const badges = ["gold", "silver", "bronze"];
               const badge = badges[index];
@@ -157,49 +158,49 @@ export default function RankingsPage() {
               return (
                 <div
                   key={entry.post.id}
-                  className="podium-column"
+                  className={`podium-column ${isFirst ? "ring-2 ring-yellow-400/50 rounded-lg p-4" : ""}`}
                   style={{ order: orders[index] }}
                   data-testid={`podium-${entry.rank}`}
                 >
                   {/* Crown for 1st */}
                   {entry.rank === 1 && (
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
-                      <Crown className="w-6 h-6 text-yellow-400" />
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-10">
+                      <Crown className="w-8 h-8 text-yellow-400" />
                     </div>
                   )}
 
                   {/* Avatar */}
-                  <Avatar className={`w-16 h-16 border-2 ring-4 ${
-                    badge === "gold" ? "border-yellow-500 ring-yellow-500/20" :
+                  <Avatar className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} border-2 ring-4 ${
+                    badge === "gold" ? "border-yellow-500 ring-yellow-500/30" :
                     badge === "silver" ? "border-gray-400 ring-gray-400/20" :
                     "border-orange-500 ring-orange-500/20"
                   }`}>
                     <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
-                    <AvatarFallback>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className={isFirst ? "text-lg" : ""}>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
 
                   {/* Rank Badge */}
-                  <div className={`rank-badge-${badge} w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border border-white/20`}>
+                  <div className={`rank-badge-${badge} ${isFirst ? "w-14 h-14 text-2xl" : "w-12 h-12 text-lg"} rounded-full flex items-center justify-center font-bold border border-white/20`}>
                     {entry.rank}
                   </div>
 
                   {/* Username */}
-                  <p className="text-sm font-semibold text-white text-center line-clamp-1 max-w-[140px]">
+                  <p className={`${isFirst ? "text-base font-bold" : "text-sm font-semibold"} text-white text-center line-clamp-1 max-w-[160px]`}>
                     {entry.post.user?.username}
                   </p>
 
                   {/* Host indicator */}
                   {entry.post.user?.id === rankingsData?.trendHostId && (
-                    <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                    <Star className={`${isFirst ? "w-4 h-4" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
                   )}
 
                   {/* Votes */}
-                  <p className={`text-xs font-bold ${
-                    badge === "gold" ? "text-yellow-400" :
-                    badge === "silver" ? "text-gray-300" :
-                    "text-orange-400"
+                  <p className={`${isFirst ? "text-sm font-bold" : "text-xs font-bold"} ${
+                    badge === "gold" ? "text-yellow-300" :
+                    badge === "silver" ? "text-gray-200" :
+                    "text-orange-300"
                   }`}>
-                    {entry.post.votes} votes
+                    {entry.post.votes || 0} votes
                   </p>
 
                   {/* Podium Base */}
@@ -208,7 +209,7 @@ export default function RankingsPage() {
                       badge === "gold" ? "rank-card-gold" :
                       badge === "silver" ? "rank-card-silver" :
                       "rank-card-bronze"
-                    }`}
+                    } ${isFirst ? "shadow-lg" : ""}`}
                     style={{ height: heights[index] }}
                   />
                 </div>
@@ -270,18 +271,18 @@ export default function RankingsPage() {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Avatar className="w-5 h-5 flex-shrink-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Avatar className="w-6 h-6 flex-shrink-0">
                       <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
                       <AvatarFallback className="text-xs">{entry.post.user?.username.slice(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <p className="text-sm font-semibold text-white truncate">{entry.post.user?.username}</p>
+                    <p className="text-sm font-bold text-white truncate">{entry.post.user?.username}</p>
                     {entry.post.user?.id === rankingsData?.trendHostId && (
                       <Star className="w-3 h-3 fill-yellow-500 text-yellow-500 flex-shrink-0" data-testid="icon-host" />
                     )}
                   </div>
 
-                  <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                  <p className="text-xs text-gray-300 line-clamp-1 mb-2">
                     {entry.post.caption || "No caption"}
                   </p>
 
