@@ -1,4 +1,4 @@
-import { X, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -89,14 +89,22 @@ export default function PostFullscreenModal({
 
   if (!isOpen) return null;
 
-  // Prevent background scrolling when fullscreen is open
+  // Prevent background scrolling when fullscreen is open and hide scrollbars
   useEffect(() => {
     document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.scrollbarWidth = "none";
+    document.documentElement.style.msOverflowStyle = "none";
     document.body.style.overflow = "hidden";
+    document.body.style.scrollbarWidth = "none";
+    document.body.style.msOverflowStyle = "none";
 
     return () => {
       document.documentElement.style.overflow = "";
+      document.documentElement.style.scrollbarWidth = "";
+      document.documentElement.style.msOverflowStyle = "";
       document.body.style.overflow = "";
+      document.body.style.scrollbarWidth = "";
+      document.body.style.msOverflowStyle = "";
     };
   }, []);
 
@@ -179,14 +187,14 @@ export default function PostFullscreenModal({
           }`}
           data-testid="modal-fullscreen-post"
         >
-          {/* Close Button */}
+          {/* Back Button */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 z-50 w-14 h-14 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
+            className="absolute top-6 left-6 z-50 w-14 h-14 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
             data-testid="button-close-fullscreen"
-            aria-label="Close fullscreen"
+            aria-label="Go back"
           >
-            <X className="w-8 h-8" />
+            <ArrowLeft className="w-8 h-8" />
           </button>
 
           {/* Media */}
