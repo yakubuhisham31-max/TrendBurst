@@ -80,7 +80,7 @@ function Router() {
       <Route path="/profile/:username" component={(props) => <ProtectedRoute component={ProfilePage} {...props} />} />
       <Route path="/edit-profile" component={(props) => <ProtectedRoute component={EditProfilePage} {...props} />} />
       <Route path="/instructions/:id" component={InstructionsPage} />
-      <Route path="/rankings/:id" component={RankingsPage} />
+      <Route path="/rankings/:id" component={(props) => <ProtectedRoute component={RankingsPage} {...props} />} />
       <Route path="/feed-chat/:id" component={(props) => <ProtectedRoute component={FeedChatPage} {...props} />} />
       
       <Route component={NotFound} />

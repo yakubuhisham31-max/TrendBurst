@@ -312,7 +312,13 @@ export default function FeedPage() {
               size="icon"
               variant="secondary"
               className="w-10 h-10 rounded-full relative"
-              onClick={() => setLocation(`/feed-chat/${trendId}`)}
+              onClick={() => {
+                if (!user) {
+                  setAuthModalOpen(true);
+                  return;
+                }
+                setLocation(`/feed-chat/${trendId}`);
+              }}
               data-testid="button-feed-chat"
             >
               <MessageSquare className="w-5 h-5" />
@@ -341,7 +347,13 @@ export default function FeedPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setLocation(`/rankings/${trendId}`)}
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              setLocation(`/rankings/${trendId}`);
+            }}
             data-testid="button-rankings"
           >
             <Trophy className="w-4 h-4 mr-2" />
@@ -391,7 +403,13 @@ export default function FeedPage() {
                     isTrendEnded={isTrendEnded}
                     onVoteUp={() => handleVoteUp(post.id)}
                     onVoteDown={() => handleVoteDown(post.id)}
-                    onComment={() => setCommentsPostId(post.id)}
+                    onComment={() => {
+                      if (!user) {
+                        setAuthModalOpen(true);
+                        return;
+                      }
+                      setCommentsPostId(post.id);
+                    }}
                     onDelete={() => handleDeletePost(post.id)}
                     onDisqualify={() => handleDisqualify(post.id)}
                     onFullscreen={() => setFullscreenPostId(post.id)}
