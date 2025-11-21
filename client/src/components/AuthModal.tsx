@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Mail, LogIn } from "lucide-react";
 import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,6 +19,28 @@ export function AuthModal({
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
   const [isSliding, setIsSliding] = useState(false);
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    // Load Google Sign-In SDK
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
+
+  const handleGoogleSignIn = () => {
+    // For now, redirect to login page where users can set up credentials
+    // Future: Implement full Google OAuth flow
+    window.location.href = "/login";
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -33,8 +56,7 @@ export function AuthModal({
             size="lg"
             className="w-full"
             onClick={() => {
-              // For now, redirect to login. In future, implement Google OAuth
-              window.location.href = "/login";
+              setLocation("/login");
             }}
             data-testid="button-auth-email"
           >
@@ -46,10 +68,7 @@ export function AuthModal({
             variant="outline"
             size="lg"
             className="w-full"
-            onClick={() => {
-              // Google OAuth will be implemented here
-              window.location.href = "/api/auth/google";
-            }}
+            onClick={handleGoogleSignIn}
             data-testid="button-auth-google"
           >
             <LogIn className="w-4 h-4 mr-2" />

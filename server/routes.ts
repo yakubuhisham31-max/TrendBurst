@@ -192,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user) {
         // Existing Google user - just log them in
         req.session.userId = user.id;
-        res.json({ user: sanitizeUser(user), isNewUser: false });
+        res.json({ user: sanitizeUser(user), isNewUser: false, redirectTo: "/" });
       } else {
         // New Google user - create account, redirect to complete profile
         const tempUsername = `user_${googleId.substring(0, 10)}`;
@@ -210,6 +210,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Google auth error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET endpoint for Google OAuth callback (for redirect flow)
+  app.get("/api/auth/google/callback", async (req, res) => {
+    try {
+      const { code } = req.query;
+      
+      if (!code) {
+        return res.redirect("/login?error=missing_code");
+      }
+
+      // Since we don't have real Google OAuth credentials yet, redirect to login
+      // In production, you would exchange the code for an ID token here
+      res.redirect("/login");
+    } catch (error) {
+      console.error("Google callback error:", error);
+      res.redirect("/login?error=auth_failed");
     }
   });
 
