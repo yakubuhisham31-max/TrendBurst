@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Menu, Plus, Search, AlertCircle } from "lucide-react";
+import { Menu, Plus, Search, AlertCircle, LogIn } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
+import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
@@ -45,8 +46,9 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
 
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   

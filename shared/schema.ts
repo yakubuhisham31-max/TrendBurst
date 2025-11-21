@@ -140,7 +140,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profilePicture: true,
   categories: true,
   role: true,
-}).partial({ password: true, googleId: true }).refine(
+  profileComplete: true,
+}).partial({ password: true, googleId: true, profileComplete: true }).refine(
   (data) => data.password || data.googleId,
   { message: "Either password or googleId is required" }
 );

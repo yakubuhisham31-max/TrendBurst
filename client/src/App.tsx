@@ -11,7 +11,6 @@ import CompleteProfilePage from "@/pages/CompleteProfilePage";
 import CategorySelectionPage from "@/pages/CategorySelectionPage";
 import RoleSelectionPage from "@/pages/RoleSelectionPage";
 import HomePage from "@/pages/HomePage";
-import { PublicHomePage } from "@/components/PublicHomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
 import EditTrendPage from "@/pages/EditTrendPage";
@@ -63,8 +62,6 @@ function PublicOnlyRoute({ component: Component, ...rest }: { component: any; [k
 }
 
 function Router() {
-  const { user, loading } = useAuth();
-
   return (
     <Switch>
       <Route path="/login" component={(props) => <PublicOnlyRoute component={LoginPage} {...props} />} />
@@ -74,7 +71,7 @@ function Router() {
       
       <Route path="/onboarding/categories" component={(props) => <ProtectedRoute component={CategorySelectionPage} {...props} />} />
       <Route path="/onboarding/role" component={(props) => <ProtectedRoute component={RoleSelectionPage} {...props} />} />
-      <Route path="/" component={() => loading ? <div className="min-h-screen flex items-center justify-center">Loading...</div> : (user ? <HomePage /> : <PublicHomePage />)} />
+      <Route path="/" component={HomePage} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />
