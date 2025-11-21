@@ -208,51 +208,79 @@
 @layer utilities {
   /* Competitive Rankings UI */
   .rank-card-gold {
-    @apply bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/30;
+    background: linear-gradient(to bottom right, rgba(234, 179, 8, 0.1), rgba(180, 83, 9, 0.05));
+    border-color: rgba(234, 179, 8, 0.3);
   }
 
   .rank-card-silver {
-    @apply bg-gradient-to-br from-gray-400/10 to-gray-500/5 border-gray-400/30;
+    background: linear-gradient(to bottom right, rgba(163, 230, 53, 0.1), rgba(107, 114, 128, 0.05));
+    border-color: rgba(163, 230, 53, 0.3);
   }
 
   .rank-card-bronze {
-    @apply bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/30;
+    background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), rgba(180, 83, 9, 0.05));
+    border-color: rgba(249, 115, 22, 0.3);
   }
 
   .rank-badge-gold {
-    @apply bg-gradient-to-br from-yellow-400 to-yellow-600 text-white;
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    color: white;
     box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
   }
 
   .rank-badge-silver {
-    @apply bg-gradient-to-br from-gray-300 to-gray-500 text-white;
+    background: linear-gradient(135deg, #d1d5db 0%, #6b7280 100%);
+    color: white;
     box-shadow: 0 0 12px rgba(209, 213, 219, 0.3);
   }
 
   .rank-badge-bronze {
-    @apply bg-gradient-to-br from-orange-400 to-orange-600 text-white;
+    background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+    color: white;
     box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
   }
 
   .rank-item-card {
-    @apply border border-white/10 bg-gradient-to-r from-white/3 to-transparent backdrop-blur-sm hover:from-white/5 hover:to-white/2 transition-all duration-300;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.03), transparent);
+    backdrop-filter: blur(4px);
+    transition: all 300ms;
+  }
+
+  .rank-item-card:hover {
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
   }
 
   .vote-progress-bar {
-    @apply h-1 bg-white/5 rounded-full overflow-hidden;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 9999px;
+    overflow: hidden;
   }
 
   .vote-progress-fill {
-    @apply h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full;
+    height: 100%;
+    background: linear-gradient(to right, rgb(59, 130, 246), rgb(34, 197, 233));
+    border-radius: 9999px;
     box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
   }
 
   .podium-column {
-    @apply relative flex flex-col items-center gap-3 transition-transform duration-500 hover:scale-105;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: transform 500ms;
+  }
+
+  .podium-column:hover {
+    transform: scale(1.05);
   }
 
   .podium-base {
-    @apply rounded-t-xl border-b border-white/10;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
 
