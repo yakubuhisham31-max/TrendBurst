@@ -1,13 +1,3 @@
-import * as OneSignal from "onesignal-node";
-
-const oneSignalClient = new OneSignal.Client({
-  userKey: process.env.ONESIGNAL_USER_KEY!,
-  app: {
-    appAuthKey: process.env.ONESIGNAL_REST_API_KEY!,
-    appId: process.env.ONESIGNAL_APP_ID!,
-  },
-});
-
 export interface PushNotificationPayload {
   userId: string;
   heading: string;
@@ -23,15 +13,27 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       return;
     }
 
-    // Send notification to specific user
-    const notification = new OneSignal.Notification({
-      contents: { en: payload.content },
-      headings: { en: payload.heading },
-      include_external_user_ids: [payload.userId],
-      data: payload.data || {},
+    // Send notification via OneSignal REST API
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+      },
+      body: JSON.stringify({
+        app_id: process.env.ONESIGNAL_APP_ID,
+        include_external_user_ids: [payload.userId],
+        contents: { en: payload.content },
+        headings: { en: payload.heading },
+        data: payload.data || {},
+      }),
     });
 
-    await oneSignalClient.createNotification(notification);
+    if (!response.ok) {
+      console.error("OneSignal API error:", await response.text());
+      return;
+    }
+
     console.log(`Push notification sent to user ${payload.userId}`);
   } catch (error) {
     console.error("Failed to send OneSignal push notification:", error);

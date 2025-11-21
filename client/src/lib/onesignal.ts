@@ -1,29 +1,38 @@
-import OneSignal from "onesignal-js";
+declare global {
+  interface Window {
+    OneSignal?: {
+      push: (fn: () => void) => void;
+      init: (config: any) => void;
+      setExternalUserId: (userId: string) => void;
+      showSlidedownPrompt: () => void;
+    };
+  }
+}
 
 export function initializeOneSignal(userId: string) {
   try {
-    // OneSignal is loaded from CDN in index.html
     const onesignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
-    if (!onesignalAppId || !window.OneSignal) {
-      console.log("OneSignal not configured");
+    if (!onesignalAppId) {
+      console.log("OneSignal app ID not configured");
       return;
     }
 
-    // Initialize OneSignal
-    window.OneSignal.push(function () {
-      window.OneSignal.init({
+    if (!window.OneSignal) {
+      console.log("OneSignal SDK not loaded");
+      return;
+    }
+
+    window.OneSignal.push(() => {
+      window.OneSignal!.init({
         appId: onesignalAppId,
         allowLocalhostAsSecureOrigin: true,
       });
 
-      // Set external user ID for tracking
-      window.OneSignal.setExternalUserId(userId);
+      window.OneSignal!.setExternalUserId(userId);
+      window.OneSignal!.showSlidedownPrompt();
 
-      // Request notification permission
-      window.OneSignal.showSlidedownPrompt();
-
-      console.log("OneSignal initialized");
+      console.log("OneSignal initialized for user:", userId);
     });
   } catch (error) {
     console.error("Failed to initialize OneSignal:", error);
@@ -32,10 +41,14 @@ export function initializeOneSignal(userId: string) {
 
 export function updateOneSignalUserId(userId: string) {
   try {
-    if (!window.OneSignal) return;
+    if (!window.OneSignal) {
+      console.log("OneSignal not available");
+      return;
+    }
 
-    window.OneSignal.push(function () {
-      window.OneSignal.setExternalUserId(userId);
+    window.OneSignal.push(() => {
+      window.OneSignal!.setExternalUserId(userId);
+      console.log("OneSignal user ID updated:", userId);
     });
   } catch (error) {
     console.error("Failed to update OneSignal user ID:", error);
