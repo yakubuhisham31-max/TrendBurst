@@ -7,9 +7,11 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import SignupPage from "@/pages/SignupPage";
+import CompleteProfilePage from "@/pages/CompleteProfilePage";
 import CategorySelectionPage from "@/pages/CategorySelectionPage";
 import RoleSelectionPage from "@/pages/RoleSelectionPage";
 import HomePage from "@/pages/HomePage";
+import { PublicHomePage } from "@/components/PublicHomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
 import EditTrendPage from "@/pages/EditTrendPage";
@@ -61,15 +63,18 @@ function PublicOnlyRoute({ component: Component, ...rest }: { component: any; [k
 }
 
 function Router() {
+  const { user, loading } = useAuth();
+
   return (
     <Switch>
       <Route path="/login" component={(props) => <PublicOnlyRoute component={LoginPage} {...props} />} />
       <Route path="/register" component={(props) => <PublicOnlyRoute component={RegisterPage} {...props} />} />
       <Route path="/signup" component={(props) => <PublicOnlyRoute component={SignupPage} {...props} />} />
+      <Route path="/complete-profile" component={(props) => <ProtectedRoute component={CompleteProfilePage} {...props} />} />
       
       <Route path="/onboarding/categories" component={(props) => <ProtectedRoute component={CategorySelectionPage} {...props} />} />
       <Route path="/onboarding/role" component={(props) => <ProtectedRoute component={RoleSelectionPage} {...props} />} />
-      <Route path="/" component={(props) => <ProtectedRoute component={HomePage} {...props} />} />
+      <Route path="/" component={() => loading ? <div className="min-h-screen flex items-center justify-center">Loading...</div> : (user ? <HomePage /> : <PublicHomePage />)} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />

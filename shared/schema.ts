@@ -136,10 +136,14 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   fullName: true,
   password: true,
+  googleId: true,
   profilePicture: true,
   categories: true,
   role: true,
-});
+}).partial({ password: true, googleId: true }).refine(
+  (data) => data.password || data.googleId,
+  { message: "Either password or googleId is required" }
+);
 
 export const insertTrendSchema = createInsertSchema(trends).omit({
   id: true,

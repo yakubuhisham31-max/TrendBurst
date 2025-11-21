@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const hashedPassword = await hashPassword(password);
+      const hashedPassword = password ? await hashPassword(password) : undefined;
       const user = await storage.createUser({
         username,
         email,
@@ -93,6 +93,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      if (!user.password) {
+        return res.status(401).json({ message: "Please use Google login for this account" });
       }
 
       const isValidPassword = await comparePassword(password, user.password);
@@ -1185,8 +1189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.getUser(req.session.userId!);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      if (!user || !user.password) {
+        return res.status(404).json({ message: "User not found or no password set" });
       }
 
       const passwordMatch = await comparePassword(currentPassword, user.password);
