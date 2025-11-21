@@ -13,6 +13,7 @@ import {
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { R2StorageService } from "./r2Storage";
+import { extractMentions } from "@/lib/mentions";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -811,6 +812,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             postId: comment.postId,
             trendId: comment.trendId,
           });
+        }
+      }
+      
+      // Handle @mentions in comment
+      const mentions = extractMentions(comment.text);
+      if (mentions.length > 0) {
+        for (const username of mentions) {
+          const mentionedUser = await storage.getUserByUsername(username);
+          if (mentionedUser && mentionedUser.id !== req.session.userId) {
+            await storage.createNotification({
+              userId: mentionedUser.id,
+              actorId: req.session.userId!,
+              type: 'mention',
+              commentId: comment.id,
+              postId: comment.postId,
+              trendId: comment.trendId,
+            });
+          }
         }
       }
       
