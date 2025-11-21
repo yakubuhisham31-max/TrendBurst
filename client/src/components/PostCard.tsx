@@ -363,7 +363,7 @@ export default function PostCard({
                 loop
                 muted={isMuted}
                 playsInline
-                onClick={handleVideoTap}
+                onClick={onFullscreen}
                 data-testid="video-post"
               />
               
