@@ -14,12 +14,12 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     }
 
     // Send notification via OneSignal REST API
-    // Using the API key directly in Authorization header as per OneSignal docs
+    // OneSignal REST API expects the key directly in Authorization header
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+        "Authorization": process.env.ONESIGNAL_REST_API_KEY,
       },
       body: JSON.stringify({
         app_id: process.env.ONESIGNAL_APP_ID,
