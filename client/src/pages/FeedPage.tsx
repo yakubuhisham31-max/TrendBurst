@@ -377,8 +377,7 @@ export default function FeedPage() {
                     onClick={() => setAuthModalOpen(true)}
                   >
                     <div className="text-center space-y-2">
-                      <p className="text-white font-bold text-lg">Sign in to view</p>
-                      <p className="text-white/90 text-sm">Click to sign in</p>
+                      <p className="text-white font-bold text-lg">Tap to view</p>
                     </div>
                   </div>
                 )}
