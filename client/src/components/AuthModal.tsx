@@ -59,6 +59,16 @@ export function AuthModal({
         return;
       }
 
+      // Validate Client ID format (should NOT start with GOCSPX- which is a client secret)
+      if (clientId.startsWith('GOCSPX-')) {
+        toast({
+          title: "Invalid Google Credentials",
+          description: "Please provide the Client ID (not Client Secret). Get it from Google Cloud Console.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Initialize Google Sign-In
       if (!window.google) {
         toast({
