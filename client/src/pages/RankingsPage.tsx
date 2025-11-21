@@ -238,6 +238,7 @@ export default function RankingsPage() {
           post={rankingsData.rankings.find((e) => e.post.id === fullscreenPostId)?.post!}
           isOpen={!!fullscreenPostId}
           onClose={() => setFullscreenPostId(null)}
+          rank={rankingsData.rankings.find((e) => e.post.id === fullscreenPostId)?.rank}
         />
       )}
     </div>

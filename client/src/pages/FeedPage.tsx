@@ -420,6 +420,7 @@ export default function FeedPage() {
           onVoteUp={() => handleVoteUp(fullscreenPostId)}
           onVoteDown={() => handleVoteDown(fullscreenPostId)}
           userVoted={posts.find((p) => p.id === fullscreenPostId)?.userVoted}
+          rank={voteRankMap.get(fullscreenPostId)}
         />
       )}
     </div>

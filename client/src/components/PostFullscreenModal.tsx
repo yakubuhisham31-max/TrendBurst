@@ -18,6 +18,7 @@ interface PostFullscreenModalProps {
   onVoteUp?: (postId: string) => void;
   onVoteDown?: (postId: string) => void;
   userVoted?: boolean;
+  rank?: number;
 }
 
 export default function PostFullscreenModal({
@@ -28,10 +29,20 @@ export default function PostFullscreenModal({
   onVoteUp,
   onVoteDown,
   userVoted = false,
+  rank,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const getRankOrdinal = (num: number) => {
+    const j = num % 10;
+    const k = num % 100;
+    if (j === 1 && k !== 11) return `${num}st`;
+    if (j === 2 && k !== 12) return `${num}nd`;
+    if (j === 3 && k !== 13) return `${num}rd`;
+    return `${num}th`;
+  };
 
   // Check if post is saved
   const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
@@ -127,7 +138,14 @@ export default function PostFullscreenModal({
                   <AvatarFallback>{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">{post.user?.username}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-white truncate">{post.user?.username}</p>
+                    {rank && (
+                      <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
+                        {getRankOrdinal(rank)}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {post.createdAt && formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                   </p>
