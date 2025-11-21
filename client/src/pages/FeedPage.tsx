@@ -440,6 +440,11 @@ export default function FeedPage() {
           }}
         />
       )}
+
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AuthModal } from "@/components/AuthModal";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ export default function PostCommentsDialog({
 }: PostCommentsDialogProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -98,11 +100,7 @@ export default function PostCommentsDialog({
 
   const handleSubmit = () => {
     if (!user) {
-      toast({
-        title: "Login required",
-        description: "Please log in to comment.",
-        variant: "destructive",
-      });
+      setAuthModalOpen(true);
       return;
     }
     if (newComment.trim()) {
