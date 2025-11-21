@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   checkAuth: () => Promise<void>;
+  isLoggedOut: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await refetch();
   };
 
+  const isLoggedOut = () => !user && !isLoading;
+
   return (
     <AuthContext.Provider
       value={{
@@ -80,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         register,
         checkAuth,
+        isLoggedOut,
       }}
     >
       {children}
