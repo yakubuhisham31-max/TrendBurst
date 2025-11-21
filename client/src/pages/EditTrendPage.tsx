@@ -1,4 +1,4 @@
-import { useLocation, useRoute } from "wouter";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +7,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Trend } from "@shared/schema";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-export default function EditTrendPage() {
+export default function EditTrendPage({ params }: { params: any }) {
   const [, setLocation] = useLocation();
-  const [match, params] = useRoute("/edit-trend/:id");
   const { user } = useAuth();
   const { toast } = useToast();
   const trendId = params?.id as string;
@@ -51,8 +50,6 @@ export default function EditTrendPage() {
       });
     },
   });
-
-  if (!match) return null;
 
   if (isLoading) {
     return (
