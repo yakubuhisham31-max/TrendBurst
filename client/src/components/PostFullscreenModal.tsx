@@ -1,4 +1,4 @@
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -6,6 +6,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import ShareDialog from "./ShareDialog";
+import PostCommentsDialog from "./PostCommentsDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import type { Post, User } from "@shared/schema";
@@ -38,6 +39,7 @@ export default function PostFullscreenModal({
   onPreviousPost,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -329,10 +331,7 @@ export default function PostFullscreenModal({
                 size="sm"
                 variant="ghost"
                 className="gap-2 text-white hover:text-primary"
-                onClick={() => {
-                  onComment?.(post.id);
-                  onClose();
-                }}
+                onClick={() => setCommentsOpen(true)}
                 data-testid="button-comment-fullscreen"
               >
                 <MessageCircle className="w-4 h-4" />
@@ -370,6 +369,37 @@ export default function PostFullscreenModal({
         title={`Check out this post by ${post.user?.username}`}
         description={post.caption || undefined}
       />
+
+      {/* Comments Dialog - Stays in fullscreen mode */}
+      {commentsOpen && post.trendId && (
+        <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-background rounded-lg w-full h-full max-w-md shadow-lg flex flex-col relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setCommentsOpen(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+              aria-label="Close comments"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Comments Header */}
+            <div className="border-b border-border/20 px-4 py-3 flex-shrink-0">
+              <h2 className="text-lg font-bold text-white">Comments</h2>
+            </div>
+
+            {/* Comments Content */}
+            <div className="flex-1 overflow-y-auto">
+              <PostCommentsDialog
+                postId={post.id}
+                trendId={post.trendId}
+                open={commentsOpen}
+                onOpenChange={setCommentsOpen}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
