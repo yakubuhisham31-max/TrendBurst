@@ -16,6 +16,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 34999
+externalPort = 3002
+
+[[ports]]
 localPort = 36241
 externalPort = 3001
 
@@ -30,10 +34,6 @@ externalPort = 4200
 [[ports]]
 localPort = 44489
 externalPort = 3000
-
-[[ports]]
-localPort = 45117
-externalPort = 3002
 
 [env]
 PORT = "5000"
@@ -78,4 +78,4 @@ R2_ENDPOINT = "https://ca1f17100b850585f2cfa3678eab748e.r2.cloudflarestorage.com
 R2_BUCKET_NAME = "trendx-media"
 R2_PUBLIC_DOMAIN = "https://pub-f7315c49d83c402e911f51afd971a703.r2.dev"
 VITE_ONESIGNAL_APP_ID = "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9"
-VITE_GOOGLE_CLIENT_ID = "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"
+VITE_GOOGLE_CLIENT_ID = "261187831632-0nrmdddainssf5kc1e60i37r2g8qugr2.apps.googleusercontent.com"
