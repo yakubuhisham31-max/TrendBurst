@@ -59,6 +59,16 @@ export default function FeedPage() {
   const userHasPosted = posts.some(post => post.userId === user?.id);
   const unreadChatCount = trendId && notificationCounts?.chat?.[trendId] || 0;
 
+  // Pause all background videos when fullscreen opens
+  useEffect(() => {
+    const allVideos = document.querySelectorAll("video");
+    allVideos.forEach((video) => {
+      if (fullscreenPostId) {
+        video.pause();
+      }
+    });
+  }, [fullscreenPostId]);
+
   // Vote increment mutation
   const voteUpMutation = useMutation({
     mutationFn: async (postId: string) => {
