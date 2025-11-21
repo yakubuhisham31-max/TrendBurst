@@ -42,6 +42,7 @@ interface PostCardProps {
   onComment?: () => void;
   onDelete?: () => void;
   onDisqualify?: () => void;
+  onFullscreen?: () => void;
 }
 
 const getRankBadge = (rank: number) => {
@@ -72,6 +73,7 @@ export default function PostCard({
   onComment,
   onDelete,
   onDisqualify,
+  onFullscreen,
 }: PostCardProps) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
