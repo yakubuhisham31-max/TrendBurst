@@ -27,11 +27,14 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
 
     console.log(`[OneSignal] Request body:`, JSON.stringify(requestBody, null, 2));
 
+    // OneSignal v1 REST API requires Basic auth with base64-encoded "key:"
+    const basicAuth = Buffer.from(`${process.env.ONESIGNAL_REST_API_KEY}:`).toString('base64');
+    
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}:`,
+        "Authorization": `Basic ${basicAuth}`,
       },
       body: JSON.stringify(requestBody),
     });
