@@ -13,15 +13,13 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       return;
     }
 
-    // Encode REST API key for Basic auth
-    const basicAuth = Buffer.from(`${process.env.ONESIGNAL_REST_API_KEY}:`).toString('base64');
-
     // Send notification via OneSignal REST API
+    // Using the API key directly in Authorization header as per OneSignal docs
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${basicAuth}`,
+        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
       },
       body: JSON.stringify({
         app_id: process.env.ONESIGNAL_APP_ID,
@@ -33,7 +31,8 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     });
 
     if (!response.ok) {
-      console.error("OneSignal API error:", await response.text());
+      const error = await response.text();
+      console.error("OneSignal API error:", error);
       return;
     }
 
