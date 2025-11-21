@@ -125,7 +125,7 @@ export default function RankingsPage() {
           <div className="flex flex-col flex-1">
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" />
-              <h1 className="text-lg font-bold text-white">{rankingsData.trendName}</h1>
+              <h1 className="text-lg font-bold text-primary">{rankingsData.trendName}</h1>
             </div>
             <p className="text-xs text-muted-foreground font-medium">Hosted by <span className="text-foreground font-semibold">{rankingsData.trendHostUsername}</span></p>
           </div>
