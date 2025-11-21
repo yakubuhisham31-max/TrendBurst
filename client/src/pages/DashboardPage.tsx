@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3, Edit } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3, Edit, Play, Pause } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Trend } from "@shared/schema";
 import { useState } from "react";
@@ -31,7 +31,9 @@ interface TrendAnalytics {
     rank: number;
     username: string;
     votes: number;
-    imageUrl: string;
+    imageUrl?: string;
+    mediaUrl?: string;
+    mediaType?: string;
   }>;
   isActive: boolean;
   createdAt: string;
@@ -42,6 +44,7 @@ export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [selectedTrendId, setSelectedTrendId] = useState<string | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -315,25 +318,69 @@ export default function DashboardPage() {
                             <div>
                               <h4 className="font-semibold mb-3">Top Performing Posts</h4>
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {trendAnalytics.topPosts.map((post) => (
-                                  <div key={post.rank} className="bg-muted rounded-lg p-3 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-medium text-muted-foreground">
-                                        #{post.rank}
-                                      </span>
-                                      <div className="flex items-center gap-1 text-sm font-medium">
-                                        <ThumbsUp className="w-3 h-3" />
-                                        <span>{post.votes}</span>
+                                {trendAnalytics.topPosts.map((post) => {
+                                  const mediaUrl = post.mediaUrl || post.imageUrl || "";
+                                  const mediaType = post.mediaType || "image";
+                                  const videoId = `video-${trendAnalytics.trendId}-${post.rank}`;
+                                  const isPlaying = playingVideoId === videoId;
+                                  
+                                  return (
+                                    <div key={post.rank} className="bg-muted rounded-lg p-3 space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                          #{post.rank}
+                                        </span>
+                                        <div className="flex items-center gap-1 text-sm font-medium">
+                                          <ThumbsUp className="w-3 h-3" />
+                                          <span>{post.votes}</span>
+                                        </div>
                                       </div>
+                                      
+                                      <div className="relative w-full aspect-square rounded overflow-hidden bg-black">
+                                        {mediaType === "video" ? (
+                                          <>
+                                            <video
+                                              id={videoId}
+                                              src={mediaUrl}
+                                              className="w-full h-full object-cover"
+                                              onPlay={() => setPlayingVideoId(videoId)}
+                                              onPause={() => setPlayingVideoId(null)}
+                                            />
+                                            <button
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                const video = document.getElementById(videoId) as HTMLVideoElement;
+                                                if (video) {
+                                                  if (isPlaying) {
+                                                    video.pause();
+                                                  } else {
+                                                    video.play();
+                                                  }
+                                                }
+                                              }}
+                                              className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors"
+                                              data-testid={`button-play-video-${post.rank}`}
+                                            >
+                                              {isPlaying ? (
+                                                <Pause className="w-8 h-8 text-white" />
+                                              ) : (
+                                                <Play className="w-8 h-8 text-white" />
+                                              )}
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <img
+                                            src={mediaUrl}
+                                            alt={`Top post by ${post.username}`}
+                                            className="w-full h-full object-cover"
+                                          />
+                                        )}
+                                      </div>
+                                      
+                                      <p className="text-sm font-medium">@{post.username}</p>
                                     </div>
-                                    <img
-                                      src={post.imageUrl}
-                                      alt={`Top post by ${post.username}`}
-                                      className="w-full aspect-square object-cover rounded"
-                                    />
-                                    <p className="text-sm font-medium">@{post.username}</p>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}
