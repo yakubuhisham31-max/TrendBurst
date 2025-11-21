@@ -109,14 +109,24 @@ export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id), // who receives the notification
   actorId: varchar("actor_id").references(() => users.id), // who triggered the notification (can be null for system notifications)
-  type: text("type").notNull(), // comment_on_post, new_post_from_following, new_trend_from_following, new_follower, reply_to_comment, vote_on_post, post_in_your_trend, earned_points, bonus_reward
+  type: text("type").notNull(), // 14 notification types
   postId: varchar("post_id").references(() => posts.id),
   trendId: varchar("trend_id").references(() => trends.id),
   commentId: varchar("comment_id").references(() => comments.id),
-  voteCount: integer("vote_count"), // for vote notifications
-  pointsEarned: integer("points_earned"), // for earned_points and bonus_reward notifications
-  isRead: integer("is_read").default(0), // 0 = unread, 1 = read
+  voteCount: integer("vote_count"),
+  pointsEarned: integer("points_earned"),
+  variant: integer("variant"), // for rotating variants
+  isRead: integer("is_read").default(0),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const notificationTracking = pgTable("notification_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(),
+  lastSentAt: timestamp("last_sent_at").defaultNow(),
+  countToday: integer("count_today").default(1),
+  lastVariant: integer("last_variant").default(0),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -173,6 +183,25 @@ export const insertViewTrackingSchema = createInsertSchema(viewTracking).omit({
   id: true,
   lastViewedAt: true,
 });
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Trend = typeof trends.$inferSelect;
+export type InsertTrend = z.infer<typeof insertTrendSchema>;
+export type Post = typeof posts.$inferSelect;
+export type InsertPost = z.infer<typeof insertPostSchema>;
+export type Vote = typeof votes.$inferSelect;
+export type InsertVote = z.infer<typeof insertVoteSchema>;
+export type Comment = typeof comments.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type Follow = typeof follows.$inferSelect;
+export type InsertFollow = z.infer<typeof insertFollowSchema>;
+export type ViewTracking = typeof viewTracking.$inferSelect;
+export type InsertViewTracking = z.infer<typeof insertViewTrackingSchema>;
+export type SavedTrend = typeof savedTrends.$inferSelect;
+export type SavedPost = typeof savedPosts.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
 
 export const insertSavedTrendSchema = createInsertSchema(savedTrends).omit({
   id: true,
