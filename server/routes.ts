@@ -849,12 +849,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             commentId: comment.id,
           });
           // Send push notification
-          await sendPushNotification({
-            userId: post.userId,
-            heading: "New Comment",
-            content: `${commenter?.username} commented on your post`,
-            data: { postId: comment.postId, trendId: comment.trendId },
-          });
+          if (commenter?.username) {
+            await sendPushNotification({
+              userId: post.userId,
+              heading: "New Comment",
+              content: `${commenter.username} commented on your post`,
+              data: { postId: String(comment.postId), trendId: String(comment.trendId) },
+            });
+          }
         }
       }
       
@@ -871,12 +873,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             trendId: comment.trendId,
           });
           // Send push notification
-          await sendPushNotification({
-            userId: parentComment.userId,
-            heading: "Reply to Comment",
-            content: `${commenter?.username} replied to your comment`,
-            data: { postId: comment.postId, trendId: comment.trendId },
-          });
+          if (commenter?.username) {
+            await sendPushNotification({
+              userId: parentComment.userId,
+              heading: "Reply to Comment",
+              content: `${commenter.username} replied to your comment`,
+              data: { postId: String(comment.postId), trendId: String(comment.trendId) },
+            });
+          }
         }
       }
       
@@ -895,12 +899,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               trendId: comment.trendId,
             });
             // Send push notification
-            await sendPushNotification({
-              userId: mentionedUser.id,
-              heading: "Mentioned",
-              content: `${commenter?.username} mentioned you in a comment`,
-              data: { postId: comment.postId, trendId: comment.trendId },
-            });
+            if (commenter?.username) {
+              await sendPushNotification({
+                userId: mentionedUser.id,
+                heading: "Mentioned",
+                content: `${commenter.username} mentioned you in a comment`,
+                data: { postId: String(comment.postId), trendId: String(comment.trendId) },
+              });
+            }
           }
         }
       }
