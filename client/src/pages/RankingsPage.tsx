@@ -1,11 +1,13 @@
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Trophy, Loader2, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import PostFullscreenModal from "@/components/PostFullscreenModal";
 import type { Post, User } from "@shared/schema";
 
 interface RankingEntry {
@@ -26,6 +28,7 @@ export default function RankingsPage() {
   const { id: trendId } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
+  const [fullscreenPostId, setFullscreenPostId] = useState<string | null>(null);
 
   const { data: rankingsData, isLoading } = useQuery<RankingsResponse>({
     queryKey: [`/api/rankings/${trendId}`],
@@ -174,6 +177,7 @@ export default function RankingsPage() {
                 className={`p-4 flex items-center gap-4 cursor-pointer hover-elevate ${
                   entry.post.userId === currentUser?.id ? 'border-primary bg-primary/5' : ''
                 }`}
+                onClick={() => setFullscreenPostId(entry.post.id)}
                 data-testid={`ranking-item-${entry.rank}`}
               >
                 <Badge
@@ -186,15 +190,23 @@ export default function RankingsPage() {
                   entry.post.mediaType === "video" && entry.post.mediaUrl ? (
                     <video
                       src={entry.post.mediaUrl}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className="w-16 h-16 rounded-lg object-cover cursor-pointer"
                       muted
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFullscreenPostId(entry.post.id);
+                      }}
                       data-testid={`video-rank-${entry.rank}`}
                     />
                   ) : (
                     <img
                       src={entry.post.imageUrl || entry.post.mediaUrl || ""}
                       alt={entry.post.user?.username}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className="w-16 h-16 rounded-lg object-cover cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFullscreenPostId(entry.post.id);
+                      }}
                       data-testid={`img-rank-${entry.rank}`}
                     />
                   )
@@ -220,6 +232,14 @@ export default function RankingsPage() {
           </div>
         )}
       </main>
+
+      {fullscreenPostId && rankingsData && (
+        <PostFullscreenModal
+          post={rankingsData.rankings.find((e) => e.post.id === fullscreenPostId)?.post!}
+          isOpen={!!fullscreenPostId}
+          onClose={() => setFullscreenPostId(null)}
+        />
+      )}
     </div>
   );
 }

@@ -384,6 +384,7 @@ export default function FeedPage() {
               onComment={() => setCommentsPostId(post.id)}
               onDelete={() => handleDeletePost(post.id)}
               onDisqualify={() => handleDisqualify(post.id)}
+              onFullscreen={() => setFullscreenPostId(post.id)}
             />
           ))
         )}
@@ -407,6 +408,18 @@ export default function FeedPage() {
             }
           }}
           highlightCommentId={highlightCommentId || undefined}
+        />
+      )}
+
+      {fullscreenPostId && (
+        <PostFullscreenModal
+          post={posts.find((p) => p.id === fullscreenPostId)!}
+          isOpen={!!fullscreenPostId}
+          onClose={() => setFullscreenPostId(null)}
+          onComment={setCommentsPostId}
+          onVoteUp={() => handleVoteUp(fullscreenPostId)}
+          onVoteDown={() => handleVoteDown(fullscreenPostId)}
+          userVoted={posts.find((p) => p.id === fullscreenPostId)?.userVoted}
         />
       )}
     </div>

@@ -206,7 +206,7 @@ export default function PostFullscreenModal({
         onOpenChange={setShareOpen} 
         url={`/feed/${post.trendId || ""}#post-${post.id}`}
         title={`Check out this post by ${post.user?.username}`}
-        description={post.caption}
+        description={post.caption || undefined}
       />
     </>
   );
