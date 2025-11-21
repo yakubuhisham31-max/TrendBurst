@@ -91,20 +91,23 @@ export default function PostFullscreenModal({
 
   // Prevent background scrolling when fullscreen is open and hide scrollbars
   useEffect(() => {
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.scrollbarWidth = "none";
-    document.documentElement.style.msOverflowStyle = "none";
-    document.body.style.overflow = "hidden";
-    document.body.style.scrollbarWidth = "none";
-    document.body.style.msOverflowStyle = "none";
+    const htmlStyle = document.documentElement.style as any;
+    const bodyStyle = document.body.style as any;
+    
+    htmlStyle.overflow = "hidden";
+    htmlStyle.scrollbarWidth = "none";
+    htmlStyle.msOverflowStyle = "none";
+    bodyStyle.overflow = "hidden";
+    bodyStyle.scrollbarWidth = "none";
+    bodyStyle.msOverflowStyle = "none";
 
     return () => {
-      document.documentElement.style.overflow = "";
-      document.documentElement.style.scrollbarWidth = "";
-      document.documentElement.style.msOverflowStyle = "";
-      document.body.style.overflow = "";
-      document.body.style.scrollbarWidth = "";
-      document.body.style.msOverflowStyle = "";
+      htmlStyle.overflow = "";
+      htmlStyle.scrollbarWidth = "";
+      htmlStyle.msOverflowStyle = "";
+      bodyStyle.overflow = "";
+      bodyStyle.scrollbarWidth = "";
+      bodyStyle.msOverflowStyle = "";
     };
   }, []);
 

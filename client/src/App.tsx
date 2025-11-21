@@ -12,6 +12,7 @@ import RoleSelectionPage from "@/pages/RoleSelectionPage";
 import HomePage from "@/pages/HomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
+import EditTrendPage from "@/pages/EditTrendPage";
 import FeedPage from "@/pages/FeedPage";
 import ProfilePage from "@/pages/ProfilePage";
 import EditProfilePage from "@/pages/EditProfilePage";
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/" component={(props) => <ProtectedRoute component={HomePage} {...props} />} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
+      <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />
       <Route path="/feed/:id" component={(props) => <ProtectedRoute component={FeedPage} {...props} />} />
       <Route path="/profile" component={(props) => <ProtectedRoute component={ProfilePage} {...props} />} />
       <Route path="/profile/:username" component={(props) => <ProtectedRoute component={ProfilePage} {...props} />} />
