@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap } from "lucide-react";
+import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import PostFullscreenModal from "@/components/PostFullscreenModal";
@@ -262,7 +263,17 @@ export default function RankingsPage() {
         {/* Rankings List */}
         {restOfRankings.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider">More Rankings</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider">More Rankings</h2>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Percentage shows votes relative to the #1 ranked post</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             {restOfRankings.map((entry) => (
               <div
                 key={entry.post.id}
@@ -337,7 +348,16 @@ export default function RankingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-bold text-primary">{entry.post.votes || 0} votes</p>
-                      <p className="text-xs text-muted-foreground">{Math.round((((entry.post.votes || 0) / maxVotes) || 0) * 100)}%</p>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-muted-foreground cursor-help hover:text-foreground transition-colors">
+                            {Math.round((((entry.post.votes || 0) / maxVotes) || 0) * 100)}%
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" align="end">
+                          <p className="text-xs">Votes compared to #1</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>
