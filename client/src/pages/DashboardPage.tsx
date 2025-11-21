@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3 } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3, Edit } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Trend } from "@shared/schema";
 import { useState } from "react";
@@ -231,6 +231,14 @@ export default function DashboardPage() {
                         >
                           <BarChart3 className="w-4 h-4 mr-2" />
                           {selectedTrendId === trend.id ? "Hide" : "Analytics"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLocation(`/edit-trend/${trend.id}`)}
+                          data-testid={`button-edit-trend-${trend.id}`}
+                        >
+                          <Edit className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
