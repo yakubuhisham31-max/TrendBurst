@@ -2,12 +2,13 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { Trend } from "@shared/schema";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function EditTrendPage({ params }: { params: any }) {
   const [, setLocation] = useLocation();
@@ -15,6 +16,21 @@ export default function EditTrendPage({ params }: { params: any }) {
   const { toast } = useToast();
   const trendId = params?.id as string;
   const [instructions, setInstructions] = useState("");
+  const [referenceMedia, setReferenceMedia] = useState<string[]>([]);
+  const [newReferenceFiles, setNewReferenceFiles] = useState<File[]>([]);
+  const [referencePreviewUrls, setReferencePreviewUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const referencePreviewsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    referencePreviewsRef.current = referencePreviewUrls;
+  }, [referencePreviewUrls]);
+
+  useEffect(() => {
+    return () => {
+      referencePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const { data: trend, isLoading } = useQuery<Trend>({
     queryKey: ["/api/trends", trendId],
@@ -24,28 +40,70 @@ export default function EditTrendPage({ params }: { params: any }) {
       if (!res.ok) throw new Error("Failed to fetch trend");
       const data = await res.json();
       setInstructions(data.instructions || "");
+      setReferenceMedia(data.referenceMedia || []);
       return data;
     },
   });
 
+  const handleAddReferenceMedia = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleReferenceFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    for (const file of files) {
+      setNewReferenceFiles(prev => [...prev, file]);
+      const previewUrl = createPreviewURL(file);
+      setReferencePreviewUrls(prev => [...prev, previewUrl]);
+    }
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveReferenceMedia = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      setReferenceMedia(prev => prev.filter((_, i) => i !== index));
+    } else {
+      const adjustedIndex = index - referenceMedia.length;
+      const oldUrl = referencePreviewUrls[index];
+      if (oldUrl) URL.revokeObjectURL(oldUrl);
+      setNewReferenceFiles(prev => prev.filter((_, i) => i !== adjustedIndex));
+      setReferencePreviewUrls(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const updateMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("PATCH", `/api/trends/${trendId}/instructions`, {
+      let updatedReferenceMedia = [...referenceMedia];
+
+      // Upload new reference media files to R2 if provided
+      if (newReferenceFiles.length > 0) {
+        const uploadedUrls = await Promise.all(
+          newReferenceFiles.map(file => uploadToR2(file, 'reference-media'))
+        );
+        updatedReferenceMedia = [...updatedReferenceMedia, ...uploadedUrls];
+      }
+
+      return apiRequest("PATCH", `/api/trends/${trendId}`, {
         instructions,
+        referenceMedia: updatedReferenceMedia,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trends", trendId] });
       toast({
-        title: "Instructions updated",
-        description: "Trend instructions have been saved",
+        title: "Trend updated",
+        description: "Instructions and reference media have been saved",
       });
       setLocation("/dashboard");
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update instructions",
+        description: "Failed to update trend",
         variant: "destructive",
       });
     },
@@ -69,6 +127,11 @@ export default function EditTrendPage({ params }: { params: any }) {
     );
   }
 
+  const allReferencePreviews = [
+    ...referenceMedia.map(url => ({ url, type: "existing" as const })),
+    ...referencePreviewUrls.slice(referenceMedia.length).map(url => ({ url, type: "new" as const }))
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -81,7 +144,7 @@ export default function EditTrendPage({ params }: { params: any }) {
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <h1 className="text-xl font-bold">Edit Trend Instructions</h1>
+          <h1 className="text-xl font-bold">Edit Trend</h1>
         </div>
       </header>
 
@@ -97,7 +160,7 @@ export default function EditTrendPage({ params }: { params: any }) {
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 placeholder="Enter trend instructions..."
-                className="w-full h-64 p-3 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                className="w-full h-40 p-3 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 data-testid="textarea-instructions"
               />
               <p className="text-xs text-muted-foreground mt-2">
@@ -105,14 +168,69 @@ export default function EditTrendPage({ params }: { params: any }) {
               </p>
             </div>
 
+            <div>
+              <label className="text-sm font-medium mb-2 block">Reference/Sponsor Media</label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Add images or videos for reference or sponsor content
+              </p>
+
+              {allReferencePreviews.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {allReferencePreviews.map((item, index) => (
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
+                      {item.url.match(/\.(mp4|webm|mov)$/i) ? (
+                        <video
+                          src={item.url}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={item.url}
+                          alt="Reference media"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <button
+                        onClick={() => handleRemoveReferenceMedia(index, item.type === "existing")}
+                        className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        data-testid={`button-remove-reference-${index}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleReferenceFileSelect}
+                className="hidden"
+                data-testid="input-reference-media"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddReferenceMedia}
+                className="w-full"
+                data-testid="button-add-reference-media"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Add Reference Media
+              </Button>
+            </div>
+
             <div className="flex gap-3">
               <Button
                 onClick={() => updateMutation.mutate()}
                 disabled={updateMutation.isPending}
-                data-testid="button-save-instructions"
+                data-testid="button-save-trend"
               >
                 {updateMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Save Instructions
+                Save Changes
               </Button>
               <Button
                 variant="outline"
