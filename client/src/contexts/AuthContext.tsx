@@ -31,7 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: 1,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Always check for fresh session on mount
+    gcTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   useEffect(() => {
