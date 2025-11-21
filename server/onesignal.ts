@@ -31,7 +31,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": process.env.ONESIGNAL_REST_API_KEY,
+        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}:`,
       },
       body: JSON.stringify(requestBody),
     });
