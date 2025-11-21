@@ -492,6 +492,74 @@ export default function CreateTrendPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="end-date">End Date *</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="pl-9"
+                  data-testid="input-end-date"
+                  required
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set an end date for this trend (required)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cover Picture</Label>
+              {coverPreviewUrl ? (
+                <div className="relative h-48 rounded-lg overflow-hidden border-2 border-border">
+                  <img 
+                    src={coverPreviewUrl} 
+                    alt="Cover" 
+                    className="w-full h-full object-cover"
+                    data-testid="preview-cover"
+                  />
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="absolute top-2 right-2"
+                    onClick={() => {
+                      URL.revokeObjectURL(coverPreviewUrl);
+                      setCoverPreviewUrl("");
+                      setCoverFile(null);
+                    }}
+                    data-testid="button-remove-cover"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label 
+                  htmlFor="cover-upload" 
+                  className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  data-testid="dropzone-cover"
+                >
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Click to upload PNG, JPG up to 10MB
+                    </p>
+                  </div>
+                  <Input
+                    id="cover-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverFileSelect}
+                    className="hidden"
+                    data-testid="input-cover-file"
+                  />
+                </label>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label>Reference / Sponsor(s)</Label>
               <p className="text-sm text-muted-foreground">
                 Upload examples for participants to reference
