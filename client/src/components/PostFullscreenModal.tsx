@@ -40,6 +40,7 @@ export default function PostFullscreenModal({
   const [shareOpen, setShareOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const { user } = useAuth();
@@ -124,11 +125,19 @@ export default function PostFullscreenModal({
 
     // Swipe up (positive distance) - next post
     if (swipeDistance > minSwipeDistance && onNextPost) {
-      onNextPost();
+      setIsTransitioning(true);
+      setTimeout(() => {
+        onNextPost();
+        setIsTransitioning(false);
+      }, 300);
     }
     // Swipe down (negative distance) - previous post
     else if (swipeDistance < -minSwipeDistance && onPreviousPost) {
-      onPreviousPost();
+      setIsTransitioning(true);
+      setTimeout(() => {
+        onPreviousPost();
+        setIsTransitioning(false);
+      }, 300);
     }
   };
 
@@ -148,15 +157,15 @@ export default function PostFullscreenModal({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-        onClick={onClose}
+        className="fixed inset-0 bg-black z-50 w-screen h-screen overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         data-testid="modal-fullscreen-post-backdrop"
       >
         <div
-          className="relative w-full max-w-4xl bg-black rounded-lg overflow-hidden max-h-[90vh] flex flex-col"
-          onClick={(e) => e.stopPropagation()}
+          className={`relative w-screen h-screen bg-black overflow-hidden flex flex-col transition-opacity duration-300 ${
+            isTransitioning ? "opacity-50" : "opacity-100"
+          }`}
           data-testid="modal-fullscreen-post"
         >
           {/* Close Button */}
