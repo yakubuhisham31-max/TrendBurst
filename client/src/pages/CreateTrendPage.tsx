@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Upload, ArrowLeft, Plus, X, Calendar, Loader2 } from "lucide-react";
+import { Upload, ArrowLeft, Plus, X, Calendar, Loader2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -448,11 +448,11 @@ export default function CreateTrendPage() {
                     const isVideo = file?.type.startsWith('video/');
                     
                     return (
-                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
                         {isVideo ? (
                           <video 
                             src={url} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover pointer-events-none" 
                             muted 
                             data-testid={`preview-reference-${index}`}
                           />
@@ -460,14 +460,21 @@ export default function CreateTrendPage() {
                           <img 
                             src={url} 
                             alt={`Reference ${index + 1}`} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover pointer-events-none" 
                             data-testid={`preview-reference-${index}`} 
                           />
+                        )}
+                        {isVideo && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
+                            <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
+                              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                            </div>
+                          </div>
                         )}
                         <Button
                           size="icon"
                           variant="destructive"
-                          className="absolute top-1 right-1 h-6 w-6"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeReferenceFile(index)}
                           data-testid={`button-remove-reference-${index}`}
                         >
