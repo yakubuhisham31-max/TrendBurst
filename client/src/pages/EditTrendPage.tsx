@@ -2,13 +2,17 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X, Play } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { Trend } from "@shared/schema";
 import { useState, useEffect, useRef } from "react";
+
+const getMediaType = (url: string): "image" | "video" => {
+  return url.match(/\.(mp4|webm|mov|avi|mkv)$/i) ? "video" : "image";
+};
 
 export default function EditTrendPage({ params }: { params: any }) {
   const [, setLocation] = useLocation();
@@ -176,29 +180,40 @@ export default function EditTrendPage({ params }: { params: any }) {
 
               {allReferencePreviews.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 mb-4">
-                  {allReferencePreviews.map((item, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
-                      {item.url.match(/\.(mp4|webm|mov)$/i) ? (
-                        <video
-                          src={item.url}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <img
-                          src={item.url}
-                          alt="Reference media"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      <button
-                        onClick={() => handleRemoveReferenceMedia(index, item.type === "existing")}
-                        className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        data-testid={`button-remove-reference-${index}`}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                  {allReferencePreviews.map((item, index) => {
+                    const mediaType = getMediaType(item.url);
+                    return (
+                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
+                        {mediaType === "video" ? (
+                          <video
+                            src={item.url}
+                            className="w-full h-full object-cover pointer-events-none"
+                            muted
+                          />
+                        ) : (
+                          <img
+                            src={item.url}
+                            alt="Reference media"
+                            className="w-full h-full object-cover pointer-events-none"
+                          />
+                        )}
+                        {mediaType === "video" && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
+                            <div className="w-12 h-12 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
+                              <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleRemoveReferenceMedia(index, item.type === "existing")}
+                          className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid={`button-remove-reference-${index}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
