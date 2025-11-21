@@ -123,7 +123,8 @@ export default function HomePage() {
         return allTrends.filter(trend => {
           if (!trend.endDate) return false;
           const daysUntilEnd = differenceInDays(trend.endDate, now);
-          return daysUntilEnd <= 3 && daysUntilEnd >= 0;
+          // Only show trends that haven't ended yet and will end within 3 days
+          return trend.endDate > now && daysUntilEnd <= 3 && daysUntilEnd >= 0;
         });
       
       case "Ended":
