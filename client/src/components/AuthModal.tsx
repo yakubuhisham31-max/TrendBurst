@@ -29,7 +29,6 @@ export function AuthModal({
 }: AuthModalProps) {
   const [isSliding, setIsSliding] = useState(false);
   const [, setLocation] = useLocation();
-  const { refetch } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -121,8 +120,7 @@ export function AuthModal({
         description: "You have been logged in with Google",
       });
 
-      // Refresh auth and redirect
-      await refetch();
+      // Redirect based on backend response
       if (data.redirectTo) {
         setLocation(data.redirectTo);
       } else {
