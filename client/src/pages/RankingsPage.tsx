@@ -1,11 +1,13 @@
 import { useLocation, useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import PostFullscreenModal from "@/components/PostFullscreenModal";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Post, User } from "@shared/schema";
 
 interface RankingEntry {
@@ -27,10 +29,49 @@ export default function RankingsPage() {
   const [, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
   const [fullscreenPostId, setFullscreenPostId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const { data: rankingsData, isLoading } = useQuery<RankingsResponse>({
     queryKey: [`/api/rankings/${trendId}`],
     enabled: !!trendId,
+  });
+
+  // Vote increment mutation
+  const voteUpMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      if (!trendId) throw new Error("Trend ID is required");
+      const response = await apiRequest("POST", "/api/votes/increment", { postId, trendId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/rankings/${trendId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Vote failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Vote decrement mutation
+  const voteDownMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await apiRequest("POST", "/api/votes/decrement", { postId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/rankings/${trendId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove vote",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const currentUserPost = rankingsData?.rankings.find(
@@ -317,6 +358,21 @@ export default function RankingsPage() {
           isOpen={!!fullscreenPostId}
           onClose={() => setFullscreenPostId(null)}
           rank={rankingsData.rankings.find((e) => e.post.id === fullscreenPostId)?.rank}
+          onVoteUp={(postId) => voteUpMutation.mutate(postId)}
+          onVoteDown={(postId) => voteDownMutation.mutate(postId)}
+          allPosts={rankingsData.rankings.map((e) => e.post)}
+          onNextPost={() => {
+            const currentIndex = rankingsData.rankings.findIndex((e) => e.post.id === fullscreenPostId);
+            if (currentIndex < rankingsData.rankings.length - 1) {
+              setFullscreenPostId(rankingsData.rankings[currentIndex + 1].post.id);
+            }
+          }}
+          onPreviousPost={() => {
+            const currentIndex = rankingsData.rankings.findIndex((e) => e.post.id === fullscreenPostId);
+            if (currentIndex > 0) {
+              setFullscreenPostId(rankingsData.rankings[currentIndex - 1].post.id);
+            }
+          }}
         />
       )}
     </div>
