@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Trophy, Loader2, Star } from "lucide-react";
+import { ChevronLeft, Trophy, Loader2, Star, Play } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import PostFullscreenModal from "@/components/PostFullscreenModal";
 import type { Post, User } from "@shared/schema";
@@ -101,12 +101,19 @@ export default function RankingsPage() {
               </Badge>
               {(currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl) && (
                 currentUserPost.post.mediaType === "video" && currentUserPost.post.mediaUrl ? (
-                  <video
-                    src={currentUserPost.post.mediaUrl}
-                    className="w-20 h-20 rounded-lg object-cover"
-                    muted
-                    data-testid="video-user-post"
-                  />
+                  <div className="relative">
+                    <video
+                      src={currentUserPost.post.mediaUrl}
+                      className="w-20 h-20 rounded-lg object-cover"
+                      muted
+                      data-testid="video-user-post"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                        <Play className="w-4 h-4 text-white fill-white" />
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <img
                     src={currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl || ""}
@@ -188,16 +195,23 @@ export default function RankingsPage() {
                 </Badge>
                 {(entry.post.imageUrl || entry.post.mediaUrl) && (
                   entry.post.mediaType === "video" && entry.post.mediaUrl ? (
-                    <video
-                      src={entry.post.mediaUrl}
-                      className="w-16 h-16 rounded-lg object-cover cursor-pointer"
-                      muted
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFullscreenPostId(entry.post.id);
-                      }}
-                      data-testid={`video-rank-${entry.rank}`}
-                    />
+                    <div className="relative">
+                      <video
+                        src={entry.post.mediaUrl}
+                        className="w-16 h-16 rounded-lg object-cover cursor-pointer"
+                        muted
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFullscreenPostId(entry.post.id);
+                        }}
+                        data-testid={`video-rank-${entry.rank}`}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-lg">
+                        <div className="w-6 h-6 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                          <Play className="w-3 h-3 text-white fill-white" />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <img
                       src={entry.post.imageUrl || entry.post.mediaUrl || ""}
