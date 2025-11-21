@@ -25,14 +25,16 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
   const { user, loading } = useAuth();
   const [location] = useLocation();
 
+  // While loading auth, show loading screen to avoid redirect flicker
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-lg text-foreground">Loading...</div>
       </div>
     );
   }
 
+  // After loading is done, if no user, redirect to login with current location as redirect
   if (!user) {
     return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
   }
