@@ -9,6 +9,7 @@ import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
 import PostCommentsDialog from "@/components/PostCommentsDialog";
 import PostFullscreenModal from "@/components/PostFullscreenModal";
+import { AuthModal } from "@/components/AuthModal";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -26,6 +27,7 @@ export default function FeedPage() {
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const [highlightCommentId, setHighlightCommentId] = useState<string | null>(null);
   const [fullscreenPostId, setFullscreenPostId] = useState<string | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -219,11 +221,7 @@ export default function FeedPage() {
 
   const handleVoteUp = (postId: string) => {
     if (!user) {
-      toast({
-        title: "Login required",
-        description: "Please log in to vote on posts.",
-        variant: "destructive",
-      });
+      setAuthModalOpen(true);
       return;
     }
     
@@ -243,11 +241,7 @@ export default function FeedPage() {
 
   const handleVoteDown = (postId: string) => {
     if (!user) {
-      toast({
-        title: "Login required",
-        description: "Please log in to vote on posts.",
-        variant: "destructive",
-      });
+      setAuthModalOpen(true);
       return;
     }
     
