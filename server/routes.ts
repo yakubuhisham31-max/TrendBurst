@@ -336,6 +336,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: post.user?.username || "Unknown",
         votes: post.votes || 0,
         imageUrl: post.imageUrl,
+        mediaUrl: post.mediaUrl,
+        mediaType: post.mediaType || "image",
       }));
       
       // Calculate engagement rate (votes per participant)
