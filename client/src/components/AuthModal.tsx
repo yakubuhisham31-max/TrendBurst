@@ -48,6 +48,17 @@ export function AuthModal({
 
   const handleGoogleSignIn = async () => {
     try {
+      // Check if Google Client ID is configured
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        toast({
+          title: "Google Sign-In Not Configured",
+          description: "Please use email sign-in. Google OAuth will be available soon.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Initialize Google Sign-In
       if (!window.google) {
         toast({
@@ -58,7 +69,7 @@ export function AuthModal({
       }
 
       window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+        client_id: clientId,
         callback: handleCredentialResponse,
       });
 
@@ -71,7 +82,6 @@ export function AuthModal({
             window.google.accounts.id.renderButton(button, {
               theme: 'outline',
               size: 'large',
-              width: '100%',
             });
           }
         }
