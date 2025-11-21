@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star, Volume2, VolumeX } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star, Volume2, VolumeX, Play, Expand } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -78,6 +78,7 @@ export default function PostCard({
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTapRef = useRef<number>(0);
@@ -199,6 +200,32 @@ export default function PostCard({
     if (mediaType !== 'video' || !videoRef.current) return;
     videoRef.current.muted = isMuted;
   }, [isMuted, mediaType]);
+
+  // Track video play/pause state
+  useEffect(() => {
+    if (mediaType !== 'video' || !videoRef.current) return;
+    const video = videoRef.current;
+
+    const updatePlayState = () => setIsPlaying(!video.paused);
+
+    video.addEventListener('play', updatePlayState);
+    video.addEventListener('pause', updatePlayState);
+
+    return () => {
+      video.removeEventListener('play', updatePlayState);
+      video.removeEventListener('pause', updatePlayState);
+    };
+  }, [mediaType]);
+
+  const handlePlayPause = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+    } else {
+      videoRef.current.pause();
+    }
+  };
 
   // Auto-play video when in view (Instagram style), but NOT for disqualified posts
   useEffect(() => {
@@ -339,7 +366,37 @@ export default function PostCard({
                 onClick={handleVideoTap}
                 data-testid="video-post"
               />
-              {/* Mute/Unmute indicator */}
+              
+              {/* Play/Pause overlay - centered */}
+              {!isPlaying && !isDisqualified && (
+                <button
+                  onClick={handlePlayPause}
+                  className="absolute inset-0 flex items-center justify-center hover-elevate"
+                  data-testid="button-video-play"
+                  aria-label="Play video"
+                >
+                  <div className="w-16 h-16 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                    <Play className="w-8 h-8 text-primary-foreground fill-primary-foreground" />
+                  </div>
+                </button>
+              )}
+
+              {/* Expand button - top right */}
+              {!isDisqualified && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFullscreen?.();
+                  }}
+                  className="absolute top-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center hover-elevate"
+                  data-testid="button-video-expand"
+                  aria-label="Expand video"
+                >
+                  <Expand className="w-5 h-5 text-white" />
+                </button>
+              )}
+
+              {/* Mute/Unmute indicator - bottom right */}
               <div className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center pointer-events-none">
                 {isMuted ? (
                   <VolumeX className="w-5 h-5 text-white" />
