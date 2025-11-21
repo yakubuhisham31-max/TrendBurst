@@ -13,12 +13,15 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       return;
     }
 
+    // Encode REST API key for Basic auth
+    const basicAuth = Buffer.from(`${process.env.ONESIGNAL_REST_API_KEY}:`).toString('base64');
+
     // Send notification via OneSignal REST API
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+        "Authorization": `Basic ${basicAuth}`,
       },
       body: JSON.stringify({
         app_id: process.env.ONESIGNAL_APP_ID,

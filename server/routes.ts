@@ -14,6 +14,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { R2StorageService } from "./r2Storage";
 import { extractMentions } from "@/lib/mentions";
+import { sendPushNotification } from "./onesignal";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -196,12 +197,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create notification for followers
       const followers = await storage.getFollowers(req.session.userId!);
+      const actor = await storage.getUser(req.session.userId!);
       for (const follow of followers) {
         await storage.createNotification({
           userId: follow.followerId,
           actorId: req.session.userId!,
           type: 'new_trend_from_following',
           trendId: trend.id,
+        });
+        // Send push notification
+        await sendPushNotification({
+          userId: follow.followerId,
+          heading: "New Trend",
+          content: `${actor?.username} created a new trend: ${result.data.name}`,
+          data: { trendId: trend.id },
         });
       }
       
@@ -464,6 +473,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               trendId: req.params.trendId,
               pointsEarned: bonusPoints[i],
             });
+            // Send push notification
+            let place = "Top 3";
+            if (bonusPoints[i] === 150) place = "1st place";
+            else if (bonusPoints[i] === 100) place = "2nd place";
+            else if (bonusPoints[i] === 50) place = "3rd place";
+            await sendPushNotification({
+              userId: post.userId,
+              heading: "Congratulations!",
+              content: `You earned ${place} - ${bonusPoints[i]} bonus points!`,
+              data: { postId: post.id, trendId: req.params.trendId },
+            });
           }
         }
 
@@ -562,6 +582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create notification for followers
       const followers = await storage.getFollowers(req.session.userId!);
+      const postAuthor = await storage.getUser(req.session.userId!);
       for (const follow of followers) {
         await storage.createNotification({
           userId: follow.followerId,
@@ -569,6 +590,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'new_post_from_following',
           postId: post.id,
           trendId: result.data.trendId,
+        });
+        // Send push notification
+        await sendPushNotification({
+          userId: follow.followerId,
+          heading: "New Post",
+          content: `${postAuthor?.username} posted in a trend you follow`,
+          data: { postId: post.id, trendId: result.data.trendId },
         });
       }
       
@@ -581,6 +609,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'post_in_your_trend',
           postId: post.id,
           trendId: result.data.trendId,
+        });
+        // Send push notification
+        await sendPushNotification({
+          userId: trend.userId,
+          heading: "New Submission",
+          content: `${postAuthor?.username} posted in your trend`,
+          data: { postId: post.id, trendId: result.data.trendId },
         });
       }
       
@@ -598,6 +633,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           postId: post.id,
           trendId: result.data.trendId,
           pointsEarned: 50,
+        });
+        // Send push notification
+        await sendPushNotification({
+          userId: req.session.userId!,
+          heading: "Points Earned",
+          content: "You earned 50 TrendX points for posting!",
+          data: { postId: post.id, trendId: result.data.trendId },
         });
       }
       
@@ -675,6 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create notification for vote on post
       const post = await storage.getPost(postId);
+      const voter = await storage.getUser(req.session.userId!);
       if (post && post.userId !== req.session.userId) {
         await storage.createNotification({
           userId: post.userId,
@@ -683,6 +726,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           postId: postId,
           trendId: trendId,
           voteCount: vote.count,
+        });
+        // Send push notification
+        await sendPushNotification({
+          userId: post.userId,
+          heading: "Vote Received",
+          content: `${voter?.username} voted ${vote.count}x on your post`,
+          data: { postId, trendId },
         });
       }
       
@@ -785,6 +835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(result.data);
       
       // Create notification for comment on post or reply to comment
+      const commenter = await storage.getUser(req.session.userId!);
       if (comment.postId) {
         // Comment on a post - notify post owner
         const post = await storage.getPost(comment.postId);
@@ -796,6 +847,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             postId: comment.postId,
             trendId: comment.trendId,
             commentId: comment.id,
+          });
+          // Send push notification
+          await sendPushNotification({
+            userId: post.userId,
+            heading: "New Comment",
+            content: `${commenter?.username} commented on your post`,
+            data: { postId: comment.postId, trendId: comment.trendId },
           });
         }
       }
@@ -811,6 +869,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             commentId: comment.id,
             postId: comment.postId,
             trendId: comment.trendId,
+          });
+          // Send push notification
+          await sendPushNotification({
+            userId: parentComment.userId,
+            heading: "Reply to Comment",
+            content: `${commenter?.username} replied to your comment`,
+            data: { postId: comment.postId, trendId: comment.trendId },
           });
         }
       }
@@ -828,6 +893,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               commentId: comment.id,
               postId: comment.postId,
               trendId: comment.trendId,
+            });
+            // Send push notification
+            await sendPushNotification({
+              userId: mentionedUser.id,
+              heading: "Mentioned",
+              content: `${commenter?.username} mentioned you in a comment`,
+              data: { postId: comment.postId, trendId: comment.trendId },
             });
           }
         }
@@ -884,12 +956,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const follow = await storage.createFollow(result.data);
+      const follower = await storage.getUser(req.session.userId!);
       
       // Create notification for new follower
       await storage.createNotification({
         userId: result.data.followingId,
         actorId: req.session.userId!,
         type: 'new_follower',
+      });
+      // Send push notification
+      await sendPushNotification({
+        userId: result.data.followingId,
+        heading: "New Follower",
+        content: `${follower?.username} started following you`,
+        data: { userId: req.session.userId! },
       });
       
       res.status(201).json(follow);
