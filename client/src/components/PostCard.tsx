@@ -79,6 +79,7 @@ export default function PostCard({
   const [isMuted, setIsMuted] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTapRef = useRef<number>(0);
@@ -201,19 +202,26 @@ export default function PostCard({
     videoRef.current.muted = isMuted;
   }, [isMuted, mediaType]);
 
-  // Track video play/pause state
+  // Track video play/pause state and progress
   useEffect(() => {
     if (mediaType !== 'video' || !videoRef.current) return;
     const video = videoRef.current;
 
     const updatePlayState = () => setIsPlaying(!video.paused);
+    const updateProgress = () => {
+      if (video.duration) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
+    };
 
     video.addEventListener('play', updatePlayState);
     video.addEventListener('pause', updatePlayState);
+    video.addEventListener('timeupdate', updateProgress);
 
     return () => {
       video.removeEventListener('play', updatePlayState);
       video.removeEventListener('pause', updatePlayState);
+      video.removeEventListener('timeupdate', updateProgress);
     };
   }, [mediaType]);
 
@@ -381,6 +389,18 @@ export default function PostCard({
                 </button>
               )}
 
+              {/* Playing indicator - centered top */}
+              {isPlaying && !isDisqualified && (
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                  <div className="flex gap-0.5">
+                    <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0ms'}}></div>
+                    <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '150ms'}}></div>
+                    <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '300ms'}}></div>
+                  </div>
+                  <span className="text-xs text-white font-medium">Playing</span>
+                </div>
+              )}
+
               {/* Expand button - top right */}
               {!isDisqualified && (
                 <button
@@ -412,6 +432,15 @@ export default function PostCard({
                   <Volume2 className="w-5 h-5 text-white" />
                 )}
               </button>
+
+              {/* Progress bar - bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                <div 
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${progress}%` }}
+                  data-testid="video-progress-bar"
+                />
+              </div>
             </>
           ) : (
             <img

@@ -1,6 +1,6 @@
 import { X, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,9 @@ export default function PostFullscreenModal({
   allPosts,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -80,6 +83,30 @@ export default function PostFullscreenModal({
 
   if (!isOpen) return null;
 
+  // Track video progress and play state
+  useEffect(() => {
+    if (mediaType !== "video" || !videoRef.current) return;
+    const video = videoRef.current;
+
+    const updateProgress = () => {
+      if (video.duration) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
+    };
+
+    const updatePlayState = () => setIsPlaying(!video.paused);
+
+    video.addEventListener('timeupdate', updateProgress);
+    video.addEventListener('play', updatePlayState);
+    video.addEventListener('pause', updatePlayState);
+
+    return () => {
+      video.removeEventListener('timeupdate', updateProgress);
+      video.removeEventListener('play', updatePlayState);
+      video.removeEventListener('pause', updatePlayState);
+    };
+  }, []);
+
   const handleSave = (e: React.MouseEvent) => {
     e.stopPropagation();
     saveMutation.mutate();
@@ -117,15 +144,37 @@ export default function PostFullscreenModal({
           </Button>
 
           {/* Media */}
-          <div className="flex-1 flex items-center justify-center bg-black overflow-hidden">
+          <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
             {mediaType === "video" ? (
-              <video
-                src={mediaUrl}
-                className="w-full h-full object-contain"
-                controls
-                autoPlay
-                data-testid="video-fullscreen"
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  src={mediaUrl}
+                  className="w-full h-full object-contain"
+                  controls
+                  autoPlay
+                  data-testid="video-fullscreen"
+                />
+                {/* Progress bar for fullscreen */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                  <div 
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${progress}%` }}
+                    data-testid="video-fullscreen-progress"
+                  />
+                </div>
+                {/* Playing indicator */}
+                {isPlaying && (
+                  <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                    <div className="flex gap-0.5">
+                      <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0ms'}}></div>
+                      <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '150ms'}}></div>
+                      <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '300ms'}}></div>
+                    </div>
+                    <span className="text-xs text-white font-medium">Playing</span>
+                  </div>
+                )}
+              </>
             ) : (
               <img
                 src={mediaUrl}
