@@ -4,12 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Mail, LogIn } from "lucide-react";
 import { Link } from "wouter";
 import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface AuthModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   title?: string;
   description?: string;
+}
+
+declare global {
+  interface Window {
+    google: any;
+  }
 }
 
 export function AuthModal({ 
@@ -20,6 +29,8 @@ export function AuthModal({
 }: AuthModalProps) {
   const [isSliding, setIsSliding] = useState(false);
   const [, setLocation] = useLocation();
+  const { refetch } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Load Google Sign-In SDK
@@ -36,10 +47,96 @@ export function AuthModal({
     };
   }, []);
 
-  const handleGoogleSignIn = () => {
-    // For now, redirect to login page where users can set up credentials
-    // Future: Implement full Google OAuth flow
-    window.location.href = "/login";
+  const handleGoogleSignIn = async () => {
+    try {
+      // Initialize Google Sign-In
+      if (!window.google) {
+        toast({
+          title: "Google Sign-In Loading",
+          description: "Please wait a moment and try again",
+        });
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+        callback: handleCredentialResponse,
+      });
+
+      // Trigger the One Tap UI or redirect to Google login
+      window.google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback: show full sign-in flow
+          const button = document.getElementById('google-sign-in-button');
+          if (button) {
+            window.google.accounts.id.renderButton(button, {
+              theme: 'outline',
+              size: 'large',
+              width: '100%',
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      toast({
+        title: "Error",
+        description: "Could not initialize Google Sign-In. Please use email sign-in instead.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCredentialResponse = async (response: any) => {
+    try {
+      const token = response.credential;
+      
+      // Decode the JWT to get user info (without verification - for dev purposes)
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      
+      const payload = JSON.parse(jsonPayload);
+      
+      // Send to backend for authentication
+      const response2 = await apiRequest('POST', '/api/auth/google', {
+        googleId: payload.sub,
+        email: payload.email,
+        fullName: payload.name,
+      });
+
+      const data = await response2.json();
+      
+      if (!response2.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
+
+      toast({
+        title: "Success",
+        description: "You have been logged in with Google",
+      });
+
+      // Refresh auth and redirect
+      await refetch();
+      if (data.redirectTo) {
+        setLocation(data.redirectTo);
+      } else {
+        setLocation('/');
+      }
+      
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || 'Google authentication failed',
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -74,6 +171,8 @@ export function AuthModal({
             <LogIn className="w-4 h-4 mr-2" />
             Continue with Google
           </Button>
+
+          <div id="google-sign-in-button" className="w-full" />
 
           <div className="text-center text-sm text-muted-foreground mt-2">
             Already have an account?{" "}
