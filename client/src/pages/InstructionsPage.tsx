@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Star, Calendar, Loader2, Play } from "lucide-react";
+import { ChevronLeft, Star, Calendar, Loader2, Play, Trophy } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import FollowButton from "@/components/FollowButton";
 import MediaLightbox from "@/components/MediaLightbox";
@@ -215,6 +215,41 @@ export default function InstructionsPage() {
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+
+          {(trend.prizeFirst || trend.prizeSecond || trend.prizeThird) && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                Prizes
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {trend.prizeFirst && (
+                  <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800">
+                    <div className="text-xs text-muted-foreground mb-1">1st Place</div>
+                    <div className="font-semibold text-sm" data-testid="text-prize-first">
+                      {trend.prizeFirst}
+                    </div>
+                  </div>
+                )}
+                {trend.prizeSecond && (
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
+                    <div className="text-xs text-muted-foreground mb-1">2nd Place</div>
+                    <div className="font-semibold text-sm" data-testid="text-prize-second">
+                      {trend.prizeSecond}
+                    </div>
+                  </div>
+                )}
+                {trend.prizeThird && (
+                  <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                    <div className="text-xs text-muted-foreground mb-1">3rd Place</div>
+                    <div className="font-semibold text-sm" data-testid="text-prize-third">
+                      {trend.prizeThird}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
