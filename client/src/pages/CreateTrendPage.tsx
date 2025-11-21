@@ -13,7 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { InsertTrend } from "@shared/schema";
 
-const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Music", "Food", "Fashion", "Photography"];
+const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Other", "Food", "Fashion", "Photography"];
 
 export default function CreateTrendPage() {
   const [, setLocation] = useLocation();
