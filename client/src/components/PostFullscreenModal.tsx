@@ -89,6 +89,17 @@ export default function PostFullscreenModal({
 
   if (!isOpen) return null;
 
+  // Prevent background scrolling when fullscreen is open
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   // Track video progress and play state
   useEffect(() => {
     if (mediaType !== "video" || !videoRef.current) return;
@@ -169,15 +180,14 @@ export default function PostFullscreenModal({
           data-testid="modal-fullscreen-post"
         >
           {/* Close Button */}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full"
+          <button
             onClick={onClose}
+            className="absolute top-6 right-6 z-50 w-14 h-14 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
             data-testid="button-close-fullscreen"
+            aria-label="Close fullscreen"
           >
-            <X className="w-6 h-6" />
-          </Button>
+            <X className="w-8 h-8" />
+          </button>
 
           {/* Media */}
           <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
