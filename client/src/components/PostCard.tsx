@@ -82,6 +82,7 @@ export default function PostCard({
   const [progress, setProgress] = useState(0);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -367,11 +368,10 @@ export default function PostCard({
               <video
                 ref={videoRef}
                 src={mediaUrl}
-                className="w-full h-full object-cover cursor-pointer"
+                className="w-full h-full object-cover"
                 loop
                 muted={isMuted}
                 playsInline
-                onClick={onFullscreen}
                 data-testid="video-post"
               />
               
@@ -433,7 +433,7 @@ export default function PostCard({
                 )}
               </button>
 
-              {/* Play/Pause button and progress bar - bottom */}
+              {/* Play/Pause button and draggable progress bar - bottom */}
               <div className="absolute bottom-0 left-0 right-0 flex items-center gap-1.5 bg-black/20 px-1.5 py-1">
                 <button
                   onClick={handlePlayPause}
@@ -447,11 +447,38 @@ export default function PostCard({
                     <Play className="w-3 h-3 text-white fill-white" />
                   )}
                 </button>
-                <div className="flex-1 h-1 bg-black/40 rounded-full">
+                <div 
+                  ref={progressBarRef}
+                  className="flex-1 h-1 bg-black/40 rounded-full cursor-pointer hover:h-1.5 transition-all"
+                  onClick={(e) => {
+                    if (!videoRef.current || !progressBarRef.current) return;
+                    const rect = progressBarRef.current.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    const newTime = percent * videoRef.current.duration;
+                    videoRef.current.currentTime = newTime;
+                  }}
+                  onMouseDown={(e) => {
+                    if (!videoRef.current || !progressBarRef.current) return;
+                    
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      const rect = progressBarRef.current!.getBoundingClientRect();
+                      const percent = Math.max(0, Math.min(1, (moveEvent.clientX - rect.left) / rect.width));
+                      videoRef.current!.currentTime = percent * videoRef.current!.duration;
+                    };
+
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                  data-testid="video-progress-bar"
+                >
                   <div 
-                    className="h-full bg-primary transition-all rounded-full"
+                    className="h-full bg-primary rounded-full"
                     style={{ width: `${progress}%` }}
-                    data-testid="video-progress-bar"
                   />
                 </div>
               </div>
