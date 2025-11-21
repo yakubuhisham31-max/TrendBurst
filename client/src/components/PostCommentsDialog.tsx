@@ -10,6 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Star, Reply, Trash2 } from "lucide-react";
+import { parseMentions } from "@/lib/mentions";
 import type { Comment, User, Trend } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
