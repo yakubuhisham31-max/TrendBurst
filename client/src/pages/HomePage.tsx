@@ -187,15 +187,26 @@ export default function HomePage() {
           </div>
 
           {/* Create Trend Button */}
-          <Link href="/create-trend">
+          {user ? (
+            <Link href="/create-trend">
+              <Button
+                className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2 text-base font-medium transition-shadow"
+                data-testid="button-create-trend"
+              >
+                <Plus className="w-5 h-5" />
+                Create New Trend
+              </Button>
+            </Link>
+          ) : (
             <Button
+              onClick={() => setAuthModalOpen(true)}
               className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2 text-base font-medium transition-shadow"
               data-testid="button-create-trend"
             >
               <Plus className="w-5 h-5" />
               Create New Trend
             </Button>
-          </Link>
+          )}
 
           {/* Subcategories */}
           <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
@@ -296,7 +307,13 @@ export default function HomePage() {
                 createdAt={trend.createdAt || new Date()}
                 endDate={trend.endDate || undefined}
                 isTrending={selectedSubcategory === "Trending"}
-                onClick={() => setLocation(`/instructions/${trend.id}`)}
+                onClick={() => {
+                  if (!user) {
+                    setAuthModalOpen(true);
+                  } else {
+                    setLocation(`/instructions/${trend.id}`);
+                  }
+                }}
               />
             ))}
           </div>
@@ -312,6 +329,11 @@ export default function HomePage() {
           await logout();
           setLocation("/login");
         }}
+      />
+
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
       />
     </div>
   );
