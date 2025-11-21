@@ -442,7 +442,7 @@ export default function FeedPage() {
       )}
 
       <AuthModal
-        open={authModalOpen}
+        isOpen={authModalOpen}
         onOpenChange={setAuthModalOpen}
       />
     </div>

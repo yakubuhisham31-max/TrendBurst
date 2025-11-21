@@ -274,6 +274,11 @@ export default function PostCommentsDialog({
           </div>
         </div>
       </DialogContent>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+      />
     </Dialog>
   );
 }

@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +19,7 @@ export default function FollowButton({
   variant = "outline",
   className = ""
 }: FollowButtonProps) {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -77,11 +80,7 @@ export default function FollowButton({
     e.stopPropagation();
     
     if (!user) {
-      toast({
-        title: "Login required",
-        description: "Please log in to follow users.",
-        variant: "destructive",
-      });
+      setAuthModalOpen(true);
       return;
     }
 
@@ -96,15 +95,22 @@ export default function FollowButton({
   const isPending = followMutation.isPending || unfollowMutation.isPending;
 
   return (
-    <Button
-      size={size}
-      variant={isFollowing ? "secondary" : variant}
-      onClick={handleClick}
-      disabled={isLoading || isPending || !user}
-      className={`flex-shrink-0 ${className}`}
-      data-testid={`button-follow-${username}`}
-    >
-      {isFollowing ? "Following" : "Follow"}
-    </Button>
+    <>
+      <Button
+        size={size}
+        variant={isFollowing ? "secondary" : variant}
+        onClick={handleClick}
+        disabled={isLoading || isPending || !user}
+        className={`flex-shrink-0 ${className}`}
+        data-testid={`button-follow-${username}`}
+      >
+        {isFollowing ? "Following" : "Follow"}
+      </Button>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+      />
+    </>
   );
 }

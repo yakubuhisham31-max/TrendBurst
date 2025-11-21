@@ -332,7 +332,7 @@ export default function HomePage() {
       />
 
       <AuthModal
-        open={authModalOpen}
+        isOpen={authModalOpen}
         onOpenChange={setAuthModalOpen}
       />
     </div>
