@@ -33,6 +33,8 @@ function getNotificationMessage(notification: NotificationWithActor): string {
       return `${actorName} created a new trend`;
     case "reply_to_comment":
       return `${actorName} replied to your comment`;
+    case "mention":
+      return `${actorName} mentioned you in a comment`;
     case "vote_on_post": {
       const voteCount = notification.voteCount || 1;
       return `${actorName} voted ${voteCount}x on your post`;
