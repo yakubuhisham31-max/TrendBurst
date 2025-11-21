@@ -28,10 +28,6 @@ localPort = 41867
 externalPort = 3003
 
 [[ports]]
-localPort = 42699
-externalPort = 3000
-
-[[ports]]
 localPort = 44227
 externalPort = 4200
 
@@ -68,3 +64,12 @@ expertMode = true
 
 [objectStorage]
 defaultBucketID = "replit-objstore-3bc55f7e-cd7f-4920-912a-0aaf438f192d"
+
+[userenv]
+
+[userenv.shared]
+R2_ACCESS_KEY_ID = "1ca458767631cd24f5383caa1148777d"
+R2_SECRET_ACCESS_KEY = "3db1b5a9936c3876cb2e1b87234cdf89b24d035685259411161d0c627d38c1a1"
+R2_ENDPOINT = "https://ca1f17100b850585f2cfa3678eab748e.r2.cloudflarestorage.com"
+R2_BUCKET_NAME = "trendx-media"
+R2_PUBLIC_DOMAIN = "https://pub-f7315c49d83c402e911f51afd971a703.r2.dev"

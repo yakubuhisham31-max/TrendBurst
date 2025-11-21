@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, X, Upload } from "lucide-react";
+import { Plus, X, Upload, Loader2 } from "lucide-react";
+import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreateTrendDialogProps {
   open: boolean;
@@ -36,6 +38,27 @@ export default function CreateTrendDialog({
   const [rules, setRules] = useState(["", "", ""]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [coverImage, setCoverImage] = useState<string>();
+  const [selectedCoverFile, setSelectedCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+
+  // Clean up preview URL when dialog closes or component unmounts
+  useEffect(() => {
+    if (!open && coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl("");
+      setSelectedCoverFile(null);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (coverPreviewUrl) {
+        URL.revokeObjectURL(coverPreviewUrl);
+      }
+    };
+  }, [coverPreviewUrl]);
 
   const handleRuleChange = (index: number, value: string) => {
     const newRules = [...rules];
@@ -43,22 +66,82 @@ export default function CreateTrendDialog({
     setRules(newRules);
   };
 
-  const handleSubmit = () => {
-    if (onSubmit) {
-      onSubmit({
-        name,
-        instructions,
-        rules: rules.filter(r => r.trim() !== ""),
-        category: selectedCategory,
-        coverImage,
+  const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 10MB",
+        variant: "destructive",
       });
+      return;
     }
-    setName("");
-    setInstructions("");
-    setRules(["", "", ""]);
-    setSelectedCategory("");
-    setCoverImage(undefined);
-    onOpenChange(false);
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (PNG, JPG)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Revoke old preview URL if exists
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+    }
+
+    // Create preview URL
+    const preview = createPreviewURL(file);
+    setCoverPreviewUrl(preview);
+    setSelectedCoverFile(file);
+  };
+
+  const handleSubmit = async () => {
+    setIsUploading(true);
+    try {
+      let uploadedCoverUrl = coverImage;
+
+      // Upload cover image if selected
+      if (selectedCoverFile) {
+        uploadedCoverUrl = await uploadToR2(selectedCoverFile, 'trend-covers');
+      }
+
+      if (onSubmit) {
+        onSubmit({
+          name,
+          instructions,
+          rules: rules.filter(r => r.trim() !== ""),
+          category: selectedCategory,
+          coverImage: uploadedCoverUrl,
+        });
+      }
+
+      // Clean up
+      if (coverPreviewUrl) {
+        URL.revokeObjectURL(coverPreviewUrl);
+      }
+      setName("");
+      setInstructions("");
+      setRules(["", "", ""]);
+      setSelectedCategory("");
+      setCoverImage(undefined);
+      setSelectedCoverFile(null);
+      setCoverPreviewUrl("");
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload cover image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -129,34 +212,65 @@ export default function CreateTrendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Cover Picture</Label>
-            <div className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/20 hover-elevate cursor-pointer" data-testid="dropzone-cover">
-              <div className="text-center">
-                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG up to 10MB
-                </p>
-              </div>
-            </div>
+            <Label htmlFor="cover-upload">Cover Picture (Optional)</Label>
+            <label 
+              htmlFor="cover-upload"
+              className="block border-2 border-dashed rounded-lg h-48 overflow-hidden bg-muted/20 hover-elevate cursor-pointer" 
+              data-testid="dropzone-cover"
+            >
+              {coverPreviewUrl ? (
+                <img 
+                  src={coverPreviewUrl} 
+                  alt="Cover preview" 
+                  className="w-full h-full object-cover"
+                  data-testid="preview-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG up to 10MB
+                    </p>
+                  </div>
+                </div>
+              )}
+              <Input
+                id="cover-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverImageSelect}
+                className="hidden"
+                data-testid="input-cover-file"
+              />
+            </label>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isUploading}
               data-testid="button-cancel"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!name || !instructions || !selectedCategory}
+              disabled={!name || !instructions || !selectedCategory || isUploading}
               data-testid="button-create-trend"
             >
-              Create Trend
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Create Trend"
+              )}
             </Button>
           </div>
         </div>
