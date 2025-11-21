@@ -301,7 +301,7 @@ export default function PostFullscreenModal({
 
             {/* Caption */}
             {post.caption && (
-              <p className="text-sm text-foreground line-clamp-3">{post.caption}</p>
+              <p className="text-sm text-white line-clamp-3">{post.caption}</p>
             )}
 
             {/* Action Buttons */}
