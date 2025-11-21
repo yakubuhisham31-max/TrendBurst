@@ -106,12 +106,16 @@ export default function HomePage() {
         });
       
       case "Trending":
-        // Trending: Sort by engagement (views + participants * 2 + chatCount * 3)
+        // Trending: Only show trends with very high engagement
+        // Engagement calculation: views + (participants * 2) + (chatCount * 3)
+        // Very high engagement threshold: 300 or more
+        const ENGAGEMENT_THRESHOLD = 300;
         return [...allTrends]
           .map(trend => ({
             ...trend,
             engagement: (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3
           }))
+          .filter(trend => trend.engagement >= ENGAGEMENT_THRESHOLD)
           .sort((a, b) => b.engagement - a.engagement)
           .slice(0, 20); // Top 20 trending
       
