@@ -210,10 +210,10 @@ export default function TrendCard({
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
 
         {/* Top Section */}
-        <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-3 z-10">
+          <div className="flex items-center gap-3 min-w-0">
             <Avatar 
-              className="w-12 h-12 border-2 border-white/30 cursor-pointer hover-elevate" 
+              className="w-12 h-12 border-2 border-white/30 cursor-pointer hover-elevate flex-shrink-0" 
               data-testid="avatar-user"
               onClick={(e) => {
                 e.stopPropagation();
@@ -225,9 +225,9 @@ export default function TrendCard({
                 {username.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span 
-                className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline" 
+                className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
                 data-testid="text-username"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -242,7 +242,7 @@ export default function TrendCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <FollowButton 
               username={username} 
               size="sm" 
@@ -250,7 +250,7 @@ export default function TrendCard({
               className="h-8 px-3 text-white border-white/40 hover:bg-white/20 hover:border-white/60 bg-black/20"
             />
             {isTrending && (
-              <Badge className="bg-yellow-500 text-yellow-950 px-2.5 py-1 gap-1 items-center border-0 rounded-full" data-testid="badge-trending">
+              <Badge className="bg-yellow-500 text-yellow-950 px-2.5 py-1 gap-1 items-center border-0 rounded-full whitespace-nowrap flex-shrink-0" data-testid="badge-trending">
                 <Flame className="w-3.5 h-3.5" />
                 Trending
               </Badge>
