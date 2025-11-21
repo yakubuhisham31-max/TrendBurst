@@ -137,6 +137,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete profile endpoint for Google OAuth users
+  app.post("/api/auth/complete-profile", requireAuth, async (req, res) => {
+    try {
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ message: "Username must be at least 3 characters" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const updatedUser = await storage.updateUser(req.session.userId!, {
+        username,
+        password: hashedPassword,
+        profileComplete: 1,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ user: sanitizeUser(updatedUser), message: "Profile completed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Google OAuth callback endpoint
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { googleId, email, fullName } = req.body;
+
+      if (!googleId) {
+        return res.status(400).json({ message: "Google ID is required" });
+      }
+
+      // Check if user with this Google ID exists
+      let user = await storage.getUserByGoogleId(googleId);
+
+      if (user) {
+        // Existing Google user - just log them in
+        req.session.userId = user.id;
+        res.json({ user: sanitizeUser(user), isNewUser: false });
+      } else {
+        // New Google user - create account, redirect to complete profile
+        const tempUsername = `user_${googleId.substring(0, 10)}`;
+        user = await storage.createUser({
+          username: tempUsername,
+          email: email || undefined,
+          fullName: fullName || undefined,
+          googleId,
+          profileComplete: 0,
+        });
+
+        req.session.userId = user.id;
+        res.json({ user: sanitizeUser(user), isNewUser: true, redirectTo: "/complete-profile" });
+      }
+    } catch (error) {
+      console.error("Google auth error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Trends routes
 
   // GET /api/trends - Get all trends (optional category query param)
