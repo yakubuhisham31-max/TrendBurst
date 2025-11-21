@@ -68,9 +68,9 @@ export default function RankingsPage() {
   const maxVotes = getMaxVotes();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
+      <header className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
           <Button
             size="icon"
@@ -150,7 +150,7 @@ export default function RankingsPage() {
           <div className="grid grid-cols-3 gap-4 items-end">
             {topThree.map((entry, index) => {
               const isFirst = entry.rank === 1;
-              const heights = isFirst ? ["160px", "200px", "120px"] : ["120px", "160px", "100px"];
+              const heights = isFirst ? ["80px", "100px", "60px"] : ["60px", "80px", "50px"];
               const orders = [1, 0, 2];
               const badges = ["gold", "silver", "bronze"];
               const badge = badges[index];
@@ -221,7 +221,7 @@ export default function RankingsPage() {
         {/* Rankings List */}
         {restOfRankings.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">More Rankings</h2>
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">More Rankings</h2>
             {restOfRankings.map((entry) => (
               <div
                 key={entry.post.id}
