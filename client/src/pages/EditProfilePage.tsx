@@ -21,22 +21,26 @@ export default function EditProfilePage() {
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    email: "",
-    fullName: "",
     bio: "",
     instagram: "",
     tiktok: "",
     twitter: "",
     youtube: "",
   });
+  const [userInfo, setUserInfo] = useState({
+    email: "",
+    fullName: "",
+  });
   const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>("");
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      setUserInfo({
         email: user.email || "",
         fullName: user.fullName || "",
+      });
+      setFormData({
         bio: user.bio || "",
         instagram: user.instagramUrl || "",
         tiktok: user.tiktokUrl || "",
@@ -132,8 +136,6 @@ export default function EditProfilePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const updateData: Partial<User> & { profileFile?: File } = {
-      email: formData.email,
-      fullName: formData.fullName,
       bio: formData.bio,
       instagramUrl: formData.instagram,
       tiktokUrl: formData.tiktok,
@@ -244,10 +246,8 @@ export default function EditProfilePage() {
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  value={userInfo.email}
+                  disabled
                   placeholder="Enter your email"
                   data-testid="input-email"
                 />
@@ -257,10 +257,8 @@ export default function EditProfilePage() {
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
                   id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
+                  value={userInfo.fullName}
+                  disabled
                   placeholder="Enter your full name"
                   data-testid="input-fullName"
                 />
