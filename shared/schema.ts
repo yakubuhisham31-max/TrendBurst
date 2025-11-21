@@ -33,7 +33,6 @@ export const trends = pgTable("trends", {
   category: text("category").notNull(),
   coverPicture: text("cover_picture"),
   referenceMedia: text("reference_media").array(),
-  prizes: text("prizes").array().default(sql`'{}'::text[]`),
   views: integer("views").default(0),
   participants: integer("participants").default(0),
   chatCount: integer("chat_count").default(0),
@@ -141,7 +140,6 @@ export const insertTrendSchema = createInsertSchema(trends).omit({
     return val;
   }),
   referenceMedia: z.array(z.string()).nullable().optional(),
-  prizes: z.array(z.string()).optional().default([]),
 });
 
 export const insertPostSchema = createInsertSchema(posts).omit({
