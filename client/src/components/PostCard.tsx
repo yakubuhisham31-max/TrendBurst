@@ -401,40 +401,9 @@ export default function PostCard({
                 </div>
               )}
 
-              {/* Expand button - top right */}
-              {!isDisqualified && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFullscreen?.();
-                  }}
-                  className="absolute top-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center hover-elevate"
-                  data-testid="button-video-expand"
-                  aria-label="Expand video"
-                >
-                  <Expand className="w-5 h-5 text-white" />
-                </button>
-              )}
-
-              {/* Mute/Unmute button - bottom right */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMuted(!isMuted);
-                }}
-                className="absolute bottom-3 right-3 w-10 h-10 rounded-full shadow-lg bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
-                data-testid="button-video-mute"
-                aria-label={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5 text-white" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-white" />
-                )}
-              </button>
-
-              {/* Play/Pause button and draggable progress bar - bottom */}
+              {/* Controls bar - bottom */}
               <div className="absolute bottom-0 left-0 right-0 flex items-center gap-1.5 bg-black/20 px-1.5 py-1">
+                {/* Play/Pause button */}
                 <button
                   onClick={handlePlayPause}
                   className="flex-shrink-0 w-6 h-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
@@ -447,6 +416,8 @@ export default function PostCard({
                     <Play className="w-3 h-3 text-white fill-white" />
                   )}
                 </button>
+
+                {/* Progress bar */}
                 <div 
                   ref={progressBarRef}
                   className="flex-1 h-1 bg-black/40 rounded-full cursor-pointer hover:h-1.5 transition-all"
@@ -481,6 +452,38 @@ export default function PostCard({
                     style={{ width: `${progress}%` }}
                   />
                 </div>
+
+                {/* Mute/Unmute button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMuted(!isMuted);
+                  }}
+                  className="flex-shrink-0 w-6 h-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+                  data-testid="button-video-mute"
+                  aria-label={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-3 h-3 text-white" />
+                  ) : (
+                    <Volume2 className="w-3 h-3 text-white" />
+                  )}
+                </button>
+
+                {/* Expand button */}
+                {!isDisqualified && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFullscreen?.();
+                    }}
+                    className="flex-shrink-0 w-6 h-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+                    data-testid="button-video-expand"
+                    aria-label="Expand video"
+                  >
+                    <Expand className="w-3 h-3 text-white" />
+                  </button>
+                )}
               </div>
             </>
           ) : (
