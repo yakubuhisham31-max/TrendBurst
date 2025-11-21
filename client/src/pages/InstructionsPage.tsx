@@ -227,27 +227,27 @@ export default function InstructionsPage() {
                   return (
                     <div 
                       key={index} 
-                      className="aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity relative"
+                      className="aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity relative group"
                       onClick={() => setSelectedMedia({ url: media, type: mediaType })}
                       data-testid={`reference-media-${index}`}
                     >
                       {mediaType === "video" ? (
                         <video 
                           src={media} 
-                          className="w-full h-full object-cover" 
+                          className="w-full h-full object-cover pointer-events-none" 
                           muted
                         />
                       ) : (
                         <img 
                           src={media} 
                           alt={`Reference ${index + 1}`} 
-                          className="w-full h-full object-cover" 
+                          className="w-full h-full object-cover pointer-events-none" 
                         />
                       )}
                       {mediaType === "video" && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors">
-                            <Play className="w-6 h-6 text-white fill-white" />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
+                          <div className="w-16 h-16 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
+                            <Play className="w-8 h-8 text-white fill-white ml-1" />
                           </div>
                         </div>
                       )}
