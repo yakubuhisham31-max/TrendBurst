@@ -83,10 +83,10 @@ export default function RankingsPage() {
           </Button>
           <div className="flex flex-col flex-1">
             <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              <h1 className="text-lg font-bold text-yellow-400">{rankingsData.trendName}</h1>
+              <Trophy className="w-5 h-5 text-primary" />
+              <h1 className="text-lg font-bold text-white">{rankingsData.trendName}</h1>
             </div>
-            <p className="text-xs text-cyan-400 font-medium">Hosted by <span className="text-cyan-300">{rankingsData.trendHostUsername}</span></p>
+            <p className="text-xs text-muted-foreground font-medium">Hosted by <span className="text-foreground font-semibold">{rankingsData.trendHostUsername}</span></p>
           </div>
         </div>
       </header>
@@ -129,8 +129,8 @@ export default function RankingsPage() {
               )}
 
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-cyan-400">{currentUserPost.post.user?.username}</p>
-                <p className="text-sm text-gray-300 line-clamp-1">{currentUserPost.post.caption}</p>
+                <p className="font-bold text-white">{currentUserPost.post.user?.username}</p>
+                <p className="text-sm text-muted-foreground line-clamp-1">{currentUserPost.post.caption}</p>
                 <div className="mt-3 space-y-2">
                   <div className="vote-progress-bar">
                     <div
@@ -150,7 +150,7 @@ export default function RankingsPage() {
           <div className="grid grid-cols-3 gap-4 items-end">
             {topThree.map((entry, index) => {
               const isFirst = entry.rank === 1;
-              const heights = isFirst ? ["240px", "280px", "160px"] : ["160px", "200px", "140px"];
+              const heights = isFirst ? ["160px", "200px", "120px"] : ["120px", "160px", "100px"];
               const orders = [1, 0, 2];
               const badges = ["gold", "silver", "bronze"];
               const badge = badges[index];
@@ -185,7 +185,7 @@ export default function RankingsPage() {
                   </div>
 
                   {/* Username */}
-                  <p className={`${isFirst ? "text-base font-bold text-cyan-400" : "text-sm font-bold text-cyan-300"} text-center line-clamp-1 max-w-[160px]`}>
+                  <p className={`${isFirst ? "text-base font-bold" : "text-sm font-semibold"} text-white text-center line-clamp-1 max-w-[160px]`}>
                     {entry.post.user?.username}
                   </p>
 
@@ -276,7 +276,7 @@ export default function RankingsPage() {
                       <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
                       <AvatarFallback className="text-xs">{entry.post.user?.username.slice(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <p className="text-sm font-bold text-cyan-400 truncate">{entry.post.user?.username}</p>
+                    <p className="text-sm font-bold text-white truncate">{entry.post.user?.username}</p>
                     {entry.post.user?.id === rankingsData?.trendHostId && (
                       <Star className="w-3 h-3 fill-yellow-500 text-yellow-500 flex-shrink-0" data-testid="icon-host" />
                     )}
