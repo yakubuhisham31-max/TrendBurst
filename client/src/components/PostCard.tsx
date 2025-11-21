@@ -505,7 +505,13 @@ export default function PostCard({
               src={mediaUrl}
               alt="Post"
               className="w-full h-full object-cover cursor-pointer"
-              onClick={onFullscreen}
+              onClick={() => {
+                if (!user) {
+                  onAuthModalOpen?.();
+                  return;
+                }
+                onFullscreen?.();
+              }}
               data-testid="img-post"
             />
           )}

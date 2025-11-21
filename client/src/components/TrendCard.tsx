@@ -37,6 +37,7 @@ interface TrendCardProps {
   isHost?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
+  onAuthModalOpen?: () => void;
 }
 
 type NotificationStatus = "all" | "posts" | "muted";
@@ -58,6 +59,7 @@ export default function TrendCard({
   isHost = false,
   onClick,
   onDelete,
+  onAuthModalOpen,
 }: TrendCardProps) {
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("muted");
   const [shareOpen, setShareOpen] = useState(false);
@@ -217,6 +219,10 @@ export default function TrendCard({
               data-testid="avatar-user"
               onClick={(e) => {
                 e.stopPropagation();
+                if (!user) {
+                  onAuthModalOpen?.();
+                  return;
+                }
                 setLocation(`/profile/${username}`);
               }}
             >
@@ -231,6 +237,10 @@ export default function TrendCard({
                 data-testid="text-username"
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (!user) {
+                    onAuthModalOpen?.();
+                    return;
+                  }
                   setLocation(`/profile/${username}`);
                 }}
               >
