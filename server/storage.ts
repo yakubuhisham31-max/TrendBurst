@@ -522,20 +522,32 @@ export class DbStorage implements IStorage {
   }
 
   async deletePost(id: string): Promise<void> {
-    // Delete all related data first
-    // Delete votes for this post
+    // Delete all related data first - ORDER MATTERS for foreign keys!
+    
+    // Step 1: Get all comment IDs for this post (we'll need them for notifications)
+    const comments = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.postId, id));
+    const commentIds = comments.map(c => c.id);
+    
+    // Step 2: Delete notifications that reference these comments (before deleting comments)
+    if (commentIds.length > 0) {
+      await db.delete(schema.notifications).where(
+        sql`${schema.notifications.commentId} IN (${sql.join(commentIds)})`
+      );
+    }
+    
+    // Step 3: Delete votes for this post
     await db.delete(schema.votes).where(eq(schema.votes.postId, id));
     
-    // Delete comments for this post
+    // Step 4: Delete comments for this post
     await db.delete(schema.comments).where(eq(schema.comments.postId, id));
     
-    // Delete saved post records
+    // Step 5: Delete saved post records
     await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
     
-    // Delete notifications related to this post
+    // Step 6: Delete notifications related to this post
     await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
     
-    // Finally delete the post itself
+    // Step 7: Finally delete the post itself
     await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 
