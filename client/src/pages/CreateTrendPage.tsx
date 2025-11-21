@@ -421,6 +421,42 @@ export default function CreateTrendPage() {
               )}
             </div>
 
+            <div>
+              <h3 className="font-semibold mb-3">Prizes (Optional)</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="prize-first">1st Place Prize</Label>
+                  <Input
+                    id="prize-first"
+                    placeholder="e.g., $100 or Trophy"
+                    value={prizeFirst}
+                    onChange={(e) => setPrizeFirst(e.target.value)}
+                    data-testid="input-prize-first"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prize-second">2nd Place Prize</Label>
+                  <Input
+                    id="prize-second"
+                    placeholder="e.g., $50 or Certificate"
+                    value={prizeSecond}
+                    onChange={(e) => setPrizeSecond(e.target.value)}
+                    data-testid="input-prize-second"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prize-third">3rd Place Prize</Label>
+                  <Input
+                    id="prize-third"
+                    placeholder="e.g., $25 or Badge"
+                    value={prizeThird}
+                    onChange={(e) => setPrizeThird(e.target.value)}
+                    data-testid="input-prize-third"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Reference / Sponsor(s)</Label>
               <p className="text-sm text-muted-foreground">
