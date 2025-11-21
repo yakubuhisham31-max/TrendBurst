@@ -453,25 +453,28 @@ export default function CreateTrendPage() {
               </div>
 
               {includePrizes && (
-                <div>
-                  <h3 className="font-semibold mb-3">Prizes</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Prizes</h3>
+                    {(prizeFirst || prizeSecond || prizeThird) && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setPrizeFirst("");
+                          setPrizeSecond("");
+                          setPrizeThird("");
+                        }}
+                        data-testid="button-clear-all-prizes"
+                      >
+                        Clear All
+                      </Button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label htmlFor="prize-first" className="flex-1">1st Place Prize</Label>
-                        {prizeFirst && (
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setPrizeFirst("")}
-                            className="h-8 w-8"
-                            data-testid="button-clear-prize-first"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
+                      <Label htmlFor="prize-first">1st Place Prize</Label>
                       <Input
                         id="prize-first"
                         placeholder="e.g., $100 or Trophy"
@@ -481,21 +484,7 @@ export default function CreateTrendPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label htmlFor="prize-second" className="flex-1">2nd Place Prize</Label>
-                        {prizeSecond && (
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setPrizeSecond("")}
-                            className="h-8 w-8"
-                            data-testid="button-clear-prize-second"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
+                      <Label htmlFor="prize-second">2nd Place Prize</Label>
                       <Input
                         id="prize-second"
                         placeholder="e.g., $50 or Certificate"
@@ -505,21 +494,7 @@ export default function CreateTrendPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label htmlFor="prize-third" className="flex-1">3rd Place Prize</Label>
-                        {prizeThird && (
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setPrizeThird("")}
-                            className="h-8 w-8"
-                            data-testid="button-clear-prize-third"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
+                      <Label htmlFor="prize-third">3rd Place Prize</Label>
                       <Input
                         id="prize-third"
                         placeholder="e.g., $25 or Badge"
@@ -628,47 +603,52 @@ export default function CreateTrendPage() {
                 />
               </label>
               {referencePreviewUrls.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 mt-2">
-                  {referencePreviewUrls.map((url, index) => {
-                    const file = referenceFiles[index];
-                    const isVideo = file?.type.startsWith('video/');
-                    
-                    return (
-                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
-                        {isVideo ? (
-                          <video 
-                            src={url} 
-                            className="w-full h-full object-cover pointer-events-none" 
-                            muted 
-                            data-testid={`preview-reference-${index}`}
-                          />
-                        ) : (
-                          <img 
-                            src={url} 
-                            alt={`Reference ${index + 1}`} 
-                            className="w-full h-full object-cover pointer-events-none" 
-                            data-testid={`preview-reference-${index}`} 
-                          />
-                        )}
-                        {isVideo && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 to-transparent">
-                            <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center group-hover:bg-white/50 transition-colors">
-                              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    {referencePreviewUrls.map((url, index) => {
+                      const file = referenceFiles[index];
+                      const isVideo = file?.type.startsWith('video/');
+                      
+                      return (
+                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                          {isVideo ? (
+                            <video 
+                              src={url} 
+                              className="w-full h-full object-cover" 
+                              muted 
+                              data-testid={`preview-reference-${index}`}
+                            />
+                          ) : (
+                            <img 
+                              src={url} 
+                              alt={`Reference ${index + 1}`} 
+                              className="w-full h-full object-cover" 
+                              data-testid={`preview-reference-${index}`} 
+                            />
+                          )}
+                          {isVideo && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/20 to-transparent pointer-events-none">
+                              <Play className="w-5 h-5 text-white fill-white" />
                             </div>
-                          </div>
-                        )}
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          className="absolute top-1 right-1 h-6 w-6 z-10"
-                          onClick={() => removeReferenceFile(index)}
-                          data-testid={`button-remove-reference-${index}`}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    );
-                  })}
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {referencePreviewUrls.map((_, index) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeReferenceFile(index)}
+                        data-testid={`button-remove-reference-${index}`}
+                      >
+                        Remove Reference {index + 1}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
