@@ -19,6 +19,7 @@ interface PostFullscreenModalProps {
   onVoteDown?: (postId: string) => void;
   userVoted?: boolean;
   rank?: number;
+  allPosts?: (Post & { user?: User })[];
 }
 
 export default function PostFullscreenModal({
@@ -30,6 +31,7 @@ export default function PostFullscreenModal({
   onVoteDown,
   userVoted = false,
   rank,
+  allPosts,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const { user } = useAuth();
@@ -43,6 +45,12 @@ export default function PostFullscreenModal({
     if (j === 3 && k !== 13) return `${num}rd`;
     return `${num}th`;
   };
+
+  // Calculate rank from allPosts if not provided
+  const calculatedRank = rank || (allPosts ? (() => {
+    const sorted = [...allPosts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+    return sorted.findIndex(p => p.id === post.id) + 1;
+  })() : undefined);
 
   // Check if post is saved
   const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
@@ -140,9 +148,9 @@ export default function PostFullscreenModal({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-white truncate">{post.user?.username}</p>
-                    {rank && (
+                    {calculatedRank && (
                       <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
-                        {getRankOrdinal(rank)}
+                        {getRankOrdinal(calculatedRank)}
                       </span>
                     )}
                   </div>
