@@ -20,6 +20,8 @@ interface PostFullscreenModalProps {
   userVoted?: boolean;
   rank?: number;
   allPosts?: (Post & { user?: User })[];
+  onNextPost?: () => void;
+  onPreviousPost?: () => void;
 }
 
 export default function PostFullscreenModal({
@@ -32,11 +34,14 @@ export default function PostFullscreenModal({
   userVoted = false,
   rank,
   allPosts,
+  onNextPost,
+  onPreviousPost,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const touchStartY = useRef(0);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -107,6 +112,26 @@ export default function PostFullscreenModal({
     };
   }, []);
 
+  // Handle swipe gestures for post navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const swipeDistance = touchStartY.current - touchEndY;
+    const minSwipeDistance = 50;
+
+    // Swipe up (positive distance) - next post
+    if (swipeDistance > minSwipeDistance && onNextPost) {
+      onNextPost();
+    }
+    // Swipe down (negative distance) - previous post
+    else if (swipeDistance < -minSwipeDistance && onPreviousPost) {
+      onPreviousPost();
+    }
+  };
+
   const handleSave = (e: React.MouseEvent) => {
     e.stopPropagation();
     saveMutation.mutate();
@@ -125,6 +150,8 @@ export default function PostFullscreenModal({
       <div
         className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
         onClick={onClose}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         data-testid="modal-fullscreen-post-backdrop"
       >
         <div

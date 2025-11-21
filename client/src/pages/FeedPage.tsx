@@ -432,6 +432,18 @@ export default function FeedPage() {
           userVoted={posts.find((p) => p.id === fullscreenPostId)?.userVoted}
           rank={voteRankMap.get(fullscreenPostId)}
           allPosts={posts as (Post & { user?: User })[]}
+          onNextPost={() => {
+            const currentIndex = posts.findIndex((p) => p.id === fullscreenPostId);
+            if (currentIndex < posts.length - 1) {
+              setFullscreenPostId(posts[currentIndex + 1].id);
+            }
+          }}
+          onPreviousPost={() => {
+            const currentIndex = posts.findIndex((p) => p.id === fullscreenPostId);
+            if (currentIndex > 0) {
+              setFullscreenPostId(posts[currentIndex - 1].id);
+            }
+          }}
         />
       )}
     </div>
