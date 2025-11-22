@@ -2,6 +2,8 @@ import "dotenv/config";
 import "./types"; // Import session type declarations
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { serveStatic, log } from "./helpers";
@@ -61,6 +63,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+const PgStore = connectPgSimple(session);
+
 // Fix malformed DATABASE_URL (remove 'psql ' prefix and trailing quotes if present)
 let databaseUrl = process.env.DATABASE_URL;
 
@@ -91,7 +95,32 @@ pool.query('SELECT NOW()').then(() => {
   console.error('⚠️  Server will continue but features requiring database will fail');
 });
 
-// Note: Session middleware is set up by setupAuth() in registerRoutes() via replitAuth.ts
+// Validate required environment variables
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('❌ SESSION_SECRET environment variable is required in production');
+  process.exit(1);
+}
+
+app.use(
+  session({
+    store: new PgStore({
+      pool,
+      createTableIfMissing: true,
+      disableTouch: false,
+    }),
+    secret: process.env.SESSION_SECRET || "dev-secret-key-not-for-production",
+    resave: true,
+    saveUninitialized: true,
+    rolling: true,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true,
+      sameSite: "none",
+      domain: process.env.COOKIE_DOMAIN, // Optional: set cookie domain for cross-subdomain auth
+    },
+  })
+);
 
 // Add cache control headers to prevent browser caching
 app.use((req, res, next) => {

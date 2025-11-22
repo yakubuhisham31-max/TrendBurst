@@ -22,13 +22,10 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: true, // Create table if it doesn't exist
+    createTableIfMissing: true,
     ttl: sessionTtl,
-    tableName: "session", // Match existing table name (singular)
+    tableName: "sessions",
   });
-  
-  const isProduction = process.env.NODE_ENV === "production";
-  
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -36,8 +33,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: isProduction, // Only require HTTPS in production
-      sameSite: isProduction ? "none" : "lax", // Use 'none' in production for cross-site OAuth, 'lax' in dev
+      secure: true,
       maxAge: sessionTtl,
     },
   });
@@ -54,34 +50,21 @@ function updateUserSession(
 }
 
 async function upsertUser(claims: any) {
-  const fullName = claims["first_name"] && claims["last_name"] 
-    ? `${claims["first_name"]} ${claims["last_name"]}` 
-    : undefined;
-  
   await storage.upsertUser({
     id: String(claims["sub"]),
     email: claims["email"],
-    fullName: fullName,
+    fullName: claims["first_name"] && claims["last_name"] 
+      ? `${claims["first_name"]} ${claims["last_name"]}` 
+      : undefined,
     profilePicture: claims["profile_image_url"],
   });
 }
 
 export async function setupAuth(app: Express) {
-  // Note: trust proxy is set in server/index.ts before this function is called
-  // Always set up session middleware for all authentication strategies
+  app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Set up Passport serialization (shared by all strategies)
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
-
-  // Only set up Replit Auth if REPL_ID is available
-  if (!process.env.REPL_ID) {
-    console.log("⚠️  Replit Auth not configured - skipping (REPL_ID not set)");
-    return;
-  }
 
   const config = await getOidcConfig();
 
@@ -95,44 +78,58 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Get the correct callback URL - must match what's registered in Replit Auth
-  const isProduction = process.env.NODE_ENV === "production";
-  const callbackDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || "localhost:5000";
-  
-  // Use explicit scheme override if provided, otherwise derive from environment
-  // In production or when REPLIT_DOMAINS is set (deployed), use https
-  // For local development (localhost), use http unless explicitly overridden
-  const callbackScheme = process.env.REPLIT_CALLBACK_SCHEME || 
-    (process.env.REPLIT_DOMAINS || isProduction ? "https" : "http");
-  
-  const strategy = new Strategy(
-    {
-      name: "replitauth",
-      config,
-      scope: "openid email profile offline_access",
-      callbackURL: `${callbackScheme}://${callbackDomain}/api/callback`,
-    },
-    verify
-  );
-  passport.use(strategy);
+  // Keep track of registered strategies
+  const registeredStrategies = new Set<string>();
+
+  // Helper function to ensure strategy exists for a domain
+  const ensureStrategy = (domain: string) => {
+    const strategyName = `replitauth:${domain}`;
+    if (!registeredStrategies.has(strategyName)) {
+      const strategy = new Strategy(
+        {
+          name: strategyName,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL: `https://${domain}/api/callback`,
+        },
+        verify
+      );
+      passport.use(strategy);
+      registeredStrategies.add(strategyName);
+    }
+  };
+
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Note: Replit Auth handles account selection at the Replit level
-    // Users can choose their authentication method (Google, GitHub, X, Apple)
-    // but cannot select specific accounts within those providers due to Replit Auth acting as an identity broker
-    passport.authenticate("replitauth")(req, res, next);
+    // Use REPLIT_DOMAIN env var if available (Replit preview URL), otherwise use hostname
+    const domain = process.env.REPLIT_DOMAIN || req.hostname;
+    ensureStrategy(domain);
+    passport.authenticate(`replitauth:${domain}`, {
+      prompt: "login consent",
+      scope: ["openid", "email", "profile", "offline_access"],
+    })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate("replitauth", {
+    // Use REPLIT_DOMAIN env var if available (Replit preview URL), otherwise use hostname
+    const domain = process.env.REPLIT_DOMAIN || req.hostname;
+    ensureStrategy(domain);
+    passport.authenticate(`replitauth:${domain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
   });
 
-  app.post("/api/auth/logout", (req, res) => {
+  app.get("/api/logout", (req, res) => {
     req.logout(() => {
-      res.json({ success: true });
+      res.redirect(
+        client.buildEndSessionUrl(config, {
+          client_id: process.env.REPL_ID!,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+        }).href
+      );
     });
   });
 }
@@ -140,39 +137,19 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  // Check if user is authenticated in Passport
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  // If no claims, user session is invalid
-  if (!user || !user.claims) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  // Check if this is a Google OAuth user (no expiration/refresh tokens)
-  if (user.provider === "google") {
-    // Google OAuth users don't have expiring tokens - session-based auth only
-    return next();
-  }
-
-  // For Replit Auth users, check token expiration
-  // If no expiration time, something's wrong
-  if (!user.expires_at) {
+  if (!req.isAuthenticated() || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
-  
-  // Token is still valid
-  if (now < user.expires_at) {
+  if (now <= user.expires_at) {
     return next();
   }
 
-  // Token expired, try to refresh
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    return res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ message: "Unauthorized" });
+    return;
   }
 
   try {
@@ -181,7 +158,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    console.error("Token refresh failed:", error);
-    return res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ message: "Unauthorized" });
+    return;
   }
 };

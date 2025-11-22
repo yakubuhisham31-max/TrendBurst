@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, comparePassword, sanitizeUser, requireAuth } from "./auth";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { setupGoogleAuth } from "./googleAuth";
 import { 
   insertUserSchema, 
   insertTrendSchema, 
@@ -22,9 +21,6 @@ import * as notificationService from "./notificationService";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Authentication
   await setupAuth(app);
-  
-  // Setup Google OAuth (with account selection prompt)
-  await setupGoogleAuth(app);
 
   // Health check endpoint (for Render and monitoring)
   app.get("/health", (_req, res) => {
@@ -41,18 +37,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
-  // Get current authenticated user endpoint (wrapped format for frontend)
-  app.get("/api/auth/me", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json({ user });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

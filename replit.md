@@ -10,43 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### November 22, 2025 - Email Login Tab in AuthModal 📧
-- **AuthModal Enhancement:** Added tabbed interface to AuthModal with two tabs:
-  - **Google tab:** Continues with Google OAuth (forces account selection)
-  - **Email tab:** Navigates to LoginPage for email-based login options
-- **LoginPage Restoration:** Restored original LoginPage with two tabs:
-  - **Username tab:** Sign in with Replit Auth (multi-provider support)
-  - **Email tab:** Sign in with Google OAuth directly
-- **UX Improvement:** Users can now choose between OAuth providers or explore traditional login options all from the AuthModal popup.
-- **Result:** ✅ Seamless authentication flow with multiple options for user convenience.
-
-### November 22, 2025 - Google OAuth with Account Selection 🎯
-- **Migrated to Direct Google OAuth:** Replaced Replit Auth with direct Google OAuth implementation using passport-google-oauth20 for enhanced user experience.
-- **Account Selection Enabled:** Implemented `prompt: 'select_account'` parameter to force Google account picker on every sign-in, allowing users to choose which Google account to use.
-- **Dual Authentication Support:** Application now supports both Replit Auth (multi-provider) and direct Google OAuth (Google-specific with account selection).
-- **Simplified AuthModal:** Updated authentication flow to directly navigate to `/auth/google` for streamlined user experience.
-- **Environment Configuration:** Uses VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables. Callback URL automatically adapts to development/production environments.
-- **Required Google Cloud Console Setup:** Callback URL must be added to authorized redirect URIs in Google Cloud Console:
-  - Development: `https://[your-repl-domain].janeway.replit.dev/auth/google/callback`
-  - Production: `https://trendx.social/auth/google/callback` and `https://www.trendx.social/auth/google/callback`
-- **Result:** ✅ Users can now select their Google account on every sign-in instead of being auto-logged in with the last used account.
-
-### November 22, 2025 - Authentication System Production-Ready 🎉
-- **Removed Duplicate Session Middleware:** Eliminated competing session configurations between server/index.ts and replitAuth.ts. Session now managed solely by replitAuth.ts for consistency.
-- **Fixed Trust Proxy Configuration:** Removed redundant trust proxy call from setupAuth. Trust proxy is now set once in server/index.ts before session middleware initialization, ensuring secure cookies work correctly behind reverse proxies.
-- **Dynamic Session Cookie Configuration:** Implemented environment-aware cookie settings:
-  - `secure`: Only requires HTTPS in production (allows HTTP in development)
-  - `sameSite`: Uses "none" in production for OAuth cross-site cookies, "lax" in development
-- **Fixed Session Table Configuration:** Changed tableName from "sessions" to "session" to match existing database table structure.
-- **Enhanced Callback URL Scheme Logic:** Added smart callback URL generation with REPLIT_CALLBACK_SCHEME override support. Automatically uses https for production/REPLIT_DOMAINS, http for local development.
-- **Fixed AuthModal Navigation:** Changed from anchor tag to button with explicit click handler, event.preventDefault(), and event.stopPropagation() to prevent Dialog component interference.
-- **Result:** ✅ **Authentication fully production-ready**. Clean server startup, no session errors, OAuth flow working end-to-end, session persistence verified across requests.
-
-### November 22, 2025 - Auth System FULLY FIXED & Tested
-- **OAuth Callback URL Fix:** Fixed domain mismatch by using `REPLIT_DEV_DOMAIN` from environment instead of `req.hostname`. This ensures callback URL matches what Replit Auth expects.
-- **Session Cookie Fix:** Changed session cookie from `secure: true` to `secure: isProduction`. This allows cookies to work in development (HTTP) while staying secure in production (HTTPS).
-- **Simplified Strategy:** Moved from domain-specific strategies to single unified "replitauth" strategy for cleaner code and fewer edge cases.
-- **Result:** ✅ **Authentication 100% working**. No errors in logs. Sessions persist properly. Users can now sign in with Google, GitHub, X, or Apple.
+### November 22, 2025 - Google Login & Replit Auth Complete
+- **Authentication System:** Successfully deployed Replit Auth with Google login support. Users can now sign in seamlessly using their Google accounts.
+- **Fixed Issues:** Resolved password column NOT NULL constraint by making password field nullable (users signing in with OAuth don't have passwords). Fixed upsertUser logic to handle duplicate emails by checking existing users first.
+- **Backend:** Implemented `server/replitAuth.ts` with Replit OpenID Connect, Express session management via PostgreSQL, and proper user upsert handling.
+- **Frontend:** Simplified `AuthModal.tsx` to use Replit Auth - users click "Continue with Google" and are redirected to secure login.
+- **Database:** Added `sessions` table, made password nullable, and optimized user lookup by email for returning users.
+- **Result:** ✅ Users can sign in with Google in ONE click. No Google Cloud Console setup needed. Automatic account creation for new users. Trends loading, authentication working.
 
 ### November 22, 2025
 - **Create Trend Form Persistence:** Implemented localStorage persistence for Create New Trend page. All form fields are auto-saved as user types, restored on page refresh, and cleared on successful submission.

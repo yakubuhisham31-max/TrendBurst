@@ -3,9 +3,8 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import HomePage from "@/pages/HomePage";
-import LoginPage from "@/pages/LoginPage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
 import EditTrendPage from "@/pages/EditTrendPage";
@@ -18,11 +17,11 @@ import FeedChatPage from "@/pages/FeedChatPage";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [location] = useLocation();
 
   // While loading auth, show loading screen to avoid redirect flicker
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-lg text-foreground">Loading...</div>
@@ -40,9 +39,9 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
 }
 
 function PublicOnlyRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -61,7 +60,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/login" component={LoginPage} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />
@@ -81,12 +79,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Router />
-          <Toaster />
-        </TooltipProvider>
-      </AuthProvider>
+      <TooltipProvider>
+        <Router />
+        <Toaster />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

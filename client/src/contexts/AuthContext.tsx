@@ -46,37 +46,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [data]);
 
-  const login = async () => {
-    // OAuth login - redirect to Replit Auth
-    window.location.href = "/api/login";
+  const login = async (username: string, password: string) => {
+    const response = await apiRequest("POST", "/api/auth/login", {
+      username,
+      password,
+    });
+    const { user } = await response.json();
+    setUser(user);
+    initializeOneSignal(user.id);
   };
 
   const logout = async () => {
-    try {
-      // Call logout endpoint
-      await apiRequest("POST", "/api/auth/logout", {});
-    } catch (error) {
-      console.error("Logout API error:", error);
-      // Continue with logout even if API fails
-    }
-    
-    // Clear user state immediately
+    await apiRequest("POST", "/api/auth/logout", {});
     setUser(null);
-    
-    // Refetch to confirm we're logged out
-    try {
-      await refetch();
-    } catch (error) {
-      console.error("Refetch error:", error);
-    }
-
-    // Redirect to home after logout
-    window.location.href = "/";
   };
 
-  const register = async () => {
-    // OAuth registration - redirect to Replit Auth
-    window.location.href = "/api/login";
+  const register = async (data: RegisterData) => {
+    const response = await apiRequest("POST", "/api/auth/register", data);
+    const { user } = await response.json();
+    setUser(user);
+    initializeOneSignal(user.id);
   };
 
   const checkAuth = async () => {
