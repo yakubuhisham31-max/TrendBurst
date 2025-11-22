@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 interface NavigationMenuProps {
   open: boolean;
@@ -24,6 +26,32 @@ export default function NavigationMenu({
 }: NavigationMenuProps) {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({ title: "Logged out", description: "You've been signed out" });
+      onOpenChange(false);
+      window.location.href = "/";
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message || "Could not log out",
+        variant: "destructive"
+      });
+    }
+  };
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-72" data-testid="sheet-navigation">
@@ -76,7 +104,7 @@ export default function NavigationMenu({
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-                onClick={onLogoutClick}
+                onClick={handleLogout}
                 data-testid="button-logout"
               >
                 <LogOut className="w-5 h-5" />

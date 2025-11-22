@@ -61,7 +61,7 @@ export default function HomePage() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, logout, loading } = useAuth();
+  const { user, isLoading: loading } = useAuth();
 
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   
@@ -467,10 +467,6 @@ export default function HomePage() {
         onOpenChange={setMenuOpen}
         username={user?.username || "Guest"}
         userAvatar={user?.profilePicture || undefined}
-        onLogoutClick={async () => {
-          await logout();
-          setLocation("/login");
-        }}
         onAuthModalOpen={() => setAuthModalOpen(true)}
       />
 
