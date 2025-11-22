@@ -53,9 +53,10 @@ async function upsertUser(claims: any) {
   await storage.upsertUser({
     id: String(claims["sub"]),
     email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
+    fullName: claims["first_name"] && claims["last_name"] 
+      ? `${claims["first_name"]} ${claims["last_name"]}` 
+      : undefined,
+    profilePicture: claims["profile_image_url"],
   });
 }
 

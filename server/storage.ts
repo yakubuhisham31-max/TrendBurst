@@ -141,12 +141,20 @@ export class DbStorage implements IStorage {
 
   async upsertUser(userData: Partial<User>): Promise<User> {
     if (!userData.id) throw new Error("User ID is required");
+    // Map Replit Auth fields to existing schema
+    const mappedData = {
+      id: userData.id,
+      email: userData.email,
+      username: userData.username || `user_${userData.id.substring(0, 8)}`,
+      fullName: userData.fullName || userData.email?.split("@")[0],
+      profilePicture: userData.profilePicture,
+    };
     const result = await db
       .insert(schema.users)
-      .values(userData as any)
+      .values(mappedData as any)
       .onConflictDoUpdate({
         target: schema.users.id,
-        set: userData as any,
+        set: mappedData as any,
       })
       .returning();
     return result[0];

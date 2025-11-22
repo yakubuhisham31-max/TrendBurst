@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 22, 2025 - Replit Auth Migration
+- **Authentication System Upgrade:** Successfully migrated from manual Google OAuth to Replit's built-in OpenID Connect authentication. Eliminated "Error 401: invalid_client" by removing dependency on Google Cloud Console configuration.
+- **Backend Setup:** Implemented `server/replitAuth.ts` for Replit Auth flow, integrated with Express session management and PostgreSQL session storage via `connect-pg-simple`.
+- **Frontend Setup:** Created `client/src/hooks/useAuth.ts` React hook for accessing authenticated user data. Updated all components to use new auth system.
+- **Database Migration:** Added `sessions` table for express-session support. Updated user schema to use correct column mappings for Replit Auth fields.
+- **API Updates:** All protected routes now use `isAuthenticated` middleware from Replit Auth. Auto-generates usernames and full names from Replit Auth claims.
+- **Result:** Trends now loading successfully. App fully functional with Replit authentication.
+
 ### November 22, 2025
 - **Create Trend Form Persistence:** Implemented localStorage persistence for Create New Trend page. All form fields are auto-saved as user types, restored on page refresh, and cleared on successful submission.
 - **Floating Action Buttons Layout:** Reorganized floating buttons at bottom-right corner with Chat button on top and Post button below for improved user experience.

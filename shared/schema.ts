@@ -16,13 +16,11 @@ export const sessions = pgTable(
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
   email: text("email").unique(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  profileImageUrl: text("profile_image_url"),
-  username: text("username").unique(),
   fullName: text("full_name"),
   password: text("password"),
+  googleId: text("google_id").unique(),
   bio: text("bio"),
   profilePicture: text("profile_picture"),
   followers: integer("followers").default(0),
@@ -36,8 +34,6 @@ export const users = pgTable("users", {
   youtubeUrl: text("youtube_url"),
   categories: text("categories").array(),
   role: text("role"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const trends = pgTable("trends", {
