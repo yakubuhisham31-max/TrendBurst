@@ -37,6 +37,7 @@ export interface IStorage {
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
+  upsertUser(user: Partial<User>): Promise<User>;
   
   // Trends
   getTrend(id: string): Promise<Trend | undefined>;
@@ -135,6 +136,19 @@ export class DbStorage implements IStorage {
 
   async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
     const result = await db.update(schema.users).set(data).where(eq(schema.users.id, id)).returning();
+    return result[0];
+  }
+
+  async upsertUser(userData: Partial<User>): Promise<User> {
+    if (!userData.id) throw new Error("User ID is required");
+    const result = await db
+      .insert(schema.users)
+      .values(userData as any)
+      .onConflictDoUpdate({
+        target: schema.users.id,
+        set: userData as any,
+      })
+      .returning();
     return result[0];
   }
 

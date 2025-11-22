@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Upload, ArrowLeft, Plus, X, Calendar, Loader2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { InsertTrend } from "@shared/schema";

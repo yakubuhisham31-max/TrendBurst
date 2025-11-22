@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, comparePassword, sanitizeUser, requireAuth } from "./auth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertUserSchema, 
   insertTrendSchema, 
@@ -18,6 +19,9 @@ import { sendPushNotification } from "./onesignal";
 import * as notificationService from "./notificationService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Authentication
+  await setupAuth(app);
+
   // Health check endpoint (for Render and monitoring)
   app.get("/health", (_req, res) => {
     res.status(200).json({ 
@@ -27,227 +31,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Auth routes
-  
-  // Register endpoint
-  app.post("/api/auth/register", async (req, res) => {
+  // Get current authenticated user endpoint
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const result = insertUserSchema.safeParse(req.body);
-      
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
-      }
-
-      const { username, email, fullName, password, profilePicture, categories, role } = result.data;
-
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-
-      // Check if email already exists
-      if (email) {
-        const existingEmail = await storage.getUserByEmail(email);
-        if (existingEmail) {
-          return res.status(400).json({ message: "Email already exists" });
-        }
-      }
-
-      const hashedPassword = password ? await hashPassword(password) : undefined;
-      const user = await storage.createUser({
-        username,
-        email,
-        fullName,
-        password: hashedPassword,
-        profilePicture,
-        categories,
-        role,
-      });
-
-      req.session.userId = user.id;
-
-      // Send welcome notification
-      await notificationService.sendWelcomeNotification(user.id);
-
-      req.session.save((err) => {
-        if (err) {
-          return res.status(500).json({ message: "Session error" });
-        }
-        res.status(201).json({ user: sanitizeUser(user) });
-      });
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Login endpoint
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { username, password } = req.body;
-
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username/email and password are required" });
-      }
-
-      // Check if login identifier is email or username
-      const isEmail = username.includes('@');
-      const user = isEmail 
-        ? await storage.getUserByEmail(username)
-        : await storage.getUserByUsername(username);
-        
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      if (!user.password) {
-        return res.status(401).json({ message: "Please use Google login for this account" });
-      }
-
-      const isValidPassword = await comparePassword(password, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      req.session.userId = user.id;
-
-      req.session.save((err) => {
-        if (err) {
-          return res.status(500).json({ message: "Session error" });
-        }
-        res.json({ user: sanitizeUser(user) });
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Logout endpoint
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Could not log out" });
-      }
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
-  // Get current user endpoint
-  app.get("/api/auth/me", requireAuth, async (req, res) => {
-    try {
-      const user = await storage.getUser(req.session.userId!);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json({ user: sanitizeUser(user) });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Complete profile endpoint for Google OAuth users
-  app.post("/api/auth/complete-profile", requireAuth, async (req, res) => {
-    try {
-      const { username, password } = req.body;
-
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
-      }
-
-      if (username.length < 3) {
-        return res.status(400).json({ message: "Username must be at least 3 characters" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters" });
-      }
-
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      const updatedUser = await storage.updateUser(req.session.userId!, {
-        username,
-        password: hashedPassword,
-        profileComplete: 1,
-      });
-
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json({ user: sanitizeUser(updatedUser), message: "Profile completed successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Google OAuth callback endpoint
-  app.post("/api/auth/google", async (req, res) => {
-    try {
-      const { googleId, email, fullName } = req.body;
-
-      if (!googleId) {
-        return res.status(400).json({ message: "Google ID is required" });
-      }
-
-      // Check if user with this Google ID exists
-      let user = await storage.getUserByGoogleId(googleId);
-
-      if (user) {
-        // Existing Google user - just log them in
-        req.session.userId = user.id;
-        req.session.save((err) => {
-          if (err) {
-            return res.status(500).json({ message: "Session error" });
-          }
-          res.json({ user: sanitizeUser(user), isNewUser: false, redirectTo: "/" });
-        });
-      } else {
-        // New Google user - create account, redirect to complete profile
-        const tempUsername = `user_${googleId.substring(0, 10)}`;
-        user = await storage.createUser({
-          username: tempUsername,
-          email: email || undefined,
-          fullName: fullName || undefined,
-          googleId,
-          profileComplete: 0,
-        });
-
-        req.session.userId = user.id;
-        req.session.save((err) => {
-          if (err) {
-            return res.status(500).json({ message: "Session error" });
-          }
-          res.json({ user: sanitizeUser(user), isNewUser: true, redirectTo: "/complete-profile" });
-        });
-      }
-    } catch (error) {
-      console.error("Google auth error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // GET endpoint for Google OAuth callback (for redirect flow)
-  app.get("/api/auth/google/callback", async (req, res) => {
-    try {
-      const { code } = req.query;
-      
-      if (!code) {
-        return res.redirect("/login?error=missing_code");
-      }
-
-      // Since we don't have real Google OAuth credentials yet, redirect to login
-      // In production, you would exchange the code for an ID token here
-      res.redirect("/login");
-    } catch (error) {
-      console.error("Google callback error:", error);
-      res.redirect("/login?error=auth_failed");
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
@@ -276,6 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(trendsWithCreators);
     } catch (error) {
+      console.error("[/api/trends] Error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -304,11 +97,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/trends - Create trend (protected)
-  app.post("/api/trends", requireAuth, async (req, res) => {
+  app.post("/api/trends", isAuthenticated, async (req, res) => {
     try {
       const result = insertTrendSchema.safeParse({
         ...req.body,
-        userId: req.session.userId,
+        userId: ((req as any).user?.claims?.sub),
       });
 
       if (!result.success) {
@@ -318,12 +111,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trend = await storage.createTrend(result.data);
       
       // Create notification for followers
-      const followers = await storage.getFollowers(req.session.userId!);
-      const actor = await storage.getUser(req.session.userId!);
+      const followers = await storage.getFollowers(((req as any).user?.claims?.sub)!);
+      const actor = await storage.getUser(((req as any).user?.claims?.sub)!);
       for (const follow of followers) {
         await storage.createNotification({
           userId: follow.followerId,
-          actorId: req.session.userId!,
+          actorId: ((req as any).user?.claims?.sub)!,
           type: 'new_trend_from_following',
           trendId: trend.id,
         });
@@ -343,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PATCH /api/trends/:id - Update trend (protected, only trend creator)
-  app.patch("/api/trends/:id", requireAuth, async (req, res) => {
+  app.patch("/api/trends/:id", isAuthenticated, async (req, res) => {
     try {
       const trend = await storage.getTrend(req.params.id);
 
@@ -351,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== req.session.userId) {
+      if (trend.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: You can only update your own trends" });
       }
 
@@ -363,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/trends/:id - Delete trend (protected, only trend creator)
-  app.delete("/api/trends/:id", requireAuth, async (req, res) => {
+  app.delete("/api/trends/:id", isAuthenticated, async (req, res) => {
     try {
       const trend = await storage.getTrend(req.params.id);
 
@@ -371,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== req.session.userId) {
+      if (trend.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own trends" });
       }
 
@@ -405,9 +198,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/dashboard/stats - Get dashboard statistics for current user (protected)
-  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
+  app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.session.userId!;
+      const userId = ((req as any).user?.claims?.sub)!;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -441,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/dashboard/trends/:id/analytics - Get detailed analytics for a specific trend (protected, only trend creator)
-  app.get("/api/dashboard/trends/:id/analytics", requireAuth, async (req, res) => {
+  app.get("/api/dashboard/trends/:id/analytics", isAuthenticated, async (req, res) => {
     try {
       const trend = await storage.getTrend(req.params.id);
       
@@ -449,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
       
-      if (trend.userId !== req.session.userId) {
+      if (trend.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can view analytics" });
       }
 
@@ -501,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/trends/:id/end - End trend and award points (protected, only trend creator)
-  app.post("/api/trends/:id/end", requireAuth, async (req, res) => {
+  app.post("/api/trends/:id/end", isAuthenticated, async (req, res) => {
     try {
       const trend = await storage.getTrend(req.params.id);
 
@@ -509,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== req.session.userId) {
+      if (trend.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can end this trend" });
       }
 
@@ -645,8 +438,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const postsWithUserInfo = await Promise.all(
         posts.map(async (post) => {
           const user = await storage.getUser(post.userId);
-          const userVoted = req.session.userId 
-            ? !!(await storage.getVote(post.id, req.session.userId))
+          const userVoted = ((req as any).user?.claims?.sub) 
+            ? !!(await storage.getVote(post.id, ((req as any).user?.claims?.sub)))
             : false;
           
           return {
@@ -686,11 +479,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/posts - Create post (protected)
-  app.post("/api/posts", requireAuth, async (req, res) => {
+  app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const result = insertPostSchema.safeParse({
         ...req.body,
-        userId: req.session.userId,
+        userId: ((req as any).user?.claims?.sub),
       });
 
       if (!result.success) {
@@ -704,12 +497,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create notification for followers
       try {
-        const followers = await storage.getFollowers(req.session.userId!);
-        const postAuthor = await storage.getUser(req.session.userId!);
+        const followers = await storage.getFollowers(((req as any).user?.claims?.sub)!);
+        const postAuthor = await storage.getUser(((req as any).user?.claims?.sub)!);
         for (const follow of followers) {
           await storage.createNotification({
             userId: follow.followerId,
-            actorId: req.session.userId!,
+            actorId: ((req as any).user?.claims?.sub)!,
             type: 'new_post_from_following',
             postId: post.id,
             trendId: result.data.trendId,
@@ -733,17 +526,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create notification for trend host (if not posting in their own trend)
       try {
         const trend = await storage.getTrend(result.data.trendId);
-        if (trend && trend.userId !== req.session.userId) {
+        if (trend && trend.userId !== ((req as any).user?.claims?.sub)) {
           await storage.createNotification({
             userId: trend.userId,
-            actorId: req.session.userId!,
+            actorId: ((req as any).user?.claims?.sub)!,
             type: 'post_in_your_trend',
             postId: post.id,
             trendId: result.data.trendId,
           });
           // Send push notification
           try {
-            const postAuthor = await storage.getUser(req.session.userId!);
+            const postAuthor = await storage.getUser(((req as any).user?.claims?.sub)!);
             await sendPushNotification({
               userId: trend.userId,
               heading: "New Submission",
@@ -760,15 +553,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Award 50 TrendX points for creating a post
       try {
-        const user = await storage.getUser(req.session.userId!);
+        const user = await storage.getUser(((req as any).user?.claims?.sub)!);
         if (user) {
-          await storage.updateUser(req.session.userId!, {
+          await storage.updateUser(((req as any).user?.claims?.sub)!, {
             trendxPoints: (user.trendxPoints || 0) + 50,
           });
           
           // Create notification for earning points
           await storage.createNotification({
-            userId: req.session.userId!,
+            userId: ((req as any).user?.claims?.sub)!,
             type: 'earned_points',
             postId: post.id,
             trendId: result.data.trendId,
@@ -777,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send push notification
           try {
             await sendPushNotification({
-              userId: req.session.userId!,
+              userId: ((req as any).user?.claims?.sub)!,
               heading: "Points Earned",
               content: "You earned 50 TrendX points for posting!",
               data: { postId: post.id, trendId: result.data.trendId },
@@ -797,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PATCH /api/posts/:id/disqualify - Toggle disqualify status (protected, only trend creator)
-  app.patch("/api/posts/:id/disqualify", requireAuth, async (req, res) => {
+  app.patch("/api/posts/:id/disqualify", isAuthenticated, async (req, res) => {
     try {
       const post = await storage.getPost(req.params.id);
 
@@ -811,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== req.session.userId) {
+      if (trend.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can disqualify posts" });
       }
 
@@ -844,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Votes routes
 
   // POST /api/votes/increment - Increment vote on post (protected, check 10-vote limit per trend)
-  app.post("/api/votes/increment", requireAuth, async (req, res) => {
+  app.post("/api/votes/increment", isAuthenticated, async (req, res) => {
     try {
       const { postId, trendId } = req.body;
 
@@ -853,22 +646,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check 10-vote limit per trend (sum of all vote counts)
-      const userVotes = await storage.getVotesByUser(req.session.userId!, trendId);
+      const userVotes = await storage.getVotesByUser(((req as any).user?.claims?.sub)!, trendId);
       const totalVotes = userVotes.reduce((sum, vote) => sum + (vote.count || 0), 0);
       
       if (totalVotes >= 10) {
         return res.status(400).json({ message: "You have reached the maximum of 10 votes for this trend" });
       }
 
-      const vote = await storage.incrementVote(postId, req.session.userId!, trendId);
+      const vote = await storage.incrementVote(postId, ((req as any).user?.claims?.sub)!, trendId);
       
       // Create notification for vote on post
       const post = await storage.getPost(postId);
-      const voter = await storage.getUser(req.session.userId!);
-      if (post && post.userId !== req.session.userId) {
+      const voter = await storage.getUser(((req as any).user?.claims?.sub)!);
+      if (post && post.userId !== ((req as any).user?.claims?.sub)) {
         await storage.createNotification({
           userId: post.userId,
-          actorId: req.session.userId!,
+          actorId: ((req as any).user?.claims?.sub)!,
           type: 'vote_on_post',
           postId: postId,
           trendId: trendId,
@@ -890,7 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/votes/decrement - Decrement vote on post (protected)
-  app.post("/api/votes/decrement", requireAuth, async (req, res) => {
+  app.post("/api/votes/decrement", isAuthenticated, async (req, res) => {
     try {
       const { postId } = req.body;
 
@@ -898,7 +691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "postId is required" });
       }
 
-      const vote = await storage.decrementVote(postId, req.session.userId!);
+      const vote = await storage.decrementVote(postId, ((req as any).user?.claims?.sub)!);
       
       if (vote === null) {
         return res.json({ message: "Vote removed or decreased to zero" });
@@ -911,9 +704,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/votes/trend/:trendId/count - Get user's vote count for trend (protected)
-  app.get("/api/votes/trend/:trendId/count", requireAuth, async (req, res) => {
+  app.get("/api/votes/trend/:trendId/count", isAuthenticated, async (req, res) => {
     try {
-      const votes = await storage.getVotesByUser(req.session.userId!, req.params.trendId);
+      const votes = await storage.getVotesByUser(((req as any).user?.claims?.sub)!, req.params.trendId);
       const totalVotes = votes.reduce((sum, vote) => sum + (vote.count || 0), 0);
       res.json({ count: totalVotes });
     } catch (error) {
@@ -968,11 +761,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/comments - Create comment (protected)
-  app.post("/api/comments", requireAuth, async (req, res) => {
+  app.post("/api/comments", isAuthenticated, async (req, res) => {
     try {
       const result = insertCommentSchema.safeParse({
         ...req.body,
-        userId: req.session.userId,
+        userId: ((req as any).user?.claims?.sub),
       });
 
       if (!result.success) {
@@ -982,14 +775,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(result.data);
       
       // Create notification for comment on post or reply to comment
-      const commenter = await storage.getUser(req.session.userId!);
+      const commenter = await storage.getUser(((req as any).user?.claims?.sub)!);
       if (comment.postId) {
         // Comment on a post - notify post owner
         const post = await storage.getPost(comment.postId);
-        if (post && post.userId !== req.session.userId) {
+        if (post && post.userId !== ((req as any).user?.claims?.sub)) {
           await storage.createNotification({
             userId: post.userId,
-            actorId: req.session.userId!,
+            actorId: ((req as any).user?.claims?.sub)!,
             type: 'comment_on_post',
             postId: comment.postId,
             trendId: comment.trendId,
@@ -1010,10 +803,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if this is a reply to another comment
       if (comment.parentId) {
         const parentComment = await storage.getComment(comment.parentId);
-        if (parentComment && parentComment.userId !== req.session.userId) {
+        if (parentComment && parentComment.userId !== ((req as any).user?.claims?.sub)) {
           await storage.createNotification({
             userId: parentComment.userId,
-            actorId: req.session.userId!,
+            actorId: ((req as any).user?.claims?.sub)!,
             type: 'reply_to_comment',
             commentId: comment.id,
             postId: comment.postId,
@@ -1036,10 +829,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (mentions.length > 0) {
         for (const username of mentions) {
           const mentionedUser = await storage.getUserByUsername(username);
-          if (mentionedUser && mentionedUser.id !== req.session.userId) {
+          if (mentionedUser && mentionedUser.id !== ((req as any).user?.claims?.sub)) {
             await storage.createNotification({
               userId: mentionedUser.id,
-              actorId: req.session.userId!,
+              actorId: ((req as any).user?.claims?.sub)!,
               type: 'mention',
               commentId: comment.id,
               postId: comment.postId,
@@ -1065,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/comments/:id - Delete comment (protected, only comment owner)
-  app.delete("/api/comments/:id", requireAuth, async (req, res) => {
+  app.delete("/api/comments/:id", isAuthenticated, async (req, res) => {
     try {
       const comment = await storage.getComment(req.params.id);
 
@@ -1073,7 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Comment not found" });
       }
 
-      if (comment.userId !== req.session.userId) {
+      if (comment.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
       }
 
@@ -1087,10 +880,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Follows routes
 
   // POST /api/follows - Follow user (protected)
-  app.post("/api/follows", requireAuth, async (req, res) => {
+  app.post("/api/follows", isAuthenticated, async (req, res) => {
     try {
       const result = insertFollowSchema.safeParse({
-        followerId: req.session.userId,
+        followerId: ((req as any).user?.claims?.sub),
         followingId: req.body.followingId,
       });
 
@@ -1109,12 +902,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const follow = await storage.createFollow(result.data);
-      const follower = await storage.getUser(req.session.userId!);
+      const follower = await storage.getUser(((req as any).user?.claims?.sub)!);
       
       // Create notification for new follower
       await storage.createNotification({
         userId: result.data.followingId,
-        actorId: req.session.userId!,
+        actorId: ((req as any).user?.claims?.sub)!,
         type: 'new_follower',
       });
       // Send push notification
@@ -1122,7 +915,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: result.data.followingId,
         heading: "New Follower",
         content: `${follower?.username} started following you`,
-        data: { userId: req.session.userId! },
+        data: { userId: ((req as any).user?.claims?.sub)! },
       });
       
       res.status(201).json(follow);
@@ -1132,15 +925,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/follows/:userId - Unfollow user (protected)
-  app.delete("/api/follows/:userId", requireAuth, async (req, res) => {
+  app.delete("/api/follows/:userId", isAuthenticated, async (req, res) => {
     try {
-      const follow = await storage.getFollow(req.session.userId!, req.params.userId);
+      const follow = await storage.getFollow(((req as any).user?.claims?.sub)!, req.params.userId);
 
       if (!follow) {
         return res.status(404).json({ message: "Follow relationship not found" });
       }
 
-      await storage.deleteFollow(req.session.userId!, req.params.userId);
+      await storage.deleteFollow(((req as any).user?.claims?.sub)!, req.params.userId);
       res.json({ message: "Unfollowed successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1148,9 +941,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/follows/:userId/status - Check if current user follows another user (protected)
-  app.get("/api/follows/:userId/status", requireAuth, async (req, res) => {
+  app.get("/api/follows/:userId/status", isAuthenticated, async (req, res) => {
     try {
-      const follow = await storage.getFollow(req.session.userId!, req.params.userId);
+      const follow = await storage.getFollow(((req as any).user?.claims?.sub)!, req.params.userId);
       res.json({ isFollowing: !!follow });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1160,8 +953,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Object Storage routes
 
   // GET /objects/:objectPath - Serve protected objects with ACL check
-  app.get("/objects/:objectPath(*)", requireAuth, async (req, res) => {
-    const userId = req.session.userId;
+  app.get("/objects/:objectPath(*)", isAuthenticated, async (req, res) => {
+    const userId = ((req as any).user?.claims?.sub);
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
@@ -1184,7 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/objects/upload - Get presigned URL for upload (R2)
-  app.post("/api/objects/upload", requireAuth, async (req, res) => {
+  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
     try {
       const { folder, fileExtension } = req.body;
       const r2Service = new R2StorageService();
@@ -1202,7 +995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/object-storage/upload-url - Get presigned URL for custom path upload (R2)
-  app.post("/api/object-storage/upload-url", requireAuth, async (req, res) => {
+  app.post("/api/object-storage/upload-url", isAuthenticated, async (req, res) => {
     try {
       const { path } = req.body;
       
@@ -1220,12 +1013,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/posts/:id/image - Update post image and set ACL
-  app.put("/api/posts/:id/image", requireAuth, async (req, res) => {
+  app.put("/api/posts/:id/image", isAuthenticated, async (req, res) => {
     if (!req.body.imageUrl) {
       return res.status(400).json({ error: "imageUrl is required" });
     }
 
-    const userId = req.session.userId!;
+    const userId = ((req as any).user?.claims?.sub)!;
 
     try {
       const post = await storage.getPost(req.params.id);
@@ -1260,12 +1053,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/users/profile-picture - Update profile picture and set ACL
-  app.put("/api/users/profile-picture", requireAuth, async (req, res) => {
+  app.put("/api/users/profile-picture", isAuthenticated, async (req, res) => {
     if (!req.body.profilePictureUrl) {
       return res.status(400).json({ error: "profilePictureUrl is required" });
     }
 
-    const userId = req.session.userId!;
+    const userId = ((req as any).user?.claims?.sub)!;
 
     try {
       const objectStorageService = new ObjectStorageService();
@@ -1290,7 +1083,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/auth/change-password - Change password (protected)
-  app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+  app.post("/api/auth/change-password", isAuthenticated, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
 
@@ -1302,7 +1095,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "New password must be at least 6 characters" });
       }
 
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser(((req as any).user?.claims?.sub)!);
       if (!user || !user.password) {
         return res.status(404).json({ message: "User not found or no password set" });
       }
@@ -1313,7 +1106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const hashedPassword = await hashPassword(newPassword);
-      const updatedUser = await storage.updateUser(req.session.userId!, {
+      const updatedUser = await storage.updateUser(((req as any).user?.claims?.sub)!, {
         password: hashedPassword,
       });
 
@@ -1345,11 +1138,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PATCH /api/users/profile - Update current user profile (protected)
-  app.patch("/api/users/profile", requireAuth, async (req, res) => {
+  app.patch("/api/users/profile", isAuthenticated, async (req, res) => {
     try {
       const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
 
-      const updatedUser = await storage.updateUser(req.session.userId!, {
+      const updatedUser = await storage.updateUser(((req as any).user?.claims?.sub)!, {
         email,
         fullName,
         bio,
@@ -1375,7 +1168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // View Tracking routes
 
   // POST /api/view-tracking - Update view tracking (protected)
-  app.post("/api/view-tracking", requireAuth, async (req, res) => {
+  app.post("/api/view-tracking", isAuthenticated, async (req, res) => {
     try {
       const { type, identifier } = req.body;
 
@@ -1383,7 +1176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "type and identifier are required" });
       }
 
-      const tracking = await storage.updateViewTracking(req.session.userId!, type, identifier);
+      const tracking = await storage.updateViewTracking(((req as any).user?.claims?.sub)!, type, identifier);
       res.json(tracking);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1391,9 +1184,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/trends/:id/view - Track trend view (protected)
-  app.post("/api/trends/:id/view", requireAuth, async (req, res) => {
+  app.post("/api/trends/:id/view", isAuthenticated, async (req, res) => {
     try {
-      await storage.trackTrendView(req.session.userId!, req.params.id);
+      await storage.trackTrendView(((req as any).user?.claims?.sub)!, req.params.id);
       res.json({ message: "View tracked successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1401,9 +1194,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/notifications/counts - Get new content counts (protected)
-  app.get("/api/notifications/counts", requireAuth, async (req, res) => {
+  app.get("/api/notifications/counts", isAuthenticated, async (req, res) => {
     try {
-      const counts = await storage.getNewContentCounts(req.session.userId!);
+      const counts = await storage.getNewContentCounts(((req as any).user?.claims?.sub)!);
       res.json(counts);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1413,13 +1206,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Saved Items routes
 
   // POST /api/saved/trends/:trendId - Save a trend (protected)
-  app.post("/api/saved/trends/:trendId", requireAuth, async (req, res) => {
+  app.post("/api/saved/trends/:trendId", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isTrendSaved(req.session.userId!, req.params.trendId);
+      const isSaved = await storage.isTrendSaved(((req as any).user?.claims?.sub)!, req.params.trendId);
       if (isSaved) {
         return res.status(400).json({ message: "Trend already saved" });
       }
-      const saved = await storage.saveTrend(req.session.userId!, req.params.trendId);
+      const saved = await storage.saveTrend(((req as any).user?.claims?.sub)!, req.params.trendId);
       res.status(201).json(saved);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1427,9 +1220,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/saved/trends/:trendId - Unsave a trend (protected)
-  app.delete("/api/saved/trends/:trendId", requireAuth, async (req, res) => {
+  app.delete("/api/saved/trends/:trendId", isAuthenticated, async (req, res) => {
     try {
-      await storage.unsaveTrend(req.session.userId!, req.params.trendId);
+      await storage.unsaveTrend(((req as any).user?.claims?.sub)!, req.params.trendId);
       res.json({ message: "Trend unsaved successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1437,9 +1230,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/saved/trends/:trendId/status - Check if trend is saved (protected)
-  app.get("/api/saved/trends/:trendId/status", requireAuth, async (req, res) => {
+  app.get("/api/saved/trends/:trendId/status", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isTrendSaved(req.session.userId!, req.params.trendId);
+      const isSaved = await storage.isTrendSaved(((req as any).user?.claims?.sub)!, req.params.trendId);
       res.json({ isSaved });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1447,9 +1240,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/saved/trends - Get user's saved trends (protected)
-  app.get("/api/saved/trends", requireAuth, async (req, res) => {
+  app.get("/api/saved/trends", isAuthenticated, async (req, res) => {
     try {
-      const trends = await storage.getSavedTrends(req.session.userId!);
+      const trends = await storage.getSavedTrends(((req as any).user?.claims?.sub)!);
       
       // Include creator info and calculate unique participants for each trend
       const trendsWithCreators = await Promise.all(
@@ -1473,13 +1266,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/saved/posts/:postId - Save a post (protected)
-  app.post("/api/saved/posts/:postId", requireAuth, async (req, res) => {
+  app.post("/api/saved/posts/:postId", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isPostSaved(req.session.userId!, req.params.postId);
+      const isSaved = await storage.isPostSaved(((req as any).user?.claims?.sub)!, req.params.postId);
       if (isSaved) {
         return res.status(400).json({ message: "Post already saved" });
       }
-      const saved = await storage.savePost(req.session.userId!, req.params.postId);
+      const saved = await storage.savePost(((req as any).user?.claims?.sub)!, req.params.postId);
       res.status(201).json(saved);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1487,9 +1280,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/saved/posts/:postId - Unsave a post (protected)
-  app.delete("/api/saved/posts/:postId", requireAuth, async (req, res) => {
+  app.delete("/api/saved/posts/:postId", isAuthenticated, async (req, res) => {
     try {
-      await storage.unsavePost(req.session.userId!, req.params.postId);
+      await storage.unsavePost(((req as any).user?.claims?.sub)!, req.params.postId);
       res.json({ message: "Post unsaved successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1497,9 +1290,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/saved/posts/:postId/status - Check if post is saved (protected)
-  app.get("/api/saved/posts/:postId/status", requireAuth, async (req, res) => {
+  app.get("/api/saved/posts/:postId/status", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isPostSaved(req.session.userId!, req.params.postId);
+      const isSaved = await storage.isPostSaved(((req as any).user?.claims?.sub)!, req.params.postId);
       res.json({ isSaved });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1507,9 +1300,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/saved/posts - Get user's saved posts (protected)
-  app.get("/api/saved/posts", requireAuth, async (req, res) => {
+  app.get("/api/saved/posts", isAuthenticated, async (req, res) => {
     try {
-      const posts = await storage.getSavedPosts(req.session.userId!);
+      const posts = await storage.getSavedPosts(((req as any).user?.claims?.sub)!);
       res.json(posts);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1517,13 +1310,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/posts/:id - Delete post (protected, only post owner)
-  app.delete("/api/posts/:id", requireAuth, async (req, res) => {
+  app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const post = await storage.getPost(req.params.id);
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
       }
-      if (post.userId !== req.session.userId) {
+      if (post.userId !== ((req as any).user?.claims?.sub)) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own posts" });
       }
       
@@ -1557,10 +1350,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/notifications - Get user's notifications (protected)
-  app.get("/api/notifications", requireAuth, async (req, res) => {
+  app.get("/api/notifications", isAuthenticated, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const notifications = await storage.getNotifications(req.session.userId!, limit);
+      const notifications = await storage.getNotifications(((req as any).user?.claims?.sub)!, limit);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1568,9 +1361,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/notifications/unread-count - Get unread notification count (protected)
-  app.get("/api/notifications/unread-count", requireAuth, async (req, res) => {
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
     try {
-      const count = await storage.getUnreadCount(req.session.userId!);
+      const count = await storage.getUnreadCount(((req as any).user?.claims?.sub)!);
       res.json({ count });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1578,7 +1371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PATCH /api/notifications/:id/read - Mark notification as read (protected)
-  app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
+  app.patch("/api/notifications/:id/read", isAuthenticated, async (req, res) => {
     try {
       await storage.markAsRead(req.params.id);
       res.json({ message: "Notification marked as read" });
@@ -1588,9 +1381,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PATCH /api/notifications/mark-all-read - Mark all notifications as read (protected)
-  app.patch("/api/notifications/mark-all-read", requireAuth, async (req, res) => {
+  app.patch("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
     try {
-      await storage.markAllAsRead(req.session.userId!);
+      await storage.markAllAsRead(((req as any).user?.claims?.sub)!);
       res.json({ message: "All notifications marked as read" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1598,7 +1391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/notifications/:id - Delete notification (protected)
-  app.delete("/api/notifications/:id", requireAuth, async (req, res) => {
+  app.delete("/api/notifications/:id", isAuthenticated, async (req, res) => {
     try {
       await storage.deleteNotification(req.params.id);
       res.json({ message: "Notification deleted" });

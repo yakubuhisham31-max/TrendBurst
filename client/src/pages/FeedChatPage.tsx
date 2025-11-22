@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { parseMentions } from "@/lib/mentions";

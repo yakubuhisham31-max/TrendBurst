@@ -11,7 +11,7 @@ import ProfileStats from "@/components/ProfileStats";
 import TrendCard from "@/components/TrendCard";
 import FollowButton from "@/components/FollowButton";
 import VerificationBadge from "@/components/VerificationBadge";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { User, Trend } from "@shared/schema";
 

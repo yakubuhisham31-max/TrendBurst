@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { Link } from "wouter";
 import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 

@@ -18,7 +18,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import ShareDialog from "./ShareDialog";
 import FollowButton from "./FollowButton";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const categoryIcons: Record<string, JSX.Element> = {
   "AI": <span className="text-sm">🤖</span>,

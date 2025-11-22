@@ -9,7 +9,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Star, Reply, Trash2 } from "lucide-react";
 import { parseMentions } from "@/lib/mentions";
 import type { Comment, User, Trend } from "@shared/schema";

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3, Edit, Play, Pause } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import type { Trend } from "@shared/schema";
 import { useState } from "react";
 import { differenceInDays } from "date-fns";

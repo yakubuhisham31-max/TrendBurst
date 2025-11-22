@@ -3,13 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import LoginPage from "@/pages/LoginPage";
-import RegisterPage from "@/pages/RegisterPage";
-import SignupPage from "@/pages/SignupPage";
-import CompleteProfilePage from "@/pages/CompleteProfilePage";
-import CategorySelectionPage from "@/pages/CategorySelectionPage";
-import RoleSelectionPage from "@/pages/RoleSelectionPage";
+import { useAuth } from "@/hooks/useAuth";
 import HomePage from "@/pages/HomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
@@ -23,11 +17,11 @@ import FeedChatPage from "@/pages/FeedChatPage";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [location] = useLocation();
 
   // While loading auth, show loading screen to avoid redirect flicker
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-lg text-foreground">Loading...</div>
@@ -35,18 +29,19 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
     );
   }
 
-  // After loading is done, if no user, redirect to login with current location as redirect
+  // After loading is done, if no user, redirect to login
   if (!user) {
-    return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
+    window.location.href = "/api/login";
+    return null;
   }
 
   return <Component {...rest} />;
 }
 
 function PublicOnlyRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -64,13 +59,6 @@ function PublicOnlyRoute({ component: Component, ...rest }: { component: any; [k
 function Router() {
   return (
     <Switch>
-      <Route path="/login" component={(props) => <PublicOnlyRoute component={LoginPage} {...props} />} />
-      <Route path="/register" component={(props) => <PublicOnlyRoute component={RegisterPage} {...props} />} />
-      <Route path="/signup" component={(props) => <PublicOnlyRoute component={SignupPage} {...props} />} />
-      <Route path="/complete-profile" component={(props) => <ProtectedRoute component={CompleteProfilePage} {...props} />} />
-      
-      <Route path="/onboarding/categories" component={(props) => <ProtectedRoute component={CategorySelectionPage} {...props} />} />
-      <Route path="/onboarding/role" component={(props) => <ProtectedRoute component={RoleSelectionPage} {...props} />} />
       <Route path="/" component={HomePage} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
@@ -92,10 +80,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <Router />
-          <Toaster />
-        </AuthProvider>
+        <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

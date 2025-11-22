@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import ShareDialog from "./ShareDialog";
 import PostCommentsDialog from "./PostCommentsDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

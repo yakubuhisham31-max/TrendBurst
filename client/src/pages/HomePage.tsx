@@ -10,7 +10,7 @@ import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
 import { AuthModal } from "@/components/AuthModal";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";

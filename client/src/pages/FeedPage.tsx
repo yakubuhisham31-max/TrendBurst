@@ -12,7 +12,7 @@ import PostCommentsDialog from "@/components/PostCommentsDialog";
 import PostFullscreenModal from "@/components/PostFullscreenModal";
 import { AuthModal } from "@/components/AuthModal";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
