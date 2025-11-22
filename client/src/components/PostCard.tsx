@@ -402,15 +402,26 @@ export default function PostCard({
 
       <div className="relative">
         {(() => {
-          const style = getRankStyle(rank);
-          const IconComponent = style.icon;
+          const IconComponent = rank === 1 ? Trophy : rank === 2 ? Trophy : rank === 3 ? Trophy : Zap;
+          let badgeClass = "";
+          
+          if (rank === 1) {
+            badgeClass = "rank-badge-gold rank-badge-pulse";
+          } else if (rank === 2) {
+            badgeClass = "rank-badge-silver";
+          } else if (rank === 3) {
+            badgeClass = "rank-badge-bronze";
+          } else {
+            badgeClass = "rank-badge-other";
+          }
+          
           return (
             <div
-              className={`absolute top-4 left-4 w-14 h-14 rounded-full flex flex-col items-center justify-center ${style.bgGradient} ${style.borderColor} z-10 ${style.glowClass} transition-transform hover:scale-110`}
+              className={`absolute top-4 left-4 w-16 h-16 rounded-full flex flex-col items-center justify-center z-10 rank-badge-enter ${badgeClass} transition-transform hover:scale-125`}
               data-testid={`badge-rank-${rank}`}
             >
-              <IconComponent className={`w-5 h-5 ${style.iconColor} flex-shrink-0`} />
-              <span className={`text-xs font-black ${style.textColor} leading-none mt-0.5`}>
+              <IconComponent className="w-6 h-6 flex-shrink-0 drop-shadow-lg" />
+              <span className="text-xs font-black leading-none mt-1 drop-shadow-lg">
                 {rank}
               </span>
             </div>

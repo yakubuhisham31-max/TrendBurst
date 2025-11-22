@@ -205,6 +205,28 @@
 
 }
 
+@keyframes rankBadgeEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes rankBadgePulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.6), 0 0 40px rgba(250, 204, 21, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(250, 204, 21, 0.8), 0 0 60px rgba(250, 204, 21, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.4);
+    transform: scale(1.08);
+  }
+}
+
 @layer utilities {
   /* Competitive Rankings UI */
   .rank-card-gold {
@@ -222,22 +244,64 @@
     border-color: rgba(249, 115, 22, 0.3);
   }
 
+  .rank-badge-enter {
+    animation: rankBadgeEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .rank-badge-pulse {
+    animation: rankBadgePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
   .rank-badge-gold {
-    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-    color: white;
-    box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+    background: linear-gradient(135deg, #FDE047 0%, #FCD34D 25%, #FBBF24 50%, #F59E0B 75%, #D97706 100%);
+    color: #78350F;
+    box-shadow: 
+      0 0 30px rgba(250, 204, 21, 0.6),
+      0 0 60px rgba(250, 204, 21, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.3),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(0, 0, 0, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   .rank-badge-silver {
-    background: linear-gradient(135deg, #d1d5db 0%, #6b7280 100%);
-    color: white;
-    box-shadow: 0 0 12px rgba(209, 213, 219, 0.3);
+    background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 25%, #D1D5DB 50%, #9CA3AF 75%, #6B7280 100%);
+    color: #1F2937;
+    box-shadow: 
+      0 0 25px rgba(209, 213, 219, 0.6),
+      0 0 50px rgba(209, 213, 219, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.4),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.2),
+      0 8px 16px rgba(0, 0, 0, 0.15);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   .rank-badge-bronze {
-    background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #FDBA74 0%, #FB923C 25%, #F97316 50%, #EA580C 75%, #C2410C 100%);
+    color: #7C2D12;
+    box-shadow: 
+      0 0 25px rgba(251, 146, 60, 0.6),
+      0 0 50px rgba(251, 146, 60, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.3),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(0, 0, 0, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .rank-badge-other {
+    background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 50%, #10B981 100%);
     color: white;
-    box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.5),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      inset 0 0 15px rgba(255, 255, 255, 0.2),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.2),
+      0 8px 16px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   .rank-item-card {
