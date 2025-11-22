@@ -46,14 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [data]);
 
-  const login = async (username: string, password: string) => {
-    const response = await apiRequest("POST", "/api/auth/login", {
-      username,
-      password,
-    });
-    const { user } = await response.json();
-    setUser(user);
-    initializeOneSignal(user.id);
+  const login = async () => {
+    // OAuth login - redirect to Replit Auth
+    window.location.href = "/api/login";
   };
 
   const logout = async () => {
@@ -74,13 +69,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Refetch error:", error);
     }
+
+    // Redirect to home after logout
+    window.location.href = "/";
   };
 
-  const register = async (data: RegisterData) => {
-    const response = await apiRequest("POST", "/api/auth/register", data);
-    const { user } = await response.json();
-    setUser(user);
-    initializeOneSignal(user.id);
+  const register = async () => {
+    // OAuth registration - redirect to Replit Auth
+    window.location.href = "/api/login";
   };
 
   const checkAuth = async () => {
