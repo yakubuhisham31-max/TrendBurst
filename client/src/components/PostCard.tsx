@@ -176,9 +176,9 @@ export default function PostCard({
     setShareDialogOpen(true);
   };
 
-  // Handle video tap: single tap to mute/unmute, double tap to like
+  // Handle video tap: single tap to pause/play, double tap to like
   const handleVideoTap = () => {
-    if (mediaType !== 'video') return;
+    if (mediaType !== 'video' || !videoRef.current) return;
 
     const now = Date.now();
     const timeSinceLastTap = now - lastTapRef.current;
@@ -200,7 +200,7 @@ export default function PostCard({
       }
       lastTapRef.current = 0;
     } else {
-      // Potential single tap - defer mute toggle to check for double tap
+      // Potential single tap - defer pause/play toggle to check for double tap
       lastTapRef.current = now;
       
       // Clear any existing timeout
@@ -208,11 +208,15 @@ export default function PostCard({
         clearTimeout(tapTimeoutRef.current);
       }
       
-      // Set timeout to toggle mute after double-tap window
+      // Set timeout to toggle pause/play after double-tap window
       tapTimeoutRef.current = setTimeout(() => {
-        // Only toggle mute if still a video and not disqualified
-        if (mediaType === 'video' && !isDisqualified) {
-          setIsMuted((prev) => !prev);
+        // Only toggle play/pause if still a video and not disqualified
+        if (mediaType === 'video' && !isDisqualified && videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play();
+          } else {
+            videoRef.current.pause();
+          }
         }
         tapTimeoutRef.current = null;
       }, 300);
@@ -289,6 +293,9 @@ export default function PostCard({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            // Dynamically load video only when visible to reduce lag
+            video.preload = 'auto';
+            
             // Pause all other videos in the DOM to prevent multiple playback
             const allVideos = document.querySelectorAll('video');
             allVideos.forEach((v: any) => {
@@ -300,6 +307,8 @@ export default function PostCard({
               // Video play failed (e.g., user interaction required)
             });
           } else {
+            // Stop preloading when out of view to save bandwidth
+            video.preload = 'none';
             video.pause();
           }
         });
@@ -455,8 +464,9 @@ export default function PostCard({
                 loop
                 muted={isMuted}
                 playsInline
-                preload="auto"
+                preload="none"
                 crossOrigin="anonymous"
+                onClick={handleVideoTap}
                 data-testid="video-post"
               />
               
