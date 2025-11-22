@@ -106,10 +106,12 @@ app.use(
     store: new PgStore({
       pool,
       createTableIfMissing: true,
+      disableTouch: false,
     }),
     secret: process.env.SESSION_SECRET || "dev-secret-key-not-for-production",
-    resave: false,
+    resave: true,
     saveUninitialized: true,
+    rolling: true,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
