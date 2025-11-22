@@ -112,6 +112,16 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
+  // Specific endpoint for Google with account selection
+  app.get("/api/login/google", (req, res, next) => {
+    const domain = process.env.REPLIT_DOMAIN || req.hostname;
+    ensureStrategy(domain);
+    passport.authenticate(`replitauth:${domain}`, {
+      prompt: "select_account",
+      scope: ["openid", "email", "profile", "offline_access"],
+    })(req, res, next);
+  });
+
   app.get("/api/callback", (req, res, next) => {
     // Use REPLIT_DOMAIN env var if available (Replit preview URL), otherwise use hostname
     const domain = process.env.REPLIT_DOMAIN || req.hostname;

@@ -2,15 +2,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { useEffect, useState } from "react";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
-import { useEffect } from "react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
@@ -23,6 +22,7 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { login, user } = useAuth();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -40,6 +40,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      setIsLoading(true);
       await login(data.username, data.password);
       toast({
         title: "Success",
@@ -52,6 +53,8 @@ export default function LoginPage() {
         description: error.message || "Invalid username or password",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -115,25 +118,41 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={form.formState.isSubmitting}
+              disabled={isLoading}
               data-testid="button-login"
             >
-              {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
         </Form>
 
-        <div className="text-center pt-2">
-          <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link
-              href="/register"
-              className="text-primary hover:underline font-semibold"
-              data-testid="link-signup"
-            >
-              Sign up for free
-            </Link>
+        <div className="text-center pt-4 space-y-3 border-t">
+          <p className="text-sm text-muted-foreground pt-4">
+            Don't have an account?
           </p>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setLocation("/")}
+            data-testid="button-back-to-home"
+          >
+            Back to Home
+          </Button>
+
+          <div className="pt-2">
+            <p className="text-xs text-muted-foreground mb-2">
+              Or continue with other methods
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              onClick={() => window.location.href = "/api/login"}
+              data-testid="button-auth-other"
+            >
+              Google, GitHub, X, Apple
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
