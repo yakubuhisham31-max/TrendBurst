@@ -1,59 +1,92 @@
-# OneSignal Push Notifications - Published App Setup
+# OneSignal Push Notifications Setup - Corrected Guide
 
-## What Was Fixed
+## Current Setup Status
 
-1. **Removed hardcoded App ID** - OneSignal now uses the environment variable `VITE_ONESIGNAL_APP_ID`
-2. **Dynamic initialization** - OneSignal initializes properly when users log in
-3. **HTTPS-only loading** - SDK only loads on production (HTTPS)
+✅ **Fixed in your codebase:**
+- Environment variables configured (`VITE_ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`)
+- OneSignal SDK loads on HTTPS only
+- OneSignal initializes when users log in
+- OneSignalSDKWorker.js created for service worker support
 
-## Important: OneSignal Dashboard Configuration
+## What You Need to Do - OneSignal Dashboard Configuration
 
-For push notifications to work on your published app, you MUST configure your domain in OneSignal:
+### Step 1: Go to OneSignal Dashboard
+1. Visit https://onesignal.com/ and log in
+2. Select your app (App ID: `39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9`)
 
-### Steps:
+### Step 2: Configure Your Site URL ⭐ MOST IMPORTANT
+1. Go to **Settings** → **All Platforms** (or Web section)
+2. Find the **"Site URL"** field
+3. Enter your domain exactly as users see it in the browser:
+   - **For trendx.social:** `https://trendx.social`
+   - **For www.trendx.social:** `https://www.trendx.social`
 
-1. **Go to OneSignal Dashboard**: https://onesignal.com/
-2. **Select your app** (App ID: `39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9`)
-3. **Settings → All Platforms → Web Push**
-4. **Add these domains to "Authorized Origins":**
-   - `https://trendx.social`
-   - `https://www.trendx.social`
-   - `https://trend-burst-rafiqykb99.replit.app` (your Replit domain)
+⚠️ **CRITICAL:** The Site URL must match EXACTLY:
+- ✅ Include the protocol (`https://`)
+- ✅ Match www vs non-www (they're different origins!)
+- ✅ Case-sensitive
+- ✅ Don't include paths like `/page`
 
-### Verify Configuration:
+### Step 3: Test the Setup
 
-After adding domains, test on your published app:
-1. Sign in to your account
-2. You should see a prompt asking to allow notifications
-3. Check browser console (F12) for OneSignal logs
-4. Send a test notification: Sign in → Open DevTools Console → Run:
+After configuring in OneSignal:
+
+1. **Publish your app** with the latest code
+2. **Visit your published domain** (trendx.social)
+3. **Sign in** to your account
+4. You should see a **notification permission prompt**
+5. **Allow notifications**
+
+### Step 4: Send a Test Notification
+
+To verify everything works:
+
+1. **Open browser console** (Press F12, go to Console tab)
+2. **Run this command:**
    ```javascript
    fetch('/api/notifications/test', {
      method: 'POST',
      credentials: 'include'
    }).then(r => r.json()).then(console.log)
    ```
-
-## Environment Variables (Already Configured)
-
-- ✅ `VITE_ONESIGNAL_APP_ID` = `39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9`
-- ✅ `ONESIGNAL_APP_ID` (secret) = Configured for backend
-- ✅ `ONESIGNAL_REST_API_KEY` (secret) = Configured for backend
+3. You should receive a test notification
 
 ## Troubleshooting
 
-If notifications still don't work after domain configuration:
+### "Notification prompt doesn't appear"
+- ✅ Verify you're on HTTPS
+- ✅ Check console (F12) for OneSignal errors
+- ✅ **Verify Site URL in OneSignal matches your domain exactly** (most common issue)
+- ✅ Try a new browser or incognito window
 
-1. **Check browser console** for errors
-2. **Verify HTTPS** - Notifications only work on HTTPS
-3. **Clear browser cache** and try again
-4. **Check OneSignal dashboard** - View "Audience → All Users" to see if devices are registered
+### "Service Worker not registering"
+- ✅ Check DevTools → Application → Service Workers
+- ✅ Verify OneSignalSDKWorker.js is accessible at `https://yoursite.com/OneSignalSDKWorker.js`
 
-## Test Endpoint
+### "Still not working?"
+- ✅ Clear browser cache and restart
+- ✅ Check OneSignal dashboard → Logs for error messages
+- ✅ Ensure `VITE_ONESIGNAL_APP_ID` environment variable is set correctly
 
-Use this endpoint to test if notifications are working:
+## Environment Variables (Already Set)
+
 ```
-POST /api/notifications/test
+VITE_ONESIGNAL_APP_ID = 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9  ✅
+ONESIGNAL_APP_ID = (in secrets)  ✅
+ONESIGNAL_REST_API_KEY = (in secrets)  ✅
 ```
 
-This sends a test notification to the logged-in user.
+## Files in Your Codebase
+
+- `client/src/lib/onesignal.ts` - Initialization logic
+- `server/onesignal.ts` - Backend notification sending
+- `server/notificationService.ts` - Notification service
+- `public/OneSignalSDKWorker.js` - Service worker for push notifications
+- `client/index.html` - SDK loader script
+
+## Next Steps
+
+1. **Add your Site URL** in OneSignal dashboard Settings (this is the critical step!)
+2. **Make sure to use the correct exact format** (https://trendx.social or https://www.trendx.social)
+3. **Republish your app**
+4. **Test notifications** on your published domain
