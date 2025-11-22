@@ -22,9 +22,9 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
+    createTableIfMissing: true, // Create table if it doesn't exist
     ttl: sessionTtl,
-    tableName: "sessions",
+    tableName: "session", // Match existing table name (singular)
   });
   
   const isProduction = process.env.NODE_ENV === "production";
@@ -37,7 +37,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: isProduction, // Only require HTTPS in production
-      sameSite: "lax",
+      sameSite: isProduction ? "none" : "lax", // Use 'none' in production for cross-site OAuth, 'lax' in dev
       maxAge: sessionTtl,
     },
   });
@@ -67,7 +67,7 @@ async function upsertUser(claims: any) {
 }
 
 export async function setupAuth(app: Express) {
-  app.set("trust proxy", 1);
+  // Note: trust proxy is set in server/index.ts before this function is called
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
@@ -84,14 +84,22 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Get the correct callback domain - must match what's registered in Replit Auth
-  const callbackDomain = process.env.REPLIT_DOMAINS || "localhost:5000";
+  // Get the correct callback URL - must match what's registered in Replit Auth
+  const isProduction = process.env.NODE_ENV === "production";
+  const callbackDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || "localhost:5000";
+  
+  // Use explicit scheme override if provided, otherwise derive from environment
+  // In production or when REPLIT_DOMAINS is set (deployed), use https
+  // For local development (localhost), use http unless explicitly overridden
+  const callbackScheme = process.env.REPLIT_CALLBACK_SCHEME || 
+    (process.env.REPLIT_DOMAINS || isProduction ? "https" : "http");
+  
   const strategy = new Strategy(
     {
       name: "replitauth",
       config,
       scope: "openid email profile offline_access",
-      callbackURL: `https://${callbackDomain}/api/callback`,
+      callbackURL: `${callbackScheme}://${callbackDomain}/api/callback`,
     },
     verify
   );
