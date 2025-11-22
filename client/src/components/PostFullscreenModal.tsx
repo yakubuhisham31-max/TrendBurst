@@ -1,4 +1,4 @@
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -23,6 +23,7 @@ interface PostFullscreenModalProps {
   allPosts?: (Post & { user?: User })[];
   onNextPost?: () => void;
   onPreviousPost?: () => void;
+  onTrendChat?: (trendId: string) => void;
 }
 
 export default function PostFullscreenModal({
@@ -37,6 +38,7 @@ export default function PostFullscreenModal({
   allPosts,
   onNextPost,
   onPreviousPost,
+  onTrendChat,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -273,15 +275,27 @@ export default function PostFullscreenModal({
                   </div>
                 )}
 
-                {/* Remaining votes badge */}
-                {remainingVotes !== null && (
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-md px-3 py-2 rounded-full border border-primary/40 shadow-lg" data-testid="badge-remaining-votes">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white">{remainingVotes}</span>
-                      <span className="text-xs text-white/80">votes left</span>
+                {/* Remaining votes badge and chat button */}
+                <div className="absolute top-4 right-4 flex items-center gap-3">
+                  {remainingVotes !== null && (
+                    <div className="bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-md px-3 py-2 rounded-full border border-primary/40 shadow-lg" data-testid="badge-remaining-votes">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-white">{remainingVotes}</span>
+                        <span className="text-xs text-white/80">votes left</span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                  {post.trendId && (
+                    <button
+                      onClick={() => onTrendChat?.(post.trendId!)}
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+                      data-testid="button-trend-chat"
+                      aria-label="Trend chat"
+                    >
+                      <MessageSquare className="w-5 h-5 text-white" />
+                    </button>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -291,15 +305,27 @@ export default function PostFullscreenModal({
                   className="w-full h-full object-contain"
                   data-testid="img-fullscreen"
                 />
-                {/* Remaining votes badge for images */}
-                {remainingVotes !== null && (
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-md px-3 py-2 rounded-full border border-primary/40 shadow-lg" data-testid="badge-remaining-votes">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white">{remainingVotes}</span>
-                      <span className="text-xs text-white/80">votes left</span>
+                {/* Remaining votes badge and chat button for images */}
+                <div className="absolute top-4 right-4 flex items-center gap-3">
+                  {remainingVotes !== null && (
+                    <div className="bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-md px-3 py-2 rounded-full border border-primary/40 shadow-lg" data-testid="badge-remaining-votes">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-white">{remainingVotes}</span>
+                        <span className="text-xs text-white/80">votes left</span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                  {post.trendId && (
+                    <button
+                      onClick={() => onTrendChat?.(post.trendId!)}
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+                      data-testid="button-trend-chat"
+                      aria-label="Trend chat"
+                    >
+                      <MessageSquare className="w-5 h-5 text-white" />
+                    </button>
+                  )}
+                </div>
               </>
             
             )}

@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, Info, Trophy, MessageSquare, Plus, Users, Flame, Clock, MessageCircle } from "lucide-react";
+import { ChevronLeft, Info, Trophy, MessageSquare, Plus, Users, Flame, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
@@ -362,7 +362,6 @@ export default function FeedPage() {
             Rankings
           </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
-            <MessageCircle className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-semibold text-primary">{votesRemaining} votes left</span>
           </div>
         </div>
@@ -500,6 +499,13 @@ export default function FeedPage() {
             if (currentIndex > 0) {
               setFullscreenPostId(posts[currentIndex - 1].id);
             }
+          }}
+          onTrendChat={(trendChatId) => {
+            if (!user) {
+              setAuthModalOpen(true);
+              return;
+            }
+            setLocation(`/feed-chat/${trendChatId}`);
           }}
         />
       )}
