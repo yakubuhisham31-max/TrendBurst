@@ -306,9 +306,37 @@ export default function PostFullscreenModal({
           </div>
 
           {/* Post Info Bar */}
-          <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-3 overflow-y-auto max-h-[20vh] md:pb-4 md:max-h-none flex-shrink-0">
-            {/* Action Buttons - Always visible at top */}
-            <div className="flex items-center gap-6 flex-shrink-0">
+          <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 overflow-y-auto max-h-[20vh] md:pb-4 md:max-h-none flex-shrink-0">
+            {/* User Info */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Avatar className="w-10 h-10 flex-shrink-0">
+                  <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
+                  <AvatarFallback>{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-white truncate">{post.user?.username}</p>
+                    {calculatedRank && (
+                      <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
+                        {getRankOrdinal(calculatedRank)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {post.createdAt && formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Caption */}
+            {post.caption && (
+              <p className="text-sm text-white line-clamp-3">{post.caption}</p>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <Button
                   size="icon"
@@ -365,34 +393,6 @@ export default function PostFullscreenModal({
                 <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
               </Button>
             </div>
-
-            {/* User Info */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
-                  <AvatarFallback>{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-white truncate">{post.user?.username}</p>
-                    {calculatedRank && (
-                      <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
-                        {getRankOrdinal(calculatedRank)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {post.createdAt && formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Caption */}
-            {post.caption && (
-              <p className="text-sm text-white line-clamp-3">{post.caption}</p>
-            )}
           </div>
         </div>
       </div>
