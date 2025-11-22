@@ -20,10 +20,8 @@
           appId: "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9",
           allowLocalhostAsSecureOrigin: true,
         });
-      });
-      
-      // Get Player ID for verification
-      OneSignal.push(function() {
+        
+        // Get Player ID AFTER initialization completes
         OneSignal.getUserId(function(id) {
           console.log("✅ OneSignal Player ID:", id);
         });
