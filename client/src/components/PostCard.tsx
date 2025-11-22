@@ -289,6 +289,13 @@ export default function PostCard({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            // Pause all other videos in the DOM to prevent multiple playback
+            const allVideos = document.querySelectorAll('video');
+            allVideos.forEach((v: any) => {
+              if (v !== video) {
+                v.pause();
+              }
+            });
             video.play().catch(() => {
               // Video play failed (e.g., user interaction required)
             });
@@ -297,7 +304,7 @@ export default function PostCard({
           }
         });
       },
-      { threshold: 0.5 } // Play when 50% visible
+      { threshold: 0.8 } // Play only when 80% visible
     );
 
     observer.observe(video);
