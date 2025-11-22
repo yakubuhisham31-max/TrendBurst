@@ -350,7 +350,7 @@ export default function FeedPage() {
         <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-2 flex-wrap">
           <Button
             size="sm"
-            className="gap-1.5 bg-primary hover:bg-primary/90 text-white border-0 shadow-sm hover:shadow-md transition-all"
+            className="gap-1.5 bg-primary/90 hover:bg-primary text-white border-0 shadow-sm hover:shadow-md transition-all"
             onClick={() => setLocation(`/instructions/${trendId}`)}
             data-testid="button-instructions"
           >
@@ -359,7 +359,7 @@ export default function FeedPage() {
           </Button>
           <Button
             size="sm"
-            className="gap-1.5 bg-chart-2 hover:bg-chart-2/90 text-white border-0 shadow-sm hover:shadow-md transition-all"
+            className="gap-1.5 bg-muted-foreground/60 hover:bg-muted-foreground text-white border-0 shadow-sm hover:shadow-md transition-all"
             onClick={() => {
               if (!user) {
                 setAuthModalOpen(true);
@@ -372,8 +372,8 @@ export default function FeedPage() {
             <Trophy className="w-3.5 h-3.5" />
             <span className="text-xs font-medium">Rankings</span>
           </Button>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted rounded-full border border-border hover:border-muted-foreground/30 transition-colors">
-            <span className="text-xs font-semibold text-muted-foreground">{votesRemaining} votes</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 hover:border-primary/40 transition-colors">
+            <span className="text-xs font-semibold text-primary">{votesRemaining} votes left</span>
           </div>
         </div>
 
