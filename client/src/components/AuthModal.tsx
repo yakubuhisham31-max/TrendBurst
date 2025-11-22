@@ -1,6 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 const GoogleLogo = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -27,11 +29,18 @@ export function AuthModal({
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
 
+  const [, navigate] = useLocation();
+
   const handleGoogleAuth = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     // Navigate to Google OAuth endpoint which forces account selection
     window.location.href = "/auth/google";
+  };
+
+  const handleEmailAuth = () => {
+    onOpenChange(false);
+    navigate("/login");
   };
 
   return (
@@ -42,21 +51,43 @@ export function AuthModal({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
-            onClick={handleGoogleAuth}
-            data-testid="button-auth-google"
-          >
-            <GoogleLogo />
-            Continue with Google
-          </button>
+        <Tabs defaultValue="google" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="google">Google</TabsTrigger>
+            <TabsTrigger value="email">Email</TabsTrigger>
+          </TabsList>
 
-          <div className="text-center text-xs text-muted-foreground mt-2">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </div>
-        </div>
+          <TabsContent value="google" className="flex flex-col gap-3">
+            <button
+              type="button"
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+              onClick={handleGoogleAuth}
+              data-testid="button-auth-google"
+            >
+              <GoogleLogo />
+              Continue with Google
+            </button>
+
+            <div className="text-center text-xs text-muted-foreground mt-2">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </div>
+          </TabsContent>
+
+          <TabsContent value="email" className="flex flex-col gap-3">
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={handleEmailAuth}
+              data-testid="button-auth-email"
+            >
+              Continue with Email
+            </Button>
+
+            <div className="text-center text-xs text-muted-foreground mt-2">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
