@@ -109,6 +109,9 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    // Note: Replit Auth handles account selection at the Replit level
+    // Users can choose their authentication method (Google, GitHub, X, Apple)
+    // but cannot select specific accounts within those providers due to Replit Auth acting as an identity broker
     passport.authenticate("replitauth")(req, res, next);
   });
 
