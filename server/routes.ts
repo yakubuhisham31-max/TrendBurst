@@ -1496,6 +1496,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/notifications/test - Send test notification (protected, for debugging)
+  app.post("/api/notifications/test", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Send test push notification
+      await sendPushNotification({
+        userId,
+        heading: "Test Notification",
+        content: `Hey ${user.username}! Your OneSignal is working perfectly.`,
+        data: { type: "test" },
+      });
+
+      res.json({ message: "Test notification sent!" });
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      res.status(500).json({ message: "Failed to send test notification" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
