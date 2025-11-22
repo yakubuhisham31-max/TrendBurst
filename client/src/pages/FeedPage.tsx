@@ -290,7 +290,27 @@ export default function FeedPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-32">
+      {/* Floating Action Button for Post Creation */}
+      {!isTrendEnded && !userHasPosted && (
+        <div className="fixed bottom-8 right-8 z-40">
+          <Button
+            size="lg"
+            className="gap-2 bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all rounded-full px-6 py-3 h-auto"
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              setCreatePostOpen(true);
+            }}
+            data-testid="button-create-post-fab"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="text-sm font-semibold">Post</span>
+          </Button>
+        </div>
+      )}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Button
@@ -310,23 +330,6 @@ export default function FeedPage() {
           />
 
           <div className="flex items-center gap-2">
-            {!isTrendEnded && !userHasPosted && (
-              <Button
-                size="icon"
-                variant="default"
-                className="w-9 h-9 rounded-full"
-                onClick={() => {
-                  if (!user) {
-                    setAuthModalOpen(true);
-                    return;
-                  }
-                  setCreatePostOpen(true);
-                }}
-                data-testid="button-create-post"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            )}
             <Button
               size="icon"
               variant="secondary"
