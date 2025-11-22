@@ -19,28 +19,31 @@ export async function initializeOneSignal(userId: string) {
     const onesignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
     if (!onesignalAppId) {
-      console.log("OneSignal app ID not configured");
+      console.log("⚠️ OneSignal app ID not configured in VITE_ONESIGNAL_APP_ID");
       return;
     }
+
+    console.log("📢 Initializing OneSignal with app ID:", onesignalAppId);
 
     // Wait for OneSignal SDK to load
     const OneSignal = await waitForOneSignal();
     if (!OneSignal) {
-      console.error("OneSignal SDK failed to load after waiting");
+      console.error("❌ OneSignal SDK failed to load after waiting");
       return;
     }
 
-    console.log("OneSignal SDK loaded, initializing...");
+    console.log("✅ OneSignal SDK loaded, logging in user:", userId);
 
     // Set the external user ID for this user
     await OneSignal.login(userId);
     
     // Prompt for push notifications
+    console.log("📢 Prompting for push notification permission...");
     await OneSignal.Slidedown.promptPush();
 
-    console.log("OneSignal initialized for user:", userId);
+    console.log("✅ OneSignal successfully initialized for user:", userId);
   } catch (error) {
-    console.error("Failed to initialize OneSignal:", error);
+    console.error("❌ Failed to initialize OneSignal:", error);
   }
 }
 

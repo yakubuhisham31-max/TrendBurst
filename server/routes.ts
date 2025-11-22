@@ -102,6 +102,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         res.status(201).json({ message: "Account created successfully", user: sanitizeUser(newUser) });
       });
+
+      // Send welcome push notification asynchronously (don't wait)
+      notificationService.sendWelcomeNotification(newUser.id).catch((error) => {
+        console.error("Failed to send welcome notification:", error);
+      });
     } catch (error) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Registration failed" });

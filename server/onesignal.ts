@@ -8,8 +8,11 @@ export interface PushNotificationPayload {
 export async function sendPushNotification(payload: PushNotificationPayload) {
   try {
     if (!process.env.ONESIGNAL_APP_ID || !process.env.ONESIGNAL_REST_API_KEY) {
+      console.log("⚠️ OneSignal not configured - missing APP_ID or API_KEY");
       return;
     }
+
+    console.log(`📢 Sending push notification: "${payload.heading}" to user ${payload.userId}`);
 
     const requestBody = {
       app_id: process.env.ONESIGNAL_APP_ID,
@@ -30,12 +33,12 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("OneSignal API error:", error);
+      console.error("❌ OneSignal API error:", error);
       return;
     }
 
-    console.log(`Push notification sent to user ${payload.userId}`);
+    console.log(`✅ Push notification sent to user ${payload.userId}`);
   } catch (error) {
-    console.error("Failed to send OneSignal push notification:", error);
+    console.error("❌ Failed to send OneSignal push notification:", error);
   }
 }
