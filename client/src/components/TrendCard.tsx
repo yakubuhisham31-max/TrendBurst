@@ -361,19 +361,19 @@ export default function TrendCard({
           <div className="flex items-center gap-2">
             {status === "ending-soon" && (
               <div 
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 text-white text-sm font-semibold drop-shadow-lg shadow-lg border border-white/20"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-sm text-amber-300 text-xs font-semibold border border-amber-400/50 drop-shadow"
                 data-testid="badge-ending-soon"
               >
-                <Clock className="w-4 h-4" />
-                <span>Ending Soon</span>
+                <Clock className="w-3.5 h-3.5" />
+                <span>Ending</span>
               </div>
             )}
             {status === "ended" && (
               <div 
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-gray-500 to-slate-600 text-white text-sm font-semibold drop-shadow-lg shadow-lg border border-white/20"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-sm text-slate-300 text-xs font-semibold border border-slate-400/50 drop-shadow"
                 data-testid="badge-ended"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
                 <span>Ended</span>
               </div>
             )}
