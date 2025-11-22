@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const GoogleLogo = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -26,6 +27,13 @@ export function AuthModal({
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
 
+  const handleAuthClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Navigate directly using full page navigation
+    window.location.href = "/api/login";
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -35,17 +43,15 @@ export function AuthModal({
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
-          <a href="/api/login" style={{ display: 'contents' }}>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              data-testid="button-auth-google"
-            >
-              <GoogleLogo />
-              Continue with Google
-            </Button>
-          </a>
+          <button
+            type="button"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+            onClick={handleAuthClick}
+            data-testid="button-auth-google"
+          >
+            <GoogleLogo />
+            Continue with Google
+          </button>
 
           <div className="text-center text-xs text-muted-foreground mt-2">
             You can also sign in with GitHub, X, or Apple in the next screen
