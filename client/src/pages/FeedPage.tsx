@@ -32,6 +32,17 @@ export default function FeedPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Get query params for fullscreen post from returning from chat
+  useEffect(() => {
+    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const fullscreenPostParam = searchParams.get('fullscreenPost');
+    if (fullscreenPostParam) {
+      setFullscreenPostId(fullscreenPostParam);
+      // Clean up URL
+      window.history.replaceState({}, '', `/feed/${trendId}`);
+    }
+  }, [trendId]);
 
   // Fetch trend info
   const { data: trend, isLoading: trendLoading } = useQuery<TrendWithCreator>({
@@ -505,7 +516,7 @@ export default function FeedPage() {
               setAuthModalOpen(true);
               return;
             }
-            setLocation(`/feed-chat/${trendChatId}`);
+            setLocation(`/feed-chat/${trendChatId}?fromPost=${fullscreenPostId}`);
           }}
         />
       )}

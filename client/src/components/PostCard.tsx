@@ -376,7 +376,7 @@ export default function PostCard({
           </div>
         )}
 
-        <div className={`relative aspect-square overflow-hidden bg-muted ${isDisqualified ? 'blur-sm' : ''}`}>
+        <div className={`relative aspect-[4/5] overflow-hidden bg-muted ${isDisqualified ? 'blur-sm' : ''}`}>
           {mediaType === 'video' ? (
             <>
               <video

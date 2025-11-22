@@ -27,6 +27,10 @@ export default function FeedChatPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Get query params
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const fromPostId = searchParams.get('fromPost');
 
   // Fetch trend info
   const { data: trend, isLoading: trendLoading } = useQuery<TrendWithCreator>({
@@ -171,7 +175,14 @@ export default function FeedChatPage() {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => window.history.back()}
+              onClick={() => {
+                if (fromPostId) {
+                  // Navigate back to feed with fullscreen modal open
+                  setLocation(`/feed/${trendId}?fullscreenPost=${fromPostId}`);
+                } else {
+                  window.history.back();
+                }
+              }}
               data-testid="button-back"
             >
               <ChevronLeft className="w-6 h-6" />
