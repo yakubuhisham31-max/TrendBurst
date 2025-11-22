@@ -379,18 +379,31 @@ export default function FeedPage() {
 
         {/* Trend Stats */}
         {trend && !trendLoading && (
-          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-6 text-xs text-muted-foreground">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-center gap-3 flex-wrap">
             {trend.participants !== undefined && (
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" />
-                <span className="font-medium">{trend.participants} participants</span>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-colors">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{trend.participants}</span>
+                <span className="text-xs text-blue-600/70 dark:text-blue-400/70">participating</span>
               </div>
             )}
             {trend.endDate && (
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span className="font-medium">
-                  {isTrendEnded ? 'Ended' : `Ends ${formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}`}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-colors ${
+                isTrendEnded 
+                  ? 'bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/20 hover:border-red-500/40' 
+                  : 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20 hover:border-amber-500/40'
+              }`}>
+                <Clock className={`w-4 h-4 ${
+                  isTrendEnded 
+                    ? 'text-red-600 dark:text-red-400' 
+                    : 'text-amber-600 dark:text-amber-400'
+                }`} />
+                <span className={`text-sm font-semibold ${
+                  isTrendEnded 
+                    ? 'text-red-700 dark:text-red-300' 
+                    : 'text-amber-700 dark:text-amber-300'
+                }`}>
+                  {isTrendEnded ? 'Ended' : formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}
                 </span>
               </div>
             )}
