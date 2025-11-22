@@ -305,6 +305,13 @@ export default function PostFullscreenModal({
             )}
           </div>
 
+          {/* Caption - Above border */}
+          {post.caption && (
+            <div className="bg-black px-4 pt-3 pb-2">
+              <p className="text-sm text-white line-clamp-3">{post.caption}</p>
+            </div>
+          )}
+
           {/* Post Info Bar */}
           <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 overflow-y-auto max-h-[20vh] md:pb-4 md:max-h-none flex-shrink-0">
             {/* User Info */}
@@ -329,11 +336,6 @@ export default function PostFullscreenModal({
                 </div>
               </div>
             </div>
-
-            {/* Caption */}
-            {post.caption && (
-              <p className="text-sm text-white line-clamp-3">{post.caption}</p>
-            )}
 
             {/* Action Buttons */}
             <div className="flex items-center gap-6">
