@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame } from "lucide-react";
+import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame, Clock, X } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -360,20 +360,22 @@ export default function TrendCard({
 
           <div className="flex items-center gap-2">
             {status === "ending-soon" && (
-              <Badge 
-                className="bg-yellow-500 text-yellow-950 px-2.5 py-1 rounded-full border-0"
+              <div 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 text-white text-sm font-semibold drop-shadow-lg shadow-lg border border-white/20"
                 data-testid="badge-ending-soon"
               >
-                Ending Soon
-              </Badge>
+                <Clock className="w-4 h-4" />
+                <span>Ending Soon</span>
+              </div>
             )}
             {status === "ended" && (
-              <Badge 
-                className="bg-red-500 text-white px-2.5 py-1 rounded-full border-0"
+              <div 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-gray-500 to-slate-600 text-white text-sm font-semibold drop-shadow-lg shadow-lg border border-white/20"
                 data-testid="badge-ended"
               >
-                Ended
-              </Badge>
+                <X className="w-4 h-4" />
+                <span>Ended</span>
+              </div>
             )}
           </div>
         </div>
