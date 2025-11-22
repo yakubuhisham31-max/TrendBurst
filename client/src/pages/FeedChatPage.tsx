@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -27,6 +27,7 @@ export default function FeedChatPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Get query params
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -161,6 +162,16 @@ export default function FeedChatPage() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [comments]);
+
+  // Auto-expand textarea as user types
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    textarea.style.height = 'auto';
+    const newHeight = Math.min(textarea.scrollHeight, 200); // Max height of 200px
+    textarea.style.height = `${newHeight}px`;
+  }, [message]);
 
   // Sort comments by createdAt (oldest first)
   const sortedComments = [...comments].sort((a, b) => 
@@ -377,13 +388,20 @@ export default function FeedChatPage() {
               </Button>
             </div>
           )}
-          <div className="flex gap-2">
-            <Input
+          <div className="flex gap-2 items-end">
+            <Textarea
+              ref={textareaRef}
               placeholder={replyingTo ? `Reply to ${replyingTo.user?.username}...` : "Type your message..."}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              className="flex-1"
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              className="flex-1 resize-none min-h-10 max-h-52"
+              rows={1}
               data-testid="input-message"
             />
             <Button 
