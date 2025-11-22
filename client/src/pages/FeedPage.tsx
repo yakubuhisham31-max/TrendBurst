@@ -291,9 +291,35 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Floating Action Button for Post Creation */}
-      {!isTrendEnded && !userHasPosted && (
-        <div className="fixed bottom-8 right-8 z-40">
+      {/* Floating Action Buttons - Post and Chat */}
+      <div className="fixed bottom-8 right-8 z-40 flex items-center gap-3">
+        {/* Chat Button */}
+        <Button
+          size="icon"
+          variant="secondary"
+          className="w-12 h-12 rounded-full relative shadow-lg hover:shadow-xl transition-all"
+          onClick={() => {
+            if (!user) {
+              setAuthModalOpen(true);
+              return;
+            }
+            setLocation(`/feed-chat/${trendId}`);
+          }}
+          data-testid="button-feed-chat"
+        >
+          <MessageSquare className="w-5 h-5" />
+          {unreadChatCount > 0 && (
+            <Badge 
+              className="absolute -top-2 -right-2 h-5 min-w-5 px-1 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center font-bold"
+              data-testid="badge-chat-notification"
+            >
+              {unreadChatCount > 99 ? "99+" : unreadChatCount}
+            </Badge>
+          )}
+        </Button>
+
+        {/* Post Button */}
+        {!isTrendEnded && !userHasPosted && (
           <Button
             size="lg"
             className="gap-2 bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all rounded-full px-6 py-3 h-auto"
@@ -309,8 +335,8 @@ export default function FeedPage() {
             <Plus className="w-5 h-5" />
             <span className="text-sm font-semibold">Post</span>
           </Button>
-        </div>
-      )}
+        )}
+      </div>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Button
@@ -328,32 +354,6 @@ export default function FeedPage() {
             className="h-12 sm:h-14 md:h-16 object-contain flex-1"
             data-testid="img-logo"
           />
-
-          <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="secondary"
-              className="w-9 h-9 rounded-full relative"
-              onClick={() => {
-                if (!user) {
-                  setAuthModalOpen(true);
-                  return;
-                }
-                setLocation(`/feed-chat/${trendId}`);
-              }}
-              data-testid="button-feed-chat"
-            >
-              <MessageSquare className="w-4 h-4" />
-              {unreadChatCount > 0 && (
-                <Badge 
-                  className="absolute -top-2 -right-2 h-4 min-w-4 px-1 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center font-bold"
-                  data-testid="badge-chat-notification"
-                >
-                  {unreadChatCount > 99 ? "99+" : unreadChatCount}
-                </Badge>
-              )}
-            </Button>
-          </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-2 flex-wrap">
