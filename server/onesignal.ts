@@ -25,14 +25,14 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     };
 
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
-    console.log(`🔑 API Key first 10 chars: ${apiKey?.substring(0, 10)}...`);
-    console.log(`📡 Using Authorization header: Basic ${apiKey?.substring(0, 10)}...`);
+    console.log(`🔑 API Key first 20 chars: ${apiKey?.substring(0, 20)}...`);
+    console.log(`📡 Using Authorization header: Bearer ${apiKey?.substring(0, 20)}...`);
 
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
