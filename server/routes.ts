@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, comparePassword, sanitizeUser, requireAuth } from "./auth";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupGoogleAuth } from "./googleAuth";
 import { 
   insertUserSchema, 
   insertTrendSchema, 
@@ -21,6 +22,9 @@ import * as notificationService from "./notificationService";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Authentication
   await setupAuth(app);
+  
+  // Setup Google OAuth (with account selection prompt)
+  await setupGoogleAuth(app);
 
   // Health check endpoint (for Render and monitoring)
   app.get("/health", (_req, res) => {

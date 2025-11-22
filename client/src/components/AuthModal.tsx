@@ -27,11 +27,11 @@ export function AuthModal({
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
 
-  const handleAuthClick = (e: React.MouseEvent) => {
+  const handleGoogleAuth = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Navigate directly using full page navigation
-    window.location.href = "/api/login";
+    // Navigate to Google OAuth endpoint which forces account selection
+    window.location.href = "/auth/google";
   };
 
   return (
@@ -46,7 +46,7 @@ export function AuthModal({
           <button
             type="button"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
-            onClick={handleAuthClick}
+            onClick={handleGoogleAuth}
             data-testid="button-auth-google"
           >
             <GoogleLogo />
@@ -54,7 +54,7 @@ export function AuthModal({
           </button>
 
           <div className="text-center text-xs text-muted-foreground mt-2">
-            You can also sign in with GitHub, X, or Apple in the next screen
+            By continuing, you agree to our Terms of Service and Privacy Policy
           </div>
         </div>
       </DialogContent>

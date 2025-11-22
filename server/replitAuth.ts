@@ -68,9 +68,20 @@ async function upsertUser(claims: any) {
 
 export async function setupAuth(app: Express) {
   // Note: trust proxy is set in server/index.ts before this function is called
+  // Always set up session middleware for all authentication strategies
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Set up Passport serialization (shared by all strategies)
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+
+  // Only set up Replit Auth if REPL_ID is available
+  if (!process.env.REPL_ID) {
+    console.log("⚠️  Replit Auth not configured - skipping (REPL_ID not set)");
+    return;
+  }
 
   const config = await getOidcConfig();
 
@@ -104,9 +115,6 @@ export async function setupAuth(app: Express) {
     verify
   );
   passport.use(strategy);
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
     // Note: Replit Auth handles account selection at the Replit level
@@ -142,6 +150,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
+  // Check if this is a Google OAuth user (no expiration/refresh tokens)
+  if (user.provider === "google") {
+    // Google OAuth users don't have expiring tokens - session-based auth only
+    return next();
+  }
+
+  // For Replit Auth users, check token expiration
   // If no expiration time, something's wrong
   if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });

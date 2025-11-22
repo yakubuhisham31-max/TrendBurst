@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 22, 2025 - Google OAuth with Account Selection 🎯
+- **Migrated to Direct Google OAuth:** Replaced Replit Auth with direct Google OAuth implementation using passport-google-oauth20 for enhanced user experience.
+- **Account Selection Enabled:** Implemented `prompt: 'select_account'` parameter to force Google account picker on every sign-in, allowing users to choose which Google account to use.
+- **Dual Authentication Support:** Application now supports both Replit Auth (multi-provider) and direct Google OAuth (Google-specific with account selection).
+- **Simplified AuthModal:** Updated authentication flow to directly navigate to `/auth/google` for streamlined user experience.
+- **Environment Configuration:** Uses VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables. Callback URL automatically adapts to development/production environments.
+- **Required Google Cloud Console Setup:** Callback URL must be added to authorized redirect URIs in Google Cloud Console:
+  - Development: `https://[your-repl-domain].janeway.replit.dev/auth/google/callback`
+  - Production: `https://trendx.social/auth/google/callback` and `https://www.trendx.social/auth/google/callback`
+- **Result:** ✅ Users can now select their Google account on every sign-in instead of being auto-logged in with the last used account.
+
 ### November 22, 2025 - Authentication System Production-Ready 🎉
 - **Removed Duplicate Session Middleware:** Eliminated competing session configurations between server/index.ts and replitAuth.ts. Session now managed solely by replitAuth.ts for consistency.
 - **Fixed Trust Proxy Configuration:** Removed redundant trust proxy call from setupAuth. Trust proxy is now set once in server/index.ts before session middleware initialization, ensuring secure cookies work correctly behind reverse proxies.
