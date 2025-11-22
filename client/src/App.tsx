@@ -81,7 +81,7 @@ function Router() {
       <Route path="/edit-profile" component={(props) => <ProtectedRoute component={EditProfilePage} {...props} />} />
       <Route path="/instructions/:id" component={InstructionsPage} />
       <Route path="/rankings/:id" component={RankingsPage} />
-      <Route path="/feed-chat/:id" component={(props) => <ProtectedRoute component={FeedChatPage} {...props} />} />
+      <Route path="/feed-chat/:id" component={FeedChatPage} />
       
       <Route component={NotFound} />
     </Switch>
