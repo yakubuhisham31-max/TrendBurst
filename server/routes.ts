@@ -206,6 +206,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const trend = await storage.createTrend(result.data);
       
+      // Send notification to trend creator
+      await notificationService.sendTrendCreatedNotification((req as any).session.userId, result.data.name, trend.id);
+      
       // Create notification for followers
       const followers = await storage.getFollowers((req as any).session.userId);
       const actor = await storage.getUser((req as any).session.userId);
