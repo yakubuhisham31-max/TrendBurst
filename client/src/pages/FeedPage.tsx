@@ -294,29 +294,31 @@ export default function FeedPage() {
       {/* Floating Action Buttons - Chat and Post */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col items-center gap-3">
         {/* Chat Button */}
-        <Button
-          size="icon"
-          variant="secondary"
-          className="w-12 h-12 rounded-full relative shadow-lg hover:shadow-xl transition-all"
-          onClick={() => {
-            if (!user) {
-              setAuthModalOpen(true);
-              return;
-            }
-            setLocation(`/feed-chat/${trendId}`);
-          }}
-          data-testid="button-feed-chat"
-        >
-          <MessageSquare className="w-5 h-5" />
+        <div className="relative">
+          <Button
+            size="icon"
+            variant="secondary"
+            className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all"
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              setLocation(`/feed-chat/${trendId}`);
+            }}
+            data-testid="button-feed-chat"
+          >
+            <MessageSquare className="w-6 h-6" />
+          </Button>
           {unreadChatCount > 0 && (
             <Badge 
-              className="absolute -top-2 -right-2 h-5 min-w-5 px-1 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center font-bold"
+              className="absolute -top-1 -right-1 h-6 min-w-6 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center font-bold"
               data-testid="badge-chat-notification"
             >
               {unreadChatCount > 99 ? "99+" : unreadChatCount}
             </Badge>
           )}
-        </Button>
+        </div>
 
         {/* Post Button */}
         {!isTrendEnded && !userHasPosted && (
@@ -338,10 +340,11 @@ export default function FeedPage() {
         )}
       </div>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-center gap-3 relative">
           <Button
             size="icon"
             variant="ghost"
+            className="absolute left-0"
             onClick={() => setLocation("/")}
             data-testid="button-back"
           >
@@ -351,7 +354,7 @@ export default function FeedPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-14 sm:h-16 md:h-18 object-contain flex-1"
+            className="h-14 sm:h-16 md:h-18 object-contain"
             data-testid="img-logo"
           />
         </div>
