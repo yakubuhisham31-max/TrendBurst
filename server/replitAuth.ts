@@ -68,6 +68,10 @@ export async function setupAuth(app: Express) {
 
   const config = await getOidcConfig();
 
+  // Get domain from environment variables (Replit provides these)
+  const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || "localhost";
+  const strategyName = "replit-oauth";
+
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
@@ -78,42 +82,27 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Keep track of registered strategies
-  const registeredStrategies = new Set<string>();
-
-  // Helper function to ensure strategy exists for a domain
-  const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
-    if (!registeredStrategies.has(strategyName)) {
-      const strategy = new Strategy(
-        {
-          name: strategyName,
-          config,
-          scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
-        },
-        verify
-      );
-      passport.use(strategy);
-      registeredStrategies.add(strategyName);
-    }
-  };
+  // Register single strategy with proper callback URL
+  const strategy = new Strategy(
+    {
+      name: strategyName,
+      config,
+      scope: "openid email profile offline_access",
+      callbackURL: `https://${domain}/api/callback`,
+    },
+    verify
+  );
+  passport.use(strategy);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Use REPLIT_DOMAIN env var if available (Replit preview URL), otherwise use hostname
-    const domain = process.env.REPLIT_DOMAIN || req.hostname;
-    ensureStrategy(domain);
-    passport.authenticate(`replitauth:${domain}`)(req, res, next);
+    passport.authenticate(strategyName)(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    // Use REPLIT_DOMAIN env var if available (Replit preview URL), otherwise use hostname
-    const domain = process.env.REPLIT_DOMAIN || req.hostname;
-    ensureStrategy(domain);
-    passport.authenticate(`replitauth:${domain}`, {
+    passport.authenticate(strategyName, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
