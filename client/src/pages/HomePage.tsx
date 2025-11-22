@@ -469,7 +469,7 @@ export default function HomePage() {
         userAvatar={user?.profilePicture || undefined}
         onLogoutClick={async () => {
           await logout();
-          setLocation("/login");
+          setLocation("/");
         }}
         onAuthModalOpen={() => setAuthModalOpen(true)}
       />

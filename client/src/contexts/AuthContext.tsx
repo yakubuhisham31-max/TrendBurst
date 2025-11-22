@@ -59,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await apiRequest("POST", "/api/auth/logout", {});
     setUser(null);
+    // Invalidate auth queries so home page refreshes properly
+    await refetch();
   };
 
   const register = async (data: RegisterData) => {
