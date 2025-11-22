@@ -368,23 +368,21 @@ export default function FeedPage() {
 
         {/* Trend Stats */}
         {trend && !trendLoading && (
-          <div className="max-w-3xl mx-auto px-4 pb-2 flex items-center justify-between text-xs text-muted-foreground border-t pt-2">
-            <div className="flex items-center gap-3">
-              {trend.participants !== undefined && (
-                <div className="flex items-center gap-1">
-                  <Users className="w-3 h-3" />
-                  <span className="font-medium">{trend.participants} participants</span>
-                </div>
-              )}
-              {trend.endDate && (
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  <span className="font-medium">
-                    {isTrendEnded ? 'Ended' : `Ends ${formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}`}
-                  </span>
-                </div>
-              )}
-            </div>
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-6 text-xs text-muted-foreground">
+            {trend.participants !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" />
+                <span className="font-medium">{trend.participants} participants</span>
+              </div>
+            )}
+            {trend.endDate && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="font-medium">
+                  {isTrendEnded ? 'Ended' : `Ends ${formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}`}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </header>
