@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 
@@ -29,6 +30,12 @@ export default function LoginPage() {
 
   const handleSignIn = () => {
     window.location.href = "/api/login";
+  };
+
+  const handleGoogleAuth = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = "/auth/google";
   };
 
   return (
@@ -63,22 +70,49 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={handleSignIn}
-              data-testid="button-signin-google"
-            >
-              <GoogleLogo />
-              Continue with Google
-            </Button>
+          <Tabs defaultValue="username" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="username" data-testid="tab-username">Username</TabsTrigger>
+              <TabsTrigger value="email" data-testid="tab-email">Email</TabsTrigger>
+            </TabsList>
 
-            <p className="text-xs text-center text-muted-foreground pt-2">
-              You can also sign in with GitHub, X, or Apple after clicking above
-            </p>
-          </div>
+            <TabsContent value="username" className="mt-6">
+              <div className="space-y-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleSignIn}
+                  data-testid="button-signin-username"
+                >
+                  Continue with Replit Auth
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground pt-2">
+                  Sign in with your Replit account or other providers
+                </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="email" className="mt-6">
+              <div className="space-y-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleGoogleAuth}
+                  data-testid="button-signin-email"
+                >
+                  <GoogleLogo />
+                  Continue with Google
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground pt-2">
+                  Sign in with your Google account
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>

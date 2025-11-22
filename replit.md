@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 22, 2025 - Email Login Tab in AuthModal 📧
+- **AuthModal Enhancement:** Added tabbed interface to AuthModal with two tabs:
+  - **Google tab:** Continues with Google OAuth (forces account selection)
+  - **Email tab:** Navigates to LoginPage for email-based login options
+- **LoginPage Restoration:** Restored original LoginPage with two tabs:
+  - **Username tab:** Sign in with Replit Auth (multi-provider support)
+  - **Email tab:** Sign in with Google OAuth directly
+- **UX Improvement:** Users can now choose between OAuth providers or explore traditional login options all from the AuthModal popup.
+- **Result:** ✅ Seamless authentication flow with multiple options for user convenience.
+
 ### November 22, 2025 - Google OAuth with Account Selection 🎯
 - **Migrated to Direct Google OAuth:** Replaced Replit Auth with direct Google OAuth implementation using passport-google-oauth20 for enhanced user experience.
 - **Account Selection Enabled:** Implemented `prompt: 'select_account'` parameter to force Google account picker on every sign-in, allowing users to choose which Google account to use.
