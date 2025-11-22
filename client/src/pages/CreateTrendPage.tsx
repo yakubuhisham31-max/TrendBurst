@@ -47,6 +47,45 @@ export default function CreateTrendPage() {
     referencePreviewsRef.current = referencePreviewUrls;
   }, [referencePreviewUrls]);
 
+  // Load form data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('createTrendFormData');
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        setName(data.name || "");
+        setDescription(data.description || "");
+        setInstructions(data.instructions || "");
+        setRules(data.rules || [""]);
+        setSelectedCategory(data.selectedCategory || "");
+        setEndDate(data.endDate || "");
+        setIncludePrizes(data.includePrizes || false);
+        setPrizeFirst(data.prizeFirst || "");
+        setPrizeSecond(data.prizeSecond || "");
+        setPrizeThird(data.prizeThird || "");
+      } catch (e) {
+        // Silently ignore localStorage errors
+      }
+    }
+  }, []);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    const formData = {
+      name,
+      description,
+      instructions,
+      rules,
+      selectedCategory,
+      endDate,
+      includePrizes,
+      prizeFirst,
+      prizeSecond,
+      prizeThird,
+    };
+    localStorage.setItem('createTrendFormData', JSON.stringify(formData));
+  }, [name, description, instructions, rules, selectedCategory, endDate, includePrizes, prizeFirst, prizeSecond, prizeThird]);
+
   // Clean up preview URLs when component unmounts
   useEffect(() => {
     return () => {
@@ -91,6 +130,9 @@ export default function CreateTrendPage() {
         URL.revokeObjectURL(coverPreviewUrl);
       }
       referencePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // Clear localStorage after successful submission
+      localStorage.removeItem('createTrendFormData');
       
       queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
       toast({
