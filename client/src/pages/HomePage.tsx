@@ -215,20 +215,20 @@ export default function HomePage() {
           {user ? (
             <Link href="/create-trend">
               <Button
-                className="w-full h-11 rounded-full shadow-md hover:shadow-lg gap-2 text-sm font-semibold transition-shadow"
+                className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2.5 text-sm font-bold transition-all bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0"
                 data-testid="button-create-trend"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 Create New Trend
               </Button>
             </Link>
           ) : (
             <Button
               onClick={() => setAuthModalOpen(true)}
-              className="w-full h-11 rounded-full shadow-md hover:shadow-lg gap-2 text-sm font-semibold transition-shadow"
+              className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2.5 text-sm font-bold transition-all bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0"
               data-testid="button-create-trend"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               Create New Trend
             </Button>
           )}

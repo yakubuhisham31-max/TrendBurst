@@ -15,6 +15,8 @@ Preferred communication style: Simple, everyday language.
 - **Floating Action Buttons Layout:** Reorganized floating buttons at bottom-right corner with Chat button on top and Post button below for improved user experience.
 - **Feed Header UI Improvements:** Fixed Trendz logo centering and back button alignment in post feed header using balanced flex layout. Logo now matches home screen responsive sizing (h-14 sm:h-16 md:h-18).
 - **Chat Notification Badge:** Replaced Badge component with custom styled notification indicator for more professional appearance with proper sizing, positioning, and shadow effects.
+- **Create Trend Button Redesign:** Enhanced the Create New Trend button with gradient background, improved shadows, larger icon, and bold typography for more prominence and visual appeal.
+- **Trend Card Status Badges:** Updated "Ending Soon" and "Ended" labels on trend cards with minimalist glassmorphism design, featuring backdrop blur, subtle borders, and professional coloring (amber for ending, red for ended).
 
 ### November 9, 2025
 - **Notification Sound Effect:** Implemented Web Audio API-based notification sound that plays when new notifications arrive. Sound preference is saved in localStorage and can be enabled/disabled per user.
