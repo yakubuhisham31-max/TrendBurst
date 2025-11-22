@@ -109,12 +109,12 @@ app.use(
     }),
     secret: process.env.SESSION_SECRET || "dev-secret-key-not-for-production",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       domain: process.env.COOKIE_DOMAIN, // Optional: set cookie domain for cross-subdomain auth
     },
   })
