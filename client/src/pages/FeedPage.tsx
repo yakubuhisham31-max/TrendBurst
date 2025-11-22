@@ -455,6 +455,7 @@ export default function FeedPage() {
                     isUserTrendHost={user?.id === trend?.userId}
                     isCreator={user?.id === post.userId}
                     isDisqualified={!!post.isDisqualified}
+                    isBlurred={isBlurred}
                     isTrendEnded={isTrendEnded}
                     onVoteUp={() => handleVoteUp(post.id)}
                     onVoteDown={() => handleVoteDown(post.id)}

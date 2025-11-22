@@ -36,6 +36,7 @@ interface PostCardProps {
   isTrendHost?: boolean;
   isUserTrendHost?: boolean;
   isDisqualified?: boolean;
+  isBlurred?: boolean;
   isTrendEnded?: boolean;
   onVoteUp?: () => void;
   onVoteDown?: () => void;
@@ -108,6 +109,7 @@ export default function PostCard({
   isTrendHost = false,
   isUserTrendHost = false,
   isDisqualified = false,
+  isBlurred = false,
   isTrendEnded = false,
   onVoteUp,
   onVoteDown,
@@ -278,9 +280,9 @@ export default function PostCard({
     }
   };
 
-  // Auto-play video when in view (Instagram style), but NOT for disqualified posts
+  // Auto-play video when in view (Instagram style), but NOT for disqualified or blurred posts
   useEffect(() => {
-    if (mediaType !== 'video' || !videoRef.current || isDisqualified) return;
+    if (mediaType !== 'video' || !videoRef.current || isDisqualified || isBlurred) return;
 
     const video = videoRef.current;
     const observer = new IntersectionObserver(
@@ -307,7 +309,7 @@ export default function PostCard({
         clearTimeout(tapTimeoutRef.current);
       }
     };
-  }, [mediaType, isDisqualified]);
+  }, [mediaType, isDisqualified, isBlurred]);
 
   return (
     <Card id={`post-${id}`} className="overflow-hidden transition-all" data-testid="card-post">
