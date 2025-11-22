@@ -83,19 +83,22 @@ export function AuthModal({
         callback: handleCredentialResponse,
       });
 
-      // Trigger the One Tap UI or redirect to Google login
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // Fallback: show full sign-in flow
-          const button = document.getElementById('google-sign-in-button');
-          if (button) {
-            window.google.accounts.id.renderButton(button, {
-              theme: 'outline',
-              size: 'large',
-            });
-          }
-        }
+      // Create a hidden button and trigger click to open Google auth flow
+      const hiddenButton = document.createElement('button');
+      hiddenButton.id = 'hidden-google-button';
+      document.body.appendChild(hiddenButton);
+      
+      window.google.accounts.id.renderButton(hiddenButton, {
+        theme: 'outline',
+        size: 'large',
+        type: 'standard',
       });
+      
+      // Trigger the click to open Google auth
+      hiddenButton.click();
+      
+      // Clean up
+      document.body.removeChild(hiddenButton);
     } catch (error) {
       console.error('Google Sign-In error:', error);
       toast({
@@ -189,8 +192,6 @@ export function AuthModal({
             <LogIn className="w-4 h-4 mr-2" />
             Continue with Google
           </Button>
-
-          <div id="google-sign-in-button" className="w-full" />
 
           <div className="text-center text-sm text-muted-foreground mt-2">
             Already have an account?{" "}
