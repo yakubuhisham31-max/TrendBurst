@@ -1,5 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 
 const GoogleLogo = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,11 +29,18 @@ export function AuthModal({
   title = "Join Trendx to Continue",
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
-  
+  const [activeTab, setActiveTab] = useState("email");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const handleReplitSignIn = () => {
-    // Redirect to Replit Auth login endpoint
-    // Replit Auth supports Google, GitHub, X, Apple, and email/password
     window.location.href = "/api/login";
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement email/password login
+    console.log("Login attempt:", { email, password });
   };
 
   return (
@@ -40,7 +51,8 @@ export function AuthModal({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
+          {/* Google Login */}
           <Button
             variant="outline"
             size="lg"
@@ -52,8 +64,77 @@ export function AuthModal({
             Continue with Google
           </Button>
 
-          <div className="text-center text-xs text-muted-foreground mt-2">
-            You can also sign in with GitHub, X, Apple, or email
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-muted"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+
+          {/* Email/Password Login with Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email">Email</TabsTrigger>
+              <TabsTrigger value="password">Password</TabsTrigger>
+            </TabsList>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Email Tab */}
+              <TabsContent value="email" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    data-testid="input-email"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Password Tab */}
+              <TabsContent value="password" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    data-testid="input-password"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Login Button */}
+              <Button
+                type="submit"
+                className="w-full"
+                data-testid="button-login"
+              >
+                Sign In
+              </Button>
+            </form>
+          </Tabs>
+
+          {/* Sign Up Link */}
+          <div className="text-center text-sm text-muted-foreground">
+            Don't have an account yet?{" "}
+            <button
+              onClick={() => {
+                // TODO: Navigate to sign up page
+                console.log("Sign up clicked");
+              }}
+              className="font-semibold text-primary hover:underline"
+              data-testid="button-signup"
+            >
+              Sign up
+            </button>
           </div>
         </div>
       </DialogContent>
