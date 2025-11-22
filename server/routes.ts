@@ -192,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = insertTrendSchema.safeParse({
         ...req.body,
-        userId: ((req as any).user?.claims?.sub),
+        userId: (req as any).session.userId,
       });
 
       if (!result.success) {
@@ -202,12 +202,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trend = await storage.createTrend(result.data);
       
       // Create notification for followers
-      const followers = await storage.getFollowers(((req as any).user?.claims?.sub)!);
-      const actor = await storage.getUser(((req as any).user?.claims?.sub)!);
+      const followers = await storage.getFollowers((req as any).session.userId);
+      const actor = await storage.getUser((req as any).session.userId);
       for (const follow of followers) {
         await storage.createNotification({
           userId: follow.followerId,
-          actorId: ((req as any).user?.claims?.sub)!,
+          actorId: (req as any).session.userId,
           type: 'new_trend_from_following',
           trendId: trend.id,
         });
@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== ((req as any).user?.claims?.sub)) {
+      if (trend.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: You can only update your own trends" });
       }
 
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== ((req as any).user?.claims?.sub)) {
+      if (trend.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own trends" });
       }
 
@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/dashboard/stats - Get dashboard statistics for current user (protected)
   app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
     try {
-      const userId = ((req as any).user?.claims?.sub)!;
+      const userId = (req as any).session.userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -333,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
       
-      if (trend.userId !== ((req as any).user?.claims?.sub)) {
+      if (trend.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can view analytics" });
       }
 
@@ -393,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== ((req as any).user?.claims?.sub)) {
+      if (trend.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can end this trend" });
       }
 
@@ -529,8 +529,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const postsWithUserInfo = await Promise.all(
         posts.map(async (post) => {
           const user = await storage.getUser(post.userId);
-          const userVoted = ((req as any).user?.claims?.sub) 
-            ? !!(await storage.getVote(post.id, ((req as any).user?.claims?.sub)))
+          const userVoted = (req as any).session.userId 
+            ? !!(await storage.getVote(post.id, (req as any).session.userId))
             : false;
           
           return {
@@ -574,7 +574,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = insertPostSchema.safeParse({
         ...req.body,
-        userId: ((req as any).user?.claims?.sub),
+        userId: (req as any).session.userId,
       });
 
       if (!result.success) {
@@ -588,12 +588,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create notification for followers
       try {
-        const followers = await storage.getFollowers(((req as any).user?.claims?.sub)!);
-        const postAuthor = await storage.getUser(((req as any).user?.claims?.sub)!);
+        const followers = await storage.getFollowers((req as any).session.userId);
+        const postAuthor = await storage.getUser((req as any).session.userId);
         for (const follow of followers) {
           await storage.createNotification({
             userId: follow.followerId,
-            actorId: ((req as any).user?.claims?.sub)!,
+            actorId: (req as any).session.userId,
             type: 'new_post_from_following',
             postId: post.id,
             trendId: result.data.trendId,
@@ -617,17 +617,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create notification for trend host (if not posting in their own trend)
       try {
         const trend = await storage.getTrend(result.data.trendId);
-        if (trend && trend.userId !== ((req as any).user?.claims?.sub)) {
+        if (trend && trend.userId !== (req as any).session.userId) {
           await storage.createNotification({
             userId: trend.userId,
-            actorId: ((req as any).user?.claims?.sub)!,
+            actorId: (req as any).session.userId,
             type: 'post_in_your_trend',
             postId: post.id,
             trendId: result.data.trendId,
           });
           // Send push notification
           try {
-            const postAuthor = await storage.getUser(((req as any).user?.claims?.sub)!);
+            const postAuthor = await storage.getUser((req as any).session.userId);
             await sendPushNotification({
               userId: trend.userId,
               heading: "New Submission",
@@ -644,15 +644,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Award 50 TrendX points for creating a post
       try {
-        const user = await storage.getUser(((req as any).user?.claims?.sub)!);
+        const user = await storage.getUser((req as any).session.userId);
         if (user) {
-          await storage.updateUser(((req as any).user?.claims?.sub)!, {
+          await storage.updateUser((req as any).session.userId, {
             trendxPoints: (user.trendxPoints || 0) + 50,
           });
           
           // Create notification for earning points
           await storage.createNotification({
-            userId: ((req as any).user?.claims?.sub)!,
+            userId: (req as any).session.userId,
             type: 'earned_points',
             postId: post.id,
             trendId: result.data.trendId,
@@ -661,7 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send push notification
           try {
             await sendPushNotification({
-              userId: ((req as any).user?.claims?.sub)!,
+              userId: (req as any).session.userId,
               heading: "Points Earned",
               content: "You earned 50 TrendX points for posting!",
               data: { postId: post.id, trendId: result.data.trendId },
@@ -695,7 +695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trend not found" });
       }
 
-      if (trend.userId !== ((req as any).user?.claims?.sub)) {
+      if (trend.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: Only the trend creator can disqualify posts" });
       }
 
@@ -737,22 +737,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check 10-vote limit per trend (sum of all vote counts)
-      const userVotes = await storage.getVotesByUser(((req as any).user?.claims?.sub)!, trendId);
+      const userVotes = await storage.getVotesByUser((req as any).session.userId, trendId);
       const totalVotes = userVotes.reduce((sum, vote) => sum + (vote.count || 0), 0);
       
       if (totalVotes >= 10) {
         return res.status(400).json({ message: "You have reached the maximum of 10 votes for this trend" });
       }
 
-      const vote = await storage.incrementVote(postId, ((req as any).user?.claims?.sub)!, trendId);
+      const vote = await storage.incrementVote(postId, (req as any).session.userId, trendId);
       
       // Create notification for vote on post
       const post = await storage.getPost(postId);
-      const voter = await storage.getUser(((req as any).user?.claims?.sub)!);
-      if (post && post.userId !== ((req as any).user?.claims?.sub)) {
+      const voter = await storage.getUser((req as any).session.userId);
+      if (post && post.userId !== (req as any).session.userId) {
         await storage.createNotification({
           userId: post.userId,
-          actorId: ((req as any).user?.claims?.sub)!,
+          actorId: (req as any).session.userId,
           type: 'vote_on_post',
           postId: postId,
           trendId: trendId,
@@ -782,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "postId is required" });
       }
 
-      const vote = await storage.decrementVote(postId, ((req as any).user?.claims?.sub)!);
+      const vote = await storage.decrementVote(postId, (req as any).session.userId);
       
       if (vote === null) {
         return res.json({ message: "Vote removed or decreased to zero" });
@@ -797,7 +797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/votes/trend/:trendId/count - Get user's vote count for trend (protected)
   app.get("/api/votes/trend/:trendId/count", isAuthenticated, async (req, res) => {
     try {
-      const votes = await storage.getVotesByUser(((req as any).user?.claims?.sub)!, req.params.trendId);
+      const votes = await storage.getVotesByUser((req as any).session.userId, req.params.trendId);
       const totalVotes = votes.reduce((sum, vote) => sum + (vote.count || 0), 0);
       res.json({ count: totalVotes });
     } catch (error) {
@@ -856,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = insertCommentSchema.safeParse({
         ...req.body,
-        userId: ((req as any).user?.claims?.sub),
+        userId: (req as any).session.userId,
       });
 
       if (!result.success) {
@@ -866,14 +866,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(result.data);
       
       // Create notification for comment on post or reply to comment
-      const commenter = await storage.getUser(((req as any).user?.claims?.sub)!);
+      const commenter = await storage.getUser((req as any).session.userId);
       if (comment.postId) {
         // Comment on a post - notify post owner
         const post = await storage.getPost(comment.postId);
-        if (post && post.userId !== ((req as any).user?.claims?.sub)) {
+        if (post && post.userId !== (req as any).session.userId) {
           await storage.createNotification({
             userId: post.userId,
-            actorId: ((req as any).user?.claims?.sub)!,
+            actorId: (req as any).session.userId,
             type: 'comment_on_post',
             postId: comment.postId,
             trendId: comment.trendId,
@@ -894,10 +894,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if this is a reply to another comment
       if (comment.parentId) {
         const parentComment = await storage.getComment(comment.parentId);
-        if (parentComment && parentComment.userId !== ((req as any).user?.claims?.sub)) {
+        if (parentComment && parentComment.userId !== (req as any).session.userId) {
           await storage.createNotification({
             userId: parentComment.userId,
-            actorId: ((req as any).user?.claims?.sub)!,
+            actorId: (req as any).session.userId,
             type: 'reply_to_comment',
             commentId: comment.id,
             postId: comment.postId,
@@ -920,10 +920,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (mentions.length > 0) {
         for (const username of mentions) {
           const mentionedUser = await storage.getUserByUsername(username);
-          if (mentionedUser && mentionedUser.id !== ((req as any).user?.claims?.sub)) {
+          if (mentionedUser && mentionedUser.id !== (req as any).session.userId) {
             await storage.createNotification({
               userId: mentionedUser.id,
-              actorId: ((req as any).user?.claims?.sub)!,
+              actorId: (req as any).session.userId,
               type: 'mention',
               commentId: comment.id,
               postId: comment.postId,
@@ -957,7 +957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Comment not found" });
       }
 
-      if (comment.userId !== ((req as any).user?.claims?.sub)) {
+      if (comment.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
       }
 
@@ -974,7 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/follows", isAuthenticated, async (req, res) => {
     try {
       const result = insertFollowSchema.safeParse({
-        followerId: ((req as any).user?.claims?.sub),
+        followerId: (req as any).session.userId,
         followingId: req.body.followingId,
       });
 
@@ -993,12 +993,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const follow = await storage.createFollow(result.data);
-      const follower = await storage.getUser(((req as any).user?.claims?.sub)!);
+      const follower = await storage.getUser((req as any).session.userId);
       
       // Create notification for new follower
       await storage.createNotification({
         userId: result.data.followingId,
-        actorId: ((req as any).user?.claims?.sub)!,
+        actorId: (req as any).session.userId,
         type: 'new_follower',
       });
       // Send push notification
@@ -1006,7 +1006,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: result.data.followingId,
         heading: "New Follower",
         content: `${follower?.username} started following you`,
-        data: { userId: ((req as any).user?.claims?.sub)! },
+        data: { userId: (req as any).session.userId },
       });
       
       res.status(201).json(follow);
@@ -1018,13 +1018,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DELETE /api/follows/:userId - Unfollow user (protected)
   app.delete("/api/follows/:userId", isAuthenticated, async (req, res) => {
     try {
-      const follow = await storage.getFollow(((req as any).user?.claims?.sub)!, req.params.userId);
+      const follow = await storage.getFollow((req as any).session.userId, req.params.userId);
 
       if (!follow) {
         return res.status(404).json({ message: "Follow relationship not found" });
       }
 
-      await storage.deleteFollow(((req as any).user?.claims?.sub)!, req.params.userId);
+      await storage.deleteFollow((req as any).session.userId, req.params.userId);
       res.json({ message: "Unfollowed successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1034,7 +1034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/follows/:userId/status - Check if current user follows another user (protected)
   app.get("/api/follows/:userId/status", isAuthenticated, async (req, res) => {
     try {
-      const follow = await storage.getFollow(((req as any).user?.claims?.sub)!, req.params.userId);
+      const follow = await storage.getFollow((req as any).session.userId, req.params.userId);
       res.json({ isFollowing: !!follow });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1045,7 +1045,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // GET /objects/:objectPath - Serve protected objects with ACL check
   app.get("/objects/:objectPath(*)", isAuthenticated, async (req, res) => {
-    const userId = ((req as any).user?.claims?.sub);
+    const userId = (req as any).session.userId;
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
@@ -1109,7 +1109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "imageUrl is required" });
     }
 
-    const userId = ((req as any).user?.claims?.sub)!;
+    const userId = (req as any).session.userId;
 
     try {
       const post = await storage.getPost(req.params.id);
@@ -1149,7 +1149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "profilePictureUrl is required" });
     }
 
-    const userId = ((req as any).user?.claims?.sub)!;
+    const userId = (req as any).session.userId;
 
     try {
       const objectStorageService = new ObjectStorageService();
@@ -1186,7 +1186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "New password must be at least 6 characters" });
       }
 
-      const user = await storage.getUser(((req as any).user?.claims?.sub)!);
+      const user = await storage.getUser((req as any).session.userId);
       if (!user || !user.password) {
         return res.status(404).json({ message: "User not found or no password set" });
       }
@@ -1197,7 +1197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const hashedPassword = await hashPassword(newPassword);
-      const updatedUser = await storage.updateUser(((req as any).user?.claims?.sub)!, {
+      const updatedUser = await storage.updateUser((req as any).session.userId, {
         password: hashedPassword,
       });
 
@@ -1233,7 +1233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
 
-      const updatedUser = await storage.updateUser(((req as any).user?.claims?.sub)!, {
+      const updatedUser = await storage.updateUser((req as any).session.userId, {
         email,
         fullName,
         bio,
@@ -1267,7 +1267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "type and identifier are required" });
       }
 
-      const tracking = await storage.updateViewTracking(((req as any).user?.claims?.sub)!, type, identifier);
+      const tracking = await storage.updateViewTracking((req as any).session.userId, type, identifier);
       res.json(tracking);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1277,7 +1277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/trends/:id/view - Track trend view (protected)
   app.post("/api/trends/:id/view", isAuthenticated, async (req, res) => {
     try {
-      await storage.trackTrendView(((req as any).user?.claims?.sub)!, req.params.id);
+      await storage.trackTrendView((req as any).session.userId, req.params.id);
       res.json({ message: "View tracked successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1287,7 +1287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/notifications/counts - Get new content counts (protected)
   app.get("/api/notifications/counts", isAuthenticated, async (req, res) => {
     try {
-      const counts = await storage.getNewContentCounts(((req as any).user?.claims?.sub)!);
+      const counts = await storage.getNewContentCounts((req as any).session.userId);
       res.json(counts);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1299,11 +1299,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/saved/trends/:trendId - Save a trend (protected)
   app.post("/api/saved/trends/:trendId", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isTrendSaved(((req as any).user?.claims?.sub)!, req.params.trendId);
+      const isSaved = await storage.isTrendSaved((req as any).session.userId, req.params.trendId);
       if (isSaved) {
         return res.status(400).json({ message: "Trend already saved" });
       }
-      const saved = await storage.saveTrend(((req as any).user?.claims?.sub)!, req.params.trendId);
+      const saved = await storage.saveTrend((req as any).session.userId, req.params.trendId);
       res.status(201).json(saved);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1313,7 +1313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DELETE /api/saved/trends/:trendId - Unsave a trend (protected)
   app.delete("/api/saved/trends/:trendId", isAuthenticated, async (req, res) => {
     try {
-      await storage.unsaveTrend(((req as any).user?.claims?.sub)!, req.params.trendId);
+      await storage.unsaveTrend((req as any).session.userId, req.params.trendId);
       res.json({ message: "Trend unsaved successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1323,7 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/saved/trends/:trendId/status - Check if trend is saved (protected)
   app.get("/api/saved/trends/:trendId/status", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isTrendSaved(((req as any).user?.claims?.sub)!, req.params.trendId);
+      const isSaved = await storage.isTrendSaved((req as any).session.userId, req.params.trendId);
       res.json({ isSaved });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1333,7 +1333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/saved/trends - Get user's saved trends (protected)
   app.get("/api/saved/trends", isAuthenticated, async (req, res) => {
     try {
-      const trends = await storage.getSavedTrends(((req as any).user?.claims?.sub)!);
+      const trends = await storage.getSavedTrends((req as any).session.userId);
       
       // Include creator info and calculate unique participants for each trend
       const trendsWithCreators = await Promise.all(
@@ -1359,11 +1359,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/saved/posts/:postId - Save a post (protected)
   app.post("/api/saved/posts/:postId", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isPostSaved(((req as any).user?.claims?.sub)!, req.params.postId);
+      const isSaved = await storage.isPostSaved((req as any).session.userId, req.params.postId);
       if (isSaved) {
         return res.status(400).json({ message: "Post already saved" });
       }
-      const saved = await storage.savePost(((req as any).user?.claims?.sub)!, req.params.postId);
+      const saved = await storage.savePost((req as any).session.userId, req.params.postId);
       res.status(201).json(saved);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1373,7 +1373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DELETE /api/saved/posts/:postId - Unsave a post (protected)
   app.delete("/api/saved/posts/:postId", isAuthenticated, async (req, res) => {
     try {
-      await storage.unsavePost(((req as any).user?.claims?.sub)!, req.params.postId);
+      await storage.unsavePost((req as any).session.userId, req.params.postId);
       res.json({ message: "Post unsaved successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1383,7 +1383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/saved/posts/:postId/status - Check if post is saved (protected)
   app.get("/api/saved/posts/:postId/status", isAuthenticated, async (req, res) => {
     try {
-      const isSaved = await storage.isPostSaved(((req as any).user?.claims?.sub)!, req.params.postId);
+      const isSaved = await storage.isPostSaved((req as any).session.userId, req.params.postId);
       res.json({ isSaved });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1393,7 +1393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/saved/posts - Get user's saved posts (protected)
   app.get("/api/saved/posts", isAuthenticated, async (req, res) => {
     try {
-      const posts = await storage.getSavedPosts(((req as any).user?.claims?.sub)!);
+      const posts = await storage.getSavedPosts((req as any).session.userId);
       res.json(posts);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1407,7 +1407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
       }
-      if (post.userId !== ((req as any).user?.claims?.sub)) {
+      if (post.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own posts" });
       }
       
@@ -1444,7 +1444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/notifications", isAuthenticated, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const notifications = await storage.getNotifications(((req as any).user?.claims?.sub)!, limit);
+      const notifications = await storage.getNotifications((req as any).session.userId, limit);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1454,7 +1454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/notifications/unread-count - Get unread notification count (protected)
   app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
     try {
-      const count = await storage.getUnreadCount(((req as any).user?.claims?.sub)!);
+      const count = await storage.getUnreadCount((req as any).session.userId);
       res.json({ count });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -1474,7 +1474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PATCH /api/notifications/mark-all-read - Mark all notifications as read (protected)
   app.patch("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
     try {
-      await storage.markAllAsRead(((req as any).user?.claims?.sub)!);
+      await storage.markAllAsRead((req as any).session.userId);
       res.json({ message: "All notifications marked as read" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
