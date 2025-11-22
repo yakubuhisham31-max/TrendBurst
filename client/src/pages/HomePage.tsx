@@ -10,7 +10,7 @@ import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
 import { AuthModal } from "@/components/AuthModal";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth as useAuthContext } from "@/contexts/AuthContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";
@@ -61,7 +61,7 @@ export default function HomePage() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading } = useAuthContext();
 
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   
