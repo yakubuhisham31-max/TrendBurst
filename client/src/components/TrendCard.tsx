@@ -20,6 +20,19 @@ import ShareDialog from "./ShareDialog";
 import FollowButton from "./FollowButton";
 import { useAuth } from "@/contexts/AuthContext";
 
+const categoryIcons: Record<string, JSX.Element> = {
+  "AI": <span className="text-sm">🤖</span>,
+  "Arts": <span className="text-sm">🎨</span>,
+  "Entertainment": <span className="text-sm">🎬</span>,
+  "Fashion": <span className="text-sm">👗</span>,
+  "Food": <span className="text-sm">🍔</span>,
+  "Gaming": <span className="text-sm">🎮</span>,
+  "Photography": <span className="text-sm">📸</span>,
+  "Sports": <span className="text-sm">⚽</span>,
+  "Technology": <span className="text-sm">💻</span>,
+  "Other": <span className="text-sm">✨</span>,
+};
+
 interface TrendCardProps {
   id: string;
   coverImage?: string;
@@ -312,9 +325,10 @@ export default function TrendCard({
         {/* Middle Section */}
         <div className="absolute top-[58%] left-4 right-4 -translate-y-1/2 flex flex-col items-start gap-1">
           <Badge 
-            className="bg-black/50 text-white backdrop-blur-sm px-2 py-0.5 text-xs rounded-full border-0"
+            className="bg-black/50 text-white backdrop-blur-sm px-2 py-0.5 text-xs rounded-full border-0 gap-1.5 flex items-center"
             data-testid={`badge-category-${category.toLowerCase()}`}
           >
+            {categoryIcons[category] && categoryIcons[category]}
             {category}
           </Badge>
           <h3 className="text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
