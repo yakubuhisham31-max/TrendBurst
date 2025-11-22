@@ -45,6 +45,7 @@ export default function PostFullscreenModal({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
+  const pointerStartY = useRef(0);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -145,7 +146,7 @@ export default function PostFullscreenModal({
     };
   }, []);
 
-  // Handle swipe gestures for post navigation
+  // Handle swipe gestures for post navigation (touch)
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };
@@ -153,6 +154,34 @@ export default function PostFullscreenModal({
   const handleTouchEnd = (e: React.TouchEvent) => {
     const touchEndY = e.changedTouches[0].clientY;
     const swipeDistance = touchStartY.current - touchEndY;
+    const minSwipeDistance = 50;
+
+    // Swipe up (positive distance) - next post
+    if (swipeDistance > minSwipeDistance && onNextPost) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        onNextPost();
+        setIsTransitioning(false);
+      }, 300);
+    }
+    // Swipe down (negative distance) - previous post
+    else if (swipeDistance < -minSwipeDistance && onPreviousPost) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        onPreviousPost();
+        setIsTransitioning(false);
+      }, 300);
+    }
+  };
+
+  // Handle swipe gestures for post navigation (desktop/mouse)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartY.current = e.clientY;
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    const pointerEndY = e.clientY;
+    const swipeDistance = pointerStartY.current - pointerEndY;
     const minSwipeDistance = 50;
 
     // Swipe up (positive distance) - next post
@@ -192,6 +221,8 @@ export default function PostFullscreenModal({
         className="fixed inset-0 bg-black z-50 w-screen h-screen overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
         data-testid="modal-fullscreen-post-backdrop"
       >
         <div
