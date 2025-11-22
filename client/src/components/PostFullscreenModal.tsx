@@ -305,60 +305,61 @@ export default function PostFullscreenModal({
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-center gap-3">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="gap-2 text-white hover:text-primary"
-                onClick={() => onVoteUp?.(post.id)}
-                data-testid="button-vote-up-fullscreen"
-              >
-                <ThumbsUp className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-white hover:text-primary"
+                  onClick={() => onVoteUp?.(post.id)}
+                  data-testid="button-vote-up-fullscreen"
+                >
+                  <ThumbsUp className="w-5 h-5" />
+                </Button>
 
-              <span className="text-sm font-bold text-white flex-1 text-center" data-testid="text-votes-fullscreen">
-                {post.votes}
-              </span>
+                <span className="text-sm font-bold text-white" data-testid="text-votes-fullscreen">
+                  {post.votes}
+                </span>
+
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-white hover:text-destructive"
+                  onClick={() => onVoteDown?.(post.id)}
+                  data-testid="button-vote-down-fullscreen"
+                >
+                  <ThumbsDown className="w-5 h-5" />
+                </Button>
+              </div>
 
               <Button
-                size="sm"
-                variant="ghost"
-                className="gap-2 text-white hover:text-destructive"
-                onClick={() => onVoteDown?.(post.id)}
-                data-testid="button-vote-down-fullscreen"
-              >
-                <ThumbsDown className="w-4 h-4" />
-              </Button>
-
-              <Button
-                size="sm"
                 variant="ghost"
                 className="gap-2 text-white hover:text-primary"
                 onClick={() => setCommentsOpen(true)}
                 data-testid="button-comment-fullscreen"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-xs">{post.commentCount || 0}</span>
+                <MessageCircle className="w-5 h-5" />
+                <span>{post.commentCount || 0}</span>
               </Button>
 
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
-                className="gap-2 text-white hover:text-primary"
+                className="text-white hover:text-primary"
                 onClick={handleShare}
                 data-testid="button-share-fullscreen"
               >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-5 h-5" />
               </Button>
 
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
-                className="gap-2 text-white hover:text-primary ml-auto"
+                className="text-white hover:text-primary ml-auto"
                 onClick={handleSave}
                 data-testid="button-save-fullscreen"
               >
-                <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
+                <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
               </Button>
             </div>
           </div>
