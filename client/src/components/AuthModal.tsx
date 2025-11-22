@@ -45,6 +45,16 @@ export function AuthModal({
         throw new Error(error.message || "Login failed");
       }
 
+      const userData = await response.json();
+      
+      // Link OneSignal player to app user ID
+      if ((window as any).OneSignalDeferred && userData.user?.id) {
+        (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
+          await OneSignal.setExternalUserId(userData.user.id);
+          console.log(`✅ OneSignal linked to user: ${userData.user.id}`);
+        });
+      }
+
       toast({ title: "Success!", description: "You're now signed in" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       onOpenChange(false);
@@ -78,6 +88,16 @@ export function AuthModal({
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Registration failed");
+      }
+
+      const userData = await response.json();
+      
+      // Link OneSignal player to app user ID
+      if ((window as any).OneSignalDeferred && userData.user?.id) {
+        (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
+          await OneSignal.setExternalUserId(userData.user.id);
+          console.log(`✅ OneSignal linked to user: ${userData.user.id}`);
+        });
       }
 
       toast({ title: "Success!", description: "Account created! You're now signed in" });

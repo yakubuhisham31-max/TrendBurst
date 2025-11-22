@@ -9,6 +9,8 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
   try {
     if (!process.env.ONESIGNAL_APP_ID || !process.env.ONESIGNAL_REST_API_KEY) {
       console.log("⚠️ OneSignal not configured - missing APP_ID or API_KEY");
+      console.log(`APP_ID: ${process.env.ONESIGNAL_APP_ID ? '✓ set' : '✗ missing'}`);
+      console.log(`REST_API_KEY: ${process.env.ONESIGNAL_REST_API_KEY ? '✓ set' : '✗ missing'}`);
       return;
     }
 
@@ -22,14 +24,20 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       data: payload.data || {},
     };
 
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    console.log(`🔑 API Key first 10 chars: ${apiKey?.substring(0, 10)}...`);
+    console.log(`📡 Using Authorization header: Basic ${apiKey?.substring(0, 10)}...`);
+
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+        "Authorization": `Basic ${apiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
+
+    console.log(`📊 OneSignal API response status: ${response.status}`);
 
     if (!response.ok) {
       const error = await response.text();
