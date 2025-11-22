@@ -149,12 +149,15 @@ export default function RankingsPage() {
 
               {(currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl) && (
                 currentUserPost.post.mediaType === "video" && currentUserPost.post.mediaUrl ? (
-                  <div className="relative">
+                  <div 
+                    className="relative cursor-pointer"
+                    onClick={() => setFullscreenPostId(currentUserPost.post.id)}
+                    data-testid="video-user-post"
+                  >
                     <video
                       src={currentUserPost.post.mediaUrl}
                       className="w-20 h-20 rounded-lg object-cover"
                       muted
-                      data-testid="video-user-post"
                     />
                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
                       <Play className="w-4 h-4 text-white fill-white" />
@@ -164,7 +167,8 @@ export default function RankingsPage() {
                   <img
                     src={currentUserPost.post.imageUrl || currentUserPost.post.mediaUrl || ""}
                     alt={currentUserPost.post.user?.username}
-                    className="w-20 h-20 rounded-lg object-cover"
+                    className="w-20 h-20 rounded-lg object-cover cursor-pointer"
+                    onClick={() => setFullscreenPostId(currentUserPost.post.id)}
                     data-testid="img-user-post"
                   />
                 )
@@ -211,15 +215,42 @@ export default function RankingsPage() {
                     </div>
                   )}
 
-                  {/* Avatar */}
-                  <Avatar className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} border-2 ring-4 ${
-                    badge === "gold" ? "border-yellow-500 ring-yellow-500/30" :
-                    badge === "silver" ? "border-gray-400 ring-gray-400/20" :
-                    "border-orange-500 ring-orange-500/20"
-                  }`}>
-                    <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
-                    <AvatarFallback className={isFirst ? "text-lg" : ""}>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  {/* Post Media or Avatar */}
+                  {(entry.post.imageUrl || entry.post.mediaUrl) ? (
+                    entry.post.mediaType === "video" && entry.post.mediaUrl ? (
+                      <div 
+                        className="relative cursor-pointer"
+                        onClick={() => setFullscreenPostId(entry.post.id)}
+                        data-testid={`video-podium-${entry.rank}`}
+                      >
+                        <video
+                          src={entry.post.mediaUrl}
+                          className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} rounded-lg object-cover`}
+                          muted
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
+                          <Play className="w-4 h-4 text-white fill-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={entry.post.imageUrl || entry.post.mediaUrl || ""}
+                        alt={entry.post.user?.username}
+                        className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} rounded-lg object-cover cursor-pointer`}
+                        onClick={() => setFullscreenPostId(entry.post.id)}
+                        data-testid={`img-podium-${entry.rank}`}
+                      />
+                    )
+                  ) : (
+                    <Avatar className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} border-2 ring-4 ${
+                      badge === "gold" ? "border-yellow-500 ring-yellow-500/30" :
+                      badge === "silver" ? "border-gray-400 ring-gray-400/20" :
+                      "border-orange-500 ring-orange-500/20"
+                    }`}>
+                      <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
+                      <AvatarFallback className={isFirst ? "text-lg" : ""}>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  )}
 
                   {/* Rank Badge */}
                   <div className={`rank-badge-${badge} ${isFirst ? "w-14 h-14 text-2xl" : "w-12 h-12 text-lg"} rounded-full flex items-center justify-center font-bold border border-white/20`}>
