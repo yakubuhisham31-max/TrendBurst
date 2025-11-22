@@ -370,7 +370,7 @@ export default function TrendCard({
             )}
             {status === "ended" && (
               <div 
-                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-sm text-slate-300 text-xs font-semibold border border-slate-400/50 drop-shadow"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-sm text-red-300 text-xs font-semibold border border-red-400/50 drop-shadow"
                 data-testid="badge-ended"
               >
                 <X className="w-3.5 h-3.5" />
