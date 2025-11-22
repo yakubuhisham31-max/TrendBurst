@@ -215,8 +215,18 @@ export default function RankingsPage() {
                     </div>
                   )}
 
-                  {/* Post Media or Avatar */}
-                  {(entry.post.imageUrl || entry.post.mediaUrl) ? (
+                  {/* Avatar */}
+                  <Avatar className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} border-2 ring-4 ${
+                    badge === "gold" ? "border-yellow-500 ring-yellow-500/30" :
+                    badge === "silver" ? "border-gray-400 ring-gray-400/20" :
+                    "border-orange-500 ring-orange-500/20"
+                  }`}>
+                    <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
+                    <AvatarFallback className={isFirst ? "text-lg" : ""}>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+
+                  {/* Post Media - Clickable */}
+                  {(entry.post.imageUrl || entry.post.mediaUrl) && (
                     entry.post.mediaType === "video" && entry.post.mediaUrl ? (
                       <div 
                         className="relative cursor-pointer"
@@ -241,15 +251,6 @@ export default function RankingsPage() {
                         data-testid={`img-podium-${entry.rank}`}
                       />
                     )
-                  ) : (
-                    <Avatar className={`${isFirst ? "w-20 h-20" : "w-16 h-16"} border-2 ring-4 ${
-                      badge === "gold" ? "border-yellow-500 ring-yellow-500/30" :
-                      badge === "silver" ? "border-gray-400 ring-gray-400/20" :
-                      "border-orange-500 ring-orange-500/20"
-                    }`}>
-                      <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
-                      <AvatarFallback className={isFirst ? "text-lg" : ""}>{entry.post.user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
                   )}
 
                   {/* Rank Badge */}
