@@ -50,14 +50,32 @@ function updateUserSession(
 }
 
 async function upsertUser(claims: any) {
-  await storage.upsertUser({
-    id: String(claims["sub"]),
-    email: claims["email"],
-    fullName: claims["first_name"] && claims["last_name"] 
-      ? `${claims["first_name"]} ${claims["last_name"]}` 
-      : undefined,
-    profilePicture: claims["profile_image_url"],
-  });
+  const replitSubId = String(claims["sub"]);
+  
+  // Check if user exists by Replit sub ID (stored in googleId field)
+  const existingUser = await storage.getUserByGoogleId(replitSubId);
+  
+  if (existingUser) {
+    // User already exists - update their profile
+    await storage.updateUser(existingUser.id, {
+      email: claims["email"],
+      fullName: claims["first_name"] && claims["last_name"] 
+        ? `${claims["first_name"]} ${claims["last_name"]}` 
+        : (claims["full_name"] || existingUser.fullName),
+      profilePicture: claims["profile_image_url"] || existingUser.profilePicture,
+    });
+  } else {
+    // New user - create with persistent UUID and store Replit sub in googleId
+    await storage.createUser({
+      username: claims["preferred_username"] || `user_${replitSubId.substring(0, 8)}`,
+      email: claims["email"],
+      fullName: claims["first_name"] && claims["last_name"] 
+        ? `${claims["first_name"]} ${claims["last_name"]}` 
+        : (claims["full_name"] || claims["email"]?.split("@")[0]),
+      googleId: replitSubId, // Store Replit sub ID here for future lookups
+      profilePicture: claims["profile_image_url"],
+    } as any);
+  }
 }
 
 export async function setupAuth(app: Express) {
