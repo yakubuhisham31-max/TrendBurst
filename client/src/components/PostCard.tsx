@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star, Volume2, VolumeX, Play, Expand } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Share2, Bookmark, Trash2, AlertTriangle, Star, Volume2, VolumeX, Play, Expand, Trophy, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -50,6 +50,46 @@ const getRankBadge = (rank: number) => {
   const suffixes = ["st", "nd", "rd"];
   const suffix = rank <= 3 ? suffixes[rank - 1] : "th";
   return `${rank}${suffix}`;
+};
+
+const getRankStyle = (rank: number) => {
+  if (rank === 1) {
+    return {
+      bgGradient: "bg-gradient-to-br from-yellow-400 via-yellow-300 to-orange-400",
+      borderColor: "border-2 border-yellow-500/50",
+      glowClass: "shadow-[0_0_20px_rgba(250,204,21,0.6)]",
+      textColor: "text-yellow-950",
+      icon: Trophy,
+      iconColor: "text-yellow-950",
+    };
+  } else if (rank === 2) {
+    return {
+      bgGradient: "bg-gradient-to-br from-slate-300 via-slate-200 to-slate-400",
+      borderColor: "border-2 border-slate-400/50",
+      glowClass: "shadow-[0_0_15px_rgba(148,163,184,0.5)]",
+      textColor: "text-slate-800",
+      icon: Trophy,
+      iconColor: "text-slate-800",
+    };
+  } else if (rank === 3) {
+    return {
+      bgGradient: "bg-gradient-to-br from-orange-300 via-orange-200 to-rose-400",
+      borderColor: "border-2 border-orange-500/50",
+      glowClass: "shadow-[0_0_15px_rgba(251,146,60,0.5)]",
+      textColor: "text-orange-950",
+      icon: Trophy,
+      iconColor: "text-orange-950",
+    };
+  } else {
+    return {
+      bgGradient: "bg-gradient-to-br from-primary to-chart-2",
+      borderColor: "border-2 border-primary/30",
+      glowClass: "shadow-lg",
+      textColor: "text-primary-foreground",
+      icon: Zap,
+      iconColor: "text-primary-foreground",
+    };
+  }
 };
 
 export default function PostCard({
@@ -361,12 +401,21 @@ export default function PostCard({
       </div>
 
       <div className="relative">
-        <Badge
-          className="absolute top-3 left-3 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg text-sm font-bold z-10"
-          data-testid={`badge-rank-${rank}`}
-        >
-          {getRankBadge(rank)}
-        </Badge>
+        {(() => {
+          const style = getRankStyle(rank);
+          const IconComponent = style.icon;
+          return (
+            <div
+              className={`absolute top-4 left-4 w-14 h-14 rounded-full flex flex-col items-center justify-center ${style.bgGradient} ${style.borderColor} z-10 ${style.glowClass} transition-transform hover:scale-110`}
+              data-testid={`badge-rank-${rank}`}
+            >
+              <IconComponent className={`w-5 h-5 ${style.iconColor} flex-shrink-0`} />
+              <span className={`text-xs font-black ${style.textColor} leading-none mt-0.5`}>
+                {rank}
+              </span>
+            </div>
+          );
+        })()}
 
         {isDisqualified && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
