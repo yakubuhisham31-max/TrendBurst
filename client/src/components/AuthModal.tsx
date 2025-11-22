@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Mail, LogIn } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { SiGoogle } from "react-icons/si";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -148,10 +149,18 @@ export function AuthModal({
         throw new Error(data.message || 'Authentication failed');
       }
 
-      toast({
-        title: "Success",
-        description: "You have been logged in with Google",
-      });
+      // Check if this is a new user
+      if (data.isNewUser) {
+        toast({
+          title: "Welcome!",
+          description: "Let's set up your username and password",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "You have been logged in with Google",
+        });
+      }
 
       // Redirect based on backend response
       if (data.redirectTo) {
@@ -199,7 +208,7 @@ export function AuthModal({
             onClick={handleGoogleSignIn}
             data-testid="button-auth-google"
           >
-            <LogIn className="w-4 h-4 mr-2" />
+            <SiGoogle className="w-4 h-4 mr-2" />
             Continue with Google
           </Button>
 

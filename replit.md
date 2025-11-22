@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **Chat Notification Badge:** Replaced Badge component with custom styled notification indicator for more professional appearance with proper sizing, positioning, and shadow effects.
 - **Create Trend Button Redesign:** Enhanced the Create New Trend button with gradient background, improved shadows, larger icon, and bold typography for more prominence and visual appeal.
 - **Trend Card Status Badges:** Updated "Ending Soon" and "Ended" labels on trend cards with minimalist glassmorphism design, featuring backdrop blur, subtle borders, and professional coloring (amber for ending, red for ended).
-- **Google Auth Flow Optimization:** Fixed authentication modal to directly open Google auth without extra sign-in tabs. Clicking "Continue with Google" now triggers the auth popup directly for streamlined user experience.
+- **Google Auth Flow Optimization:** Fixed authentication modal to directly open Google auth without extra sign-in tabs. Clicking "Continue with Google" now triggers the auth popup directly for streamlined user experience. Added Google logo to button. Implemented two-step Google OAuth flow: existing users are logged in directly, while new users are redirected to /complete-profile to set up username and password before proceeding.
 
 ### November 9, 2025
 - **Notification Sound Effect:** Implemented Web Audio API-based notification sound that plays when new notifications arrive. Sound preference is saved in localStorage and can be enabled/disabled per user.
