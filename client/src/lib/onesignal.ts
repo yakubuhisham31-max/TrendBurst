@@ -16,6 +16,12 @@ async function waitForOneSignal(maxWaitMs = 5000): Promise<any> {
 
 export async function initializeOneSignal(userId: string) {
   try {
+    // Only run on HTTPS (production)
+    if (window.location.protocol !== 'https:') {
+      console.log("⚠️ OneSignal only works on HTTPS, skipping initialization");
+      return;
+    }
+
     const onesignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
     if (!onesignalAppId) {
@@ -32,7 +38,14 @@ export async function initializeOneSignal(userId: string) {
       return;
     }
 
-    console.log("✅ OneSignal SDK loaded, logging in user:", userId);
+    console.log("✅ OneSignal SDK loaded, initializing with App ID...");
+
+    // Initialize OneSignal with App ID
+    await OneSignal.init({
+      appId: onesignalAppId,
+    });
+
+    console.log("✅ OneSignal initialized, logging in user:", userId);
 
     // Set the external user ID for this user
     await OneSignal.login(userId);
