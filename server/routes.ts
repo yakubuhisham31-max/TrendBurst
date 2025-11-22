@@ -70,7 +70,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send welcome notification
       await notificationService.sendWelcomeNotification(user.id);
 
-      res.status(201).json({ user: sanitizeUser(user) });
+      req.session.save((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.status(201).json({ user: sanitizeUser(user) });
+      });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -106,7 +111,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       req.session.userId = user.id;
 
-      res.json({ user: sanitizeUser(user) });
+      req.session.save((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.json({ user: sanitizeUser(user) });
+      });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -192,7 +202,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user) {
         // Existing Google user - just log them in
         req.session.userId = user.id;
-        res.json({ user: sanitizeUser(user), isNewUser: false, redirectTo: "/" });
+        req.session.save((err) => {
+          if (err) {
+            return res.status(500).json({ message: "Session error" });
+          }
+          res.json({ user: sanitizeUser(user), isNewUser: false, redirectTo: "/" });
+        });
       } else {
         // New Google user - create account, redirect to complete profile
         const tempUsername = `user_${googleId.substring(0, 10)}`;
@@ -205,7 +220,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         req.session.userId = user.id;
-        res.json({ user: sanitizeUser(user), isNewUser: true, redirectTo: "/complete-profile" });
+        req.session.save((err) => {
+          if (err) {
+            return res.status(500).json({ message: "Session error" });
+          }
+          res.json({ user: sanitizeUser(user), isNewUser: true, redirectTo: "/complete-profile" });
+        });
       }
     } catch (error) {
       console.error("Google auth error:", error);
