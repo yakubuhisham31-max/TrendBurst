@@ -253,12 +253,14 @@ export default function TrendCard({
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <FollowButton 
-              username={username} 
-              size="sm" 
-              variant="outline"
-              className="h-8 px-3 text-white border-white/40 hover:bg-white/20 hover:border-white/60 bg-black/20"
-            />
+            {user?.username !== username && (
+              <FollowButton 
+                username={username} 
+                size="sm" 
+                variant="outline"
+                className="h-8 px-3 text-white border-white/40 hover:bg-white/20 hover:border-white/60 bg-black/20"
+              />
+            )}
             {isTrending && (
               <Badge className="bg-yellow-500 text-yellow-950 px-2.5 py-1 gap-1 items-center border-0 rounded-full whitespace-nowrap flex-shrink-0" data-testid="badge-trending">
                 <Flame className="w-3.5 h-3.5" />
