@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 22, 2025 - OneSignal v16 Push Notifications
+- **OneSignal v16 SDK Integration:** Updated to modern OneSignal v16 SDK with `OneSignalDeferred` initialization pattern in `client/index.html`.
+- **User ID Linking:** Implemented automatic linking of app user IDs to OneSignal Player IDs via `initializeOneSignal()` function in `client/src/lib/onesignal.ts`. Called on login, registration, and initial app load for authenticated users.
+- **Push Notification Sending:** Backend sends notifications to `include_external_user_ids` using proper REST API with `Authorization: Basic {API_KEY}` header.
+- **Notification Types:** Implemented notifications for posts, comments, votes, rank changes, trend endings, and more via `server/notificationService.ts`.
+- **Current Status:** OneSignal SDK properly initialized and user linking functional. Awaiting OneSignal dashboard Site URL configuration to enable push delivery.
+- **Next Step:** Configure Site URL in OneSignal dashboard pointing to production domain for notifications to work.
+
 ### November 22, 2025 - Simple Username/Email + Password Authentication
 - **Authentication Overhaul:** Removed Replit Auth and implemented simple, self-contained username/email + password authentication system.
 - **Backend Endpoints:** Created `/api/auth/login` (login with username or email), `/api/auth/register` (create new account), and `/api/auth/logout` endpoints.
