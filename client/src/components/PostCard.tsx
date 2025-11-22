@@ -448,6 +448,8 @@ export default function PostCard({
                 loop
                 muted={isMuted}
                 playsInline
+                preload="metadata"
+                crossOrigin="anonymous"
                 data-testid="video-post"
               />
               
