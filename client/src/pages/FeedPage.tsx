@@ -310,12 +310,18 @@ export default function FeedPage() {
           />
 
           <div className="flex items-center gap-2">
-            {!isTrendEnded && user && !userHasPosted && (
+            {!isTrendEnded && !userHasPosted && (
               <Button
                 size="icon"
                 variant="default"
                 className="w-9 h-9 rounded-full"
-                onClick={() => setCreatePostOpen(true)}
+                onClick={() => {
+                  if (!user) {
+                    setAuthModalOpen(true);
+                    return;
+                  }
+                  setCreatePostOpen(true);
+                }}
                 data-testid="button-create-post"
               >
                 <Plus className="w-4 h-4" />
