@@ -39,6 +39,14 @@ export function AuthModal({
     script.defer = true;
     document.head.appendChild(script);
 
+    // Create persistent hidden container for Google button
+    if (!document.getElementById('google-signin-container')) {
+      const container = document.createElement('div');
+      container.id = 'google-signin-container';
+      container.style.display = 'none';
+      document.body.appendChild(container);
+    }
+
     return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script);
@@ -83,22 +91,24 @@ export function AuthModal({
         callback: handleCredentialResponse,
       });
 
-      // Create a hidden button and trigger click to open Google auth flow
-      const hiddenButton = document.createElement('button');
-      hiddenButton.id = 'hidden-google-button';
-      document.body.appendChild(hiddenButton);
-      
-      window.google.accounts.id.renderButton(hiddenButton, {
-        theme: 'outline',
-        size: 'large',
-        type: 'standard',
-      });
-      
-      // Trigger the click to open Google auth
-      hiddenButton.click();
-      
-      // Clean up
-      document.body.removeChild(hiddenButton);
+      // Render button on persistent hidden container and trigger click
+      const container = document.getElementById('google-signin-container');
+      if (container) {
+        // Clear previous content
+        container.innerHTML = '';
+        
+        window.google.accounts.id.renderButton(container, {
+          theme: 'outline',
+          size: 'large',
+          type: 'standard',
+        });
+        
+        // Find and click the rendered button
+        const button = container.querySelector('div[role="button"]') as HTMLElement;
+        if (button) {
+          button.click();
+        }
+      }
     } catch (error) {
       console.error('Google Sign-In error:', error);
       toast({
