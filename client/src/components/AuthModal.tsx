@@ -1,7 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
-import { Mail } from "lucide-react";
 
 const GoogleLogo = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -27,16 +25,10 @@ export function AuthModal({
   title = "Join Trendx to Continue",
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
-  const [, setLocation] = useLocation();
   
-  const handleGoogleSignIn = () => {
-    // Redirect to Google auth with account selection prompt
+  const handleSignIn = () => {
+    // Redirect to Replit Auth with account selection prompt
     window.location.href = "/api/login/google";
-  };
-
-  const handleEmailSignIn = () => {
-    onOpenChange(false);
-    setLocation("/login");
   };
 
   return (
@@ -52,26 +44,15 @@ export function AuthModal({
             variant="outline"
             size="lg"
             className="w-full"
-            onClick={handleGoogleSignIn}
+            onClick={handleSignIn}
             data-testid="button-auth-google"
           >
             <GoogleLogo />
             Continue with Google
           </Button>
 
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={handleEmailSignIn}
-            data-testid="button-auth-email"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Continue with Email
-          </Button>
-
           <div className="text-center text-xs text-muted-foreground mt-2">
-            You can also sign in with GitHub, X, or Apple through the login page
+            You can also sign in with GitHub, X, or Apple when you click the button above. Choose your preferred account in the next screen.
           </div>
         </div>
       </DialogContent>
