@@ -65,21 +65,8 @@ export default function HomePage() {
 
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   
-  const { data: allTrends = [], isLoading, error } = useQuery<TrendWithCreator[]>({
-    queryKey: ["/api/trends", categoryParam],
-    queryFn: async () => {
-      const url = categoryParam 
-        ? `/api/trends?category=${encodeURIComponent(categoryParam)}`
-        : "/api/trends";
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch trends");
-      const data = await res.json();
-      return data.map((trend: any) => ({
-        ...trend,
-        createdAt: new Date(trend.createdAt),
-        endDate: trend.endDate ? new Date(trend.endDate) : undefined,
-      }));
-    },
+  const { data: allTrends = [], isLoading } = useQuery<TrendWithCreator[]>({
+    queryKey: categoryParam ? ["/api/trends", categoryParam] : ["/api/trends"],
   });
 
   // Fetch notification counts
@@ -313,23 +300,6 @@ export default function HomePage() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {error && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-destructive" />
-            </div>
-            <p className="text-lg font-semibold text-foreground">Failed to load trends</p>
-            <p className="text-sm text-muted-foreground max-w-md text-center">{error.message}</p>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.reload()}
-              className="mt-2"
-            >
-              Try Again
-            </Button>
-          </div>
-        )}
-
         {isLoading && (
           <div className="space-y-8">
             {/* Featured Section Skeleton */}
@@ -362,7 +332,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {!isLoading && !error && filteredTrends.length === 0 && (
+        {!isLoading && filteredTrends.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-muted-foreground" />
@@ -382,7 +352,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {!isLoading && !error && filteredTrends.length > 0 && (
+        {!isLoading && filteredTrends.length > 0 && (
           <div className="space-y-8">
             {/* Featured Section - Trending */}
             {selectedSubcategory === "Trending" && filteredTrends.slice(0, 2).length > 0 && (
