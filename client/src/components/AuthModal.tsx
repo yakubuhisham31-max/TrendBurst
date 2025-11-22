@@ -35,18 +35,17 @@ export function AuthModal({
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              window.location.href = "/api/login";
-            }}
-            data-testid="button-auth-google"
-          >
-            <GoogleLogo />
-            Continue with Google
-          </Button>
+          <a href="/api/login" style={{ display: 'contents' }}>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              data-testid="button-auth-google"
+            >
+              <GoogleLogo />
+              Continue with Google
+            </Button>
+          </a>
 
           <div className="text-center text-xs text-muted-foreground mt-2">
             You can also sign in with GitHub, X, or Apple in the next screen
