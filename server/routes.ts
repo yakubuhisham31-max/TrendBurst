@@ -17,6 +17,8 @@ import { extractMentions } from "@/lib/mentions";
 import { sendPushNotification } from "./onesignal";
 import * as notificationService from "./notificationService";
 import { z } from "zod";
+import fs from "fs";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)

@@ -7,6 +7,12 @@ import connectPgSimple from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { serveStatic, log } from "./helpers";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -161,6 +167,35 @@ app.use((req, res, next) => {
   });
 
   next();
+});
+
+// OneSignal service worker routes (MUST be before serveStatic - registered synchronously)
+const distPath = process.env.NODE_ENV === "production" 
+  ? path.resolve(__dirname)
+  : path.resolve(__dirname, "../dist");
+
+app.get("/OneSignalSDKWorker.js", (_req, res) => {
+  try {
+    const workerPath = path.join(distPath, "OneSignalSDKWorker.js");
+    const content = fs.readFileSync(workerPath, "utf-8");
+    res.setHeader("Content-Type", "application/javascript");
+    res.send(content);
+  } catch (error) {
+    console.error("Failed to serve OneSignalSDKWorker.js:", error);
+    res.status(404).send("Service worker not found");
+  }
+});
+
+app.get("/OneSignalSDKUpdaterWorker.js", (_req, res) => {
+  try {
+    const workerPath = path.join(distPath, "OneSignalSDKUpdaterWorker.js");
+    const content = fs.readFileSync(workerPath, "utf-8");
+    res.setHeader("Content-Type", "application/javascript");
+    res.send(content);
+  } catch (error) {
+    console.error("Failed to serve OneSignalSDKUpdaterWorker.js:", error);
+    res.status(404).send("Service worker not found");
+  }
 });
 
 (async () => {
