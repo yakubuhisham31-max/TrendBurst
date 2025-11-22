@@ -427,6 +427,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateUser(post.userId, {
             trendxPoints: (user.trendxPoints || 0) + bonusPoints[i],
           });
+          // Send winner notification
+          await notificationService.sendWinnerNotification(post.userId, trend.name, req.params.id).catch((err) => {
+            console.error("Failed to send winner notification:", err);
+          });
+        }
+      }
+
+      // Send non-winner notifications to all other participants
+      const allPosts = await storage.getPostsByTrend(req.params.id);
+      const allParticipants = new Set(allPosts.map(p => p.userId));
+      const topThreeIds = new Set(rankedPosts.slice(0, 3).map(p => p.userId));
+      
+      for (const participantId of Array.from(allParticipants)) {
+        if (!topThreeIds.has(participantId)) {
+          const participant = await storage.getUser(participantId);
+          if (participant?.username) {
+            await notificationService.sendNonWinnerNotification(participantId, participant.username, trend.name, req.params.id).catch((err) => {
+              console.error("Failed to send non-winner notification:", err);
+            });
+          }
         }
       }
 
@@ -593,6 +613,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Increment trend participants count (total posts)
       await storage.incrementTrendParticipants(result.data.trendId);
+      
+      // Send notification to post creator
+      const trend = await storage.getTrend(result.data.trendId);
+      if (trend) {
+        await notificationService.sendPostCreatedNotification((req as any).session.userId, trend.name, trend.id, post.id).catch((err) => {
+          console.error("Failed to send post created notification:", err);
+        });
+      }
       
       // Create notification for followers
       try {
@@ -1009,13 +1037,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         actorId: (req as any).session.userId,
         type: 'new_follower',
       });
-      // Send push notification
-      await sendPushNotification({
-        userId: result.data.followingId,
-        heading: "New Follower",
-        content: `${follower?.username} started following you`,
-        data: { userId: (req as any).session.userId },
-      });
+      // Send push notification using notification service
+      if (follower?.username) {
+        await notificationService.sendNewFollowerNotification(result.data.followingId, follower.username, (req as any).session.userId).catch((err) => {
+          console.error("Failed to send new follower notification:", err);
+        });
+      }
       
       res.status(201).json(follow);
     } catch (error) {
