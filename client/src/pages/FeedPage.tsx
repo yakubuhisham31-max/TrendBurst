@@ -336,187 +336,125 @@ export default function FeedPage() {
           </div>
         </div>
 
-        {/* Navigation and Vote Counter */}
-        <div className="max-w-3xl mx-auto px-4 py-3 space-y-3 border-t">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-xs font-medium gap-1.5"
-                onClick={() => setLocation(`/instructions/${trendId}`)}
-                data-testid="button-instructions"
-              >
-                <Info className="w-3.5 h-3.5" />
-                Rules
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-xs font-medium gap-1.5"
-                onClick={() => {
-                  if (!user) {
-                    setAuthModalOpen(true);
-                    return;
-                  }
-                  setLocation(`/rankings/${trendId}`);
-                }}
-                data-testid="button-rankings"
-              >
-                <Trophy className="w-3.5 h-3.5" />
-                Rankings
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
-              <span className="text-xs font-semibold text-primary">
-                {votesRemaining} votes left
-              </span>
-            </div>
+        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setLocation(`/instructions/${trendId}`)}
+            data-testid="button-instructions"
+          >
+            <Info className="w-4 h-4 mr-2" />
+            Instructions
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              setLocation(`/rankings/${trendId}`);
+            }}
+            data-testid="button-rankings"
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Rankings
+          </Button>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
+            <span className="text-xs font-semibold text-primary">{votesRemaining} votes left</span>
           </div>
-
-          {/* Trend Stats */}
-          {trend && !trendLoading && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-3">
-                {trend.participants !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    <span className="font-medium">{trend.participants} participants</span>
-                  </div>
-                )}
-                {trend.endDate && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span className="font-medium">
-                      {isTrendEnded ? 'Ended' : `Ends ${formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}`}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <span className="font-medium">{sortedPosts.length} posts</span>
-            </div>
-          )}
         </div>
-      </header>
 
-      {/* Trend Header Card */}
-      {trend && !trendLoading && (
-        <div className="max-w-3xl mx-auto px-4 mt-4">
-          <div className="rounded-lg bg-muted/50 border p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1 flex-1 min-w-0">
-                <h1 className="text-xl font-bold line-clamp-2">{trend.name}</h1>
-                {trend.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{trend.description}</p>
-                )}
-              </div>
-              {isTrendEnded && (
-                <Badge variant="secondary" className="shrink-0">Ended</Badge>
+        {/* Trend Stats */}
+        {trend && !trendLoading && (
+          <div className="max-w-3xl mx-auto px-4 pb-2 flex items-center justify-between text-xs text-muted-foreground border-t pt-2">
+            <div className="flex items-center gap-3">
+              {trend.participants !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  <span className="font-medium">{trend.participants} participants</span>
+                </div>
+              )}
+              {trend.endDate && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span className="font-medium">
+                    {isTrendEnded ? 'Ended' : `Ends ${formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}`}
+                  </span>
+                </div>
               )}
             </div>
-            {trend.creator && (
-              <div className="flex items-center gap-2 pt-2 border-t">
-                <Avatar className="w-7 h-7">
-                  <AvatarImage src={trend.creator.profilePicture || undefined} alt={trend.creator.username} />
-                  <AvatarFallback className="text-xs">{trend.creator.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-muted-foreground">
-                    Hosted by <span className="text-foreground">{trend.creator.username}</span>
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-4 space-y-6">
         {(trendLoading || postsLoading) ? (
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-96 w-full rounded-lg" />
-            <Skeleton className="h-96 w-full rounded-lg" />
-          </div>
+          <>
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </>
         ) : sortedPosts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <Flame className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <p className="text-lg font-semibold text-foreground">No posts yet</p>
-            <p className="text-sm text-muted-foreground max-w-sm text-center">
-              Be the first to participate in this trend and show off your skills!
-            </p>
-            {!isTrendEnded && user && !userHasPosted && (
-              <Button onClick={() => setCreatePostOpen(true)} className="mt-2 rounded-full gap-2">
-                <Plus className="w-4 h-4" />
-                Create Post
-              </Button>
-            )}
+          <div className="text-center py-12 text-muted-foreground">
+            No posts yet. Be the first to post!
           </div>
         ) : (
-          <div className="space-y-4">
-            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <Flame className="w-4 h-4" />
-              Recent Posts
-            </h2>
-            {sortedPosts.map((post, index) => {
-              const isBlurred = !user && index >= 3;
-              return (
-                <div
-                  key={post.id}
-                  className="relative w-full"
-                  id={`post-${post.id}`}
-                >
-                  <div className={isBlurred ? 'blur-xl' : ''}>
-                    <PostCard
-                      id={post.id}
-                      rank={voteRankMap.get(post.id) || 0}
-                      mediaUrl={post.mediaUrl || post.imageUrl || ""}
-                      mediaType={(post.mediaType as 'image' | 'video') || 'image'}
-                      caption={post.caption || ""}
-                      username={post.user?.username || "Unknown"}
-                      userAvatar={post.user?.profilePicture || undefined}
-                      votes={post.votes || 0}
-                      createdAt={new Date(post.createdAt!)}
-                      userVoted={post.userVoted}
-                      commentsCount={post.commentCount || 0}
-                      isTrendHost={post.userId === trend?.userId}
-                      isUserTrendHost={user?.id === trend?.userId}
-                      isCreator={user?.id === post.userId}
-                      isDisqualified={!!post.isDisqualified}
-                      isTrendEnded={isTrendEnded}
-                      onVoteUp={() => handleVoteUp(post.id)}
-                      onVoteDown={() => handleVoteDown(post.id)}
-                      onComment={() => {
-                        if (!user) {
-                          setAuthModalOpen(true);
-                          return;
-                        }
-                        setCommentsPostId(post.id);
-                      }}
-                      onDelete={() => handleDeletePost(post.id)}
-                      onDisqualify={() => handleDisqualify(post.id)}
-                      onFullscreen={() => setFullscreenPostId(post.id)}
-                      onAuthModalOpen={() => setAuthModalOpen(true)}
-                    />
-                  </div>
-                  
-                  {isBlurred && (
-                    <div 
-                      className="absolute inset-0 flex items-center justify-center rounded-lg cursor-pointer z-20"
-                      onClick={() => setAuthModalOpen(true)}
-                    >
-                      <div className="text-center space-y-3 bg-black/80 px-8 py-4 rounded-lg backdrop-blur-md border border-white/10">
-                        <p className="text-white font-bold text-lg">Sign in to see more</p>
-                        <p className="text-white/70 text-sm">Join to view all posts and vote on trends</p>
-                      </div>
-                    </div>
-                  )}
+          sortedPosts.map((post, index) => {
+            const isBlurred = !user && index >= 3;
+            return (
+              <div
+                key={post.id}
+                className="relative w-full"
+                id={`post-${post.id}`}
+              >
+                <div className={isBlurred ? 'blur-xl' : ''}>
+                  <PostCard
+                    id={post.id}
+                    rank={voteRankMap.get(post.id) || 0}
+                    mediaUrl={post.mediaUrl || post.imageUrl || ""}
+                    mediaType={(post.mediaType as 'image' | 'video') || 'image'}
+                    caption={post.caption || ""}
+                    username={post.user?.username || "Unknown"}
+                    userAvatar={post.user?.profilePicture || undefined}
+                    votes={post.votes || 0}
+                    createdAt={new Date(post.createdAt!)}
+                    userVoted={post.userVoted}
+                    commentsCount={post.commentCount || 0}
+                    isTrendHost={post.userId === trend?.userId}
+                    isUserTrendHost={user?.id === trend?.userId}
+                    isCreator={user?.id === post.userId}
+                    isDisqualified={!!post.isDisqualified}
+                    isTrendEnded={isTrendEnded}
+                    onVoteUp={() => handleVoteUp(post.id)}
+                    onVoteDown={() => handleVoteDown(post.id)}
+                    onComment={() => {
+                      if (!user) {
+                        setAuthModalOpen(true);
+                        return;
+                      }
+                      setCommentsPostId(post.id);
+                    }}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onDisqualify={() => handleDisqualify(post.id)}
+                    onFullscreen={() => setFullscreenPostId(post.id)}
+                    onAuthModalOpen={() => setAuthModalOpen(true)}
+                  />
                 </div>
-              );
-            })}
-          </div>
+                
+                {isBlurred && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center rounded-lg cursor-pointer z-20"
+                    onClick={() => setAuthModalOpen(true)}
+                  >
+                    <div className="text-center space-y-3 bg-black/70 px-8 py-4 rounded-lg backdrop-blur-sm">
+                      <p className="text-white font-bold text-xl">Tap to view</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </main>
 
