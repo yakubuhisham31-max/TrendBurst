@@ -26,6 +26,14 @@ export default function ProfilePage() {
   const viewingUsername = params.username || currentUser?.username;
   const isOwnProfile = !params.username || params.username === currentUser?.username;
 
+  const handleBackClick = () => {
+    if (isOwnProfile) {
+      setLocation("/");
+    } else {
+      window.history.back();
+    }
+  };
+
   const handleShareProfile = () => {
     if (!viewingUsername) return;
     
@@ -81,7 +89,7 @@ export default function ProfilePage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => window.history.back()}
+            onClick={handleBackClick}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />
