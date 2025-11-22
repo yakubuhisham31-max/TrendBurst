@@ -350,16 +350,16 @@ export default function FeedPage() {
         <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-2 flex-wrap">
           <Button
             size="sm"
-            className="gap-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+            className="gap-1.5 bg-primary hover:bg-primary/90 text-white border-0 shadow-sm hover:shadow-md transition-all"
             onClick={() => setLocation(`/instructions/${trendId}`)}
             data-testid="button-instructions"
           >
             <Info className="w-3.5 h-3.5" />
-            <span className="text-xs">Instructions</span>
+            <span className="text-xs font-medium">Instructions</span>
           </Button>
           <Button
             size="sm"
-            className="gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+            className="gap-1.5 bg-chart-2 hover:bg-chart-2/90 text-white border-0 shadow-sm hover:shadow-md transition-all"
             onClick={() => {
               if (!user) {
                 setAuthModalOpen(true);
@@ -370,10 +370,10 @@ export default function FeedPage() {
             data-testid="button-rankings"
           >
             <Trophy className="w-3.5 h-3.5" />
-            <span className="text-xs">Rankings</span>
+            <span className="text-xs font-medium">Rankings</span>
           </Button>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-full border border-primary/20 hover:border-primary/40 transition-colors">
-            <span className="text-xs font-semibold text-primary">{votesRemaining} votes</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted rounded-full border border-border hover:border-muted-foreground/30 transition-colors">
+            <span className="text-xs font-semibold text-muted-foreground">{votesRemaining} votes</span>
           </div>
         </div>
 
@@ -381,26 +381,26 @@ export default function FeedPage() {
         {trend && !trendLoading && (
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-center gap-2 flex-wrap">
             {trend.participants !== undefined && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 hover:border-blue-500/50 transition-colors">
-                <Users className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">{trend.participants}</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 border border-primary/20 hover:border-primary/40 transition-colors">
+                <Users className="w-3 h-3 text-primary" />
+                <span className="text-xs font-semibold text-foreground">{trend.participants}</span>
               </div>
             )}
             {trend.endDate && (
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-colors ${
                 isTrendEnded 
-                  ? 'bg-red-500/10 border-red-500/30 hover:border-red-500/50' 
-                  : 'bg-amber-500/10 border-amber-500/30 hover:border-amber-500/50'
+                  ? 'bg-destructive/5 border-destructive/20 hover:border-destructive/40' 
+                  : 'bg-chart-3/5 border-chart-3/20 hover:border-chart-3/40'
               }`}>
                 <Clock className={`w-3 h-3 ${
                   isTrendEnded 
-                    ? 'text-red-600 dark:text-red-400' 
-                    : 'text-amber-600 dark:text-amber-400'
+                    ? 'text-destructive' 
+                    : 'text-chart-3'
                 }`} />
                 <span className={`text-xs font-semibold ${
                   isTrendEnded 
-                    ? 'text-red-700 dark:text-red-300' 
-                    : 'text-amber-700 dark:text-amber-300'
+                    ? 'text-destructive' 
+                    : 'text-foreground'
                 }`}>
                   {isTrendEnded ? 'Ended' : formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}
                 </span>
