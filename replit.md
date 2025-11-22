@@ -10,6 +10,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 22, 2025
+- **Create Trend Form Persistence:** Implemented localStorage persistence for Create New Trend page. All form fields are auto-saved as user types, restored on page refresh, and cleared on successful submission.
+- **Floating Action Buttons Layout:** Reorganized floating buttons at bottom-right corner with Chat button on top and Post button below for improved user experience.
+- **Feed Header UI Improvements:** Fixed Trendz logo centering and back button alignment in post feed header using balanced flex layout. Logo now matches home screen responsive sizing (h-14 sm:h-16 md:h-18).
+- **Chat Notification Badge:** Replaced Badge component with custom styled notification indicator for more professional appearance with proper sizing, positioning, and shadow effects.
+
 ### November 9, 2025
 - **Notification Sound Effect:** Implemented Web Audio API-based notification sound that plays when new notifications arrive. Sound preference is saved in localStorage and can be enabled/disabled per user.
 - **Verification Badge System:** Added blue verification badge feature for authenticated accounts. The `verified` field (integer, 0=not verified, 1=verified) has been added to the users table. Verification badges display next to usernames on ProfilePage. The "Trendx" account has been verified.

@@ -311,12 +311,12 @@ export default function FeedPage() {
             <MessageSquare className="w-6 h-6" />
           </Button>
           {unreadChatCount > 0 && (
-            <Badge 
-              className="absolute -top-1 -right-1 h-6 min-w-6 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center font-bold"
+            <div 
+              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md"
               data-testid="badge-chat-notification"
             >
               {unreadChatCount > 99 ? "99+" : unreadChatCount}
-            </Badge>
+            </div>
           )}
         </div>
 
@@ -340,11 +340,10 @@ export default function FeedPage() {
         )}
       </div>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-center gap-3 relative">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Button
             size="icon"
             variant="ghost"
-            className="absolute left-0"
             onClick={() => setLocation("/")}
             data-testid="button-back"
           >
@@ -354,9 +353,11 @@ export default function FeedPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-14 sm:h-16 md:h-18 object-contain"
+            className="h-14 sm:h-16 md:h-18 object-contain flex-1 text-center"
             data-testid="img-logo"
           />
+          
+          <div className="w-10"></div>
         </div>
 
         <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-2 flex-wrap">
