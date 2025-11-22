@@ -81,7 +81,7 @@ export default function ProfilePage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => setLocation("/")}
+            onClick={() => window.history.back()}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />
