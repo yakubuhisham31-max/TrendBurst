@@ -141,6 +141,25 @@ export class DbStorage implements IStorage {
 
   async upsertUser(userData: Partial<User>): Promise<User> {
     if (!userData.id) throw new Error("User ID is required");
+    
+    // Check if user already exists by email
+    if (userData.email) {
+      const existingUser = await this.getUserByEmail(userData.email);
+      if (existingUser) {
+        // Update existing user
+        const updatedData = {
+          profilePicture: userData.profilePicture,
+          fullName: userData.fullName,
+        };
+        const result = await db
+          .update(schema.users)
+          .set(updatedData)
+          .where(eq(schema.users.id, existingUser.id))
+          .returning();
+        return result[0];
+      }
+    }
+    
     // Map Replit Auth fields to existing schema
     const mappedData = {
       id: userData.id,
@@ -149,6 +168,7 @@ export class DbStorage implements IStorage {
       fullName: userData.fullName || userData.email?.split("@")[0],
       profilePicture: userData.profilePicture,
     };
+    
     const result = await db
       .insert(schema.users)
       .values(mappedData as any)
