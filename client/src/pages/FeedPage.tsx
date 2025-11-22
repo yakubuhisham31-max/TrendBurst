@@ -292,7 +292,26 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-background pb-32">
       {/* Floating Action Buttons - Post and Chat */}
-      <div className="fixed bottom-8 right-8 z-40 flex items-center gap-3">
+      <div className="fixed bottom-8 right-8 z-40 flex flex-col items-center gap-3">
+        {/* Post Button */}
+        {!isTrendEnded && !userHasPosted && (
+          <Button
+            size="lg"
+            className="gap-2 bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all rounded-full px-6 py-3 h-auto"
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              setCreatePostOpen(true);
+            }}
+            data-testid="button-create-post-fab"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="text-sm font-semibold">Post</span>
+          </Button>
+        )}
+
         {/* Chat Button */}
         <Button
           size="icon"
@@ -317,25 +336,6 @@ export default function FeedPage() {
             </Badge>
           )}
         </Button>
-
-        {/* Post Button */}
-        {!isTrendEnded && !userHasPosted && (
-          <Button
-            size="lg"
-            className="gap-2 bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all rounded-full px-6 py-3 h-auto"
-            onClick={() => {
-              if (!user) {
-                setAuthModalOpen(true);
-                return;
-              }
-              setCreatePostOpen(true);
-            }}
-            data-testid="button-create-post-fab"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="text-sm font-semibold">Post</span>
-          </Button>
-        )}
       </div>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
@@ -351,7 +351,7 @@ export default function FeedPage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-12 sm:h-14 md:h-16 object-contain flex-1"
+            className="h-8 object-contain flex-1"
             data-testid="img-logo"
           />
         </div>
