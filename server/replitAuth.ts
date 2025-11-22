@@ -84,21 +84,8 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Get the actual domain for OAuth callback
-  const getCallbackDomain = () => {
-    // Use environment variable if available (Replit public domain)
-    if (process.env.REPLIT_DOMAINS) {
-      return process.env.REPLIT_DOMAINS;
-    }
-    // Fallback to dev domain
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      return process.env.REPLIT_DEV_DOMAIN;
-    }
-    // Last resort: use request hostname
-    return "localhost:5000";
-  };
-
-  const callbackDomain = getCallbackDomain();
+  // Get the correct callback domain - must match what's registered in Replit Auth
+  const callbackDomain = process.env.REPLIT_DOMAINS || "localhost:5000";
   const strategy = new Strategy(
     {
       name: "replitauth",

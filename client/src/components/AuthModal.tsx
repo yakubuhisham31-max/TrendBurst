@@ -25,11 +25,6 @@ export function AuthModal({
   title = "Join Trendx to Continue",
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
-  
-  const handleSignIn = () => {
-    // Redirect to Replit Auth
-    window.location.href = "/api/login";
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -44,7 +39,9 @@ export function AuthModal({
             variant="outline"
             size="lg"
             className="w-full"
-            onClick={handleSignIn}
+            onClick={() => {
+              window.location.href = "/api/login";
+            }}
             data-testid="button-auth-google"
           >
             <GoogleLogo />
