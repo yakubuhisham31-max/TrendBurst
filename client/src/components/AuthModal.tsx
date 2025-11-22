@@ -157,7 +157,7 @@ export function AuthModal({
                 <Input
                   id="register-username"
                   type="text"
-                  placeholder="your_username"
+                  placeholder="@username"
                   value={registerUsername}
                   onChange={(e) => setRegisterUsername(e.target.value)}
                   data-testid="input-register-username"
