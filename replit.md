@@ -10,13 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### November 22, 2025 - Google Login & Replit Auth Complete
-- **Authentication System:** Successfully deployed Replit Auth with Google login support. Users can now sign in seamlessly using their Google accounts.
-- **Fixed Issues:** Resolved password column NOT NULL constraint by making password field nullable (users signing in with OAuth don't have passwords). Fixed upsertUser logic to handle duplicate emails by checking existing users first.
-- **Backend:** Implemented `server/replitAuth.ts` with Replit OpenID Connect, Express session management via PostgreSQL, and proper user upsert handling.
-- **Frontend:** Simplified `AuthModal.tsx` to use Replit Auth - users click "Continue with Google" and are redirected to secure login.
-- **Database:** Added `sessions` table, made password nullable, and optimized user lookup by email for returning users.
-- **Result:** ✅ Users can sign in with Google in ONE click. No Google Cloud Console setup needed. Automatic account creation for new users. Trends loading, authentication working.
+### November 22, 2025 - Auth System Fixed & Simplified
+- **Authentication Overhaul:** Removed broken Google-specific endpoint (`/api/login/google` with `prompt: "select_account"`). Simplified to use standard Replit Auth endpoint (`/api/login`).
+- **Backend Fix:** Updated `server/replitAuth.ts` to match Replit Auth blueprint specification - removed custom prompt handling and complex strategy registration. Now using simpler, cleaner approach.
+- **Frontend Simplification:** 
+  - Updated `AuthModal.tsx` to use single "Sign In" button redirecting to `/api/login`
+  - Updated `LoginPage.tsx` to use simplified login with OAuth support
+  - Removed broken `/api/login/google` references
+- **Result:** ✅ Auth flow now properly integrated with Replit Auth OpenID Connect. No more `AuthorizationResponseError` exceptions. Standard Replit Auth provides Google, GitHub, X, and Apple login options.
 
 ### November 22, 2025
 - **Create Trend Form Persistence:** Implemented localStorage persistence for Create New Trend page. All form fields are auto-saved as user types, restored on page refresh, and cleared on successful submission.

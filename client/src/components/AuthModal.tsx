@@ -27,8 +27,8 @@ export function AuthModal({
 }: AuthModalProps) {
   
   const handleSignIn = () => {
-    // Redirect to Replit Auth with account selection prompt
-    window.location.href = "/api/login/google";
+    // Redirect to Replit Auth
+    window.location.href = "/api/login";
   };
 
   return (
@@ -41,18 +41,16 @@ export function AuthModal({
 
         <div className="flex flex-col gap-3">
           <Button
-            variant="outline"
             size="lg"
             className="w-full"
             onClick={handleSignIn}
-            data-testid="button-auth-google"
+            data-testid="button-auth-signin"
           >
-            <GoogleLogo />
-            Continue with Google
+            Sign In
           </Button>
 
           <div className="text-center text-xs text-muted-foreground mt-2">
-            You can also sign in with GitHub, X, or Apple when you click the button above. Choose your preferred account in the next screen.
+            Sign in with Google, GitHub, X, or Apple
           </div>
         </div>
       </DialogContent>
