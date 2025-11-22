@@ -1,7 +1,17 @@
 declare global {
   interface Window {
     OneSignal?: any;
+    OneSignalDeferred?: any[];
   }
+}
+
+// Helper function to wait for OneSignal SDK to load
+async function waitForOneSignal(maxWaitMs = 5000): Promise<any> {
+  const startTime = Date.now();
+  while (!window.OneSignal && Date.now() - startTime < maxWaitMs) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  return window.OneSignal;
 }
 
 export async function initializeOneSignal(userId: string) {
@@ -13,16 +23,20 @@ export async function initializeOneSignal(userId: string) {
       return;
     }
 
-    if (!window.OneSignal) {
-      console.log("OneSignal SDK not loaded");
+    // Wait for OneSignal SDK to load
+    const OneSignal = await waitForOneSignal();
+    if (!OneSignal) {
+      console.error("OneSignal SDK failed to load after waiting");
       return;
     }
 
-    // Use the v16 OneSignal API correctly
-    await window.OneSignal.Slidedown.promptPush();
-    
+    console.log("OneSignal SDK loaded, initializing...");
+
     // Set the external user ID for this user
-    window.OneSignal.login(userId);
+    await OneSignal.login(userId);
+    
+    // Prompt for push notifications
+    await OneSignal.Slidedown.promptPush();
 
     console.log("OneSignal initialized for user:", userId);
   } catch (error) {
