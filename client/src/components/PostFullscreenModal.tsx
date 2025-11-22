@@ -306,7 +306,7 @@ export default function PostFullscreenModal({
           </div>
 
           {/* Post Info Bar */}
-          <div className="bg-black border-t border-border/20 p-4 space-y-4 overflow-y-auto max-h-[20vh] md:max-h-none flex-shrink-0">
+          <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 overflow-y-auto max-h-[20vh] md:pb-4 md:max-h-none flex-shrink-0">
             {/* User Info */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
