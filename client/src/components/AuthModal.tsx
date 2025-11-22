@@ -51,67 +51,53 @@ export function AuthModal({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          {/* Google Login */}
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={handleReplitSignIn}
-            data-testid="button-auth-google"
-          >
-            <GoogleLogo />
-            Continue with Google
-          </Button>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="google">Continue with Google</TabsTrigger>
+            <TabsTrigger value="email">Continue with Email</TabsTrigger>
+          </TabsList>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-muted"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or</span>
-            </div>
-          </div>
+          {/* Google Tab */}
+          <TabsContent value="google" className="space-y-4">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              onClick={handleReplitSignIn}
+              data-testid="button-auth-google"
+            >
+              <GoogleLogo />
+              Continue with Google
+            </Button>
+          </TabsContent>
 
-          {/* Email/Password Login with Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="password">Password</TabsTrigger>
-            </TabsList>
-
+          {/* Email Tab */}
+          <TabsContent value="email" className="space-y-4">
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Email Tab */}
-              <TabsContent value="email" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    data-testid="input-email"
-                  />
-                </div>
-              </TabsContent>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  data-testid="input-email"
+                />
+              </div>
 
-              {/* Password Tab */}
-              <TabsContent value="password" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    data-testid="input-password"
-                  />
-                </div>
-              </TabsContent>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  data-testid="input-password"
+                />
+              </div>
 
-              {/* Login Button */}
               <Button
                 type="submit"
                 className="w-full"
@@ -120,22 +106,22 @@ export function AuthModal({
                 Sign In
               </Button>
             </form>
-          </Tabs>
+          </TabsContent>
+        </Tabs>
 
-          {/* Sign Up Link */}
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account yet?{" "}
-            <button
-              onClick={() => {
-                // TODO: Navigate to sign up page
-                console.log("Sign up clicked");
-              }}
-              className="font-semibold text-primary hover:underline"
-              data-testid="button-signup"
-            >
-              Sign up
-            </button>
-          </div>
+        {/* Sign Up Link */}
+        <div className="text-center text-sm text-muted-foreground">
+          Don't have an account yet?{" "}
+          <button
+            onClick={() => {
+              // TODO: Navigate to sign up page
+              console.log("Sign up clicked");
+            }}
+            className="font-semibold text-primary hover:underline"
+            data-testid="button-signup"
+          >
+            Sign up
+          </button>
         </div>
       </DialogContent>
     </Dialog>
