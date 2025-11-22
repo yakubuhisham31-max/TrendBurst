@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { hashPassword, comparePassword, sanitizeUser, requireAuth } from "./auth";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { hashPassword, comparePassword, sanitizeUser, requireAuth, isAuthenticated } from "./auth";
 import { 
   insertUserSchema, 
   insertTrendSchema, 
@@ -17,11 +16,9 @@ import { R2StorageService } from "./r2Storage";
 import { extractMentions } from "@/lib/mentions";
 import { sendPushNotification } from "./onesignal";
 import * as notificationService from "./notificationService";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Authentication
-  await setupAuth(app);
-
   // Health check endpoint (for Render and monitoring)
   app.get("/health", (_req, res) => {
     res.status(200).json({ 
@@ -31,12 +28,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Get current authenticated user endpoint
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+  // Auth endpoints
+  app.post("/api/auth/login", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const { usernameOrEmail, password } = req.body;
+      
+      if (!usernameOrEmail || !password) {
+        return res.status(400).json({ message: "Username/email and password required" });
+      }
+
+      // Find user by username or email
+      let user = await storage.getUserByUsername(usernameOrEmail);
+      if (!user) {
+        user = await storage.getUserByEmail(usernameOrEmail);
+      }
+
+      if (!user || !user.password) {
+        return res.status(401).json({ message: "Invalid username/email or password" });
+      }
+
+      // Verify password
+      const passwordValid = await comparePassword(password, user.password);
+      if (!passwordValid) {
+        return res.status(401).json({ message: "Invalid username/email or password" });
+      }
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.save((err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.json({ message: "Logged in successfully", user: sanitizeUser(user) });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/register", async (req: any, res) => {
+    try {
+      const { username, email, password } = req.body;
+
+      if (!username || !email || !password) {
+        return res.status(400).json({ message: "Username, email, and password required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(password);
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password: hashedPassword,
+      });
+
+      // Set session
+      req.session.userId = newUser.id;
+      req.session.save((err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.status(201).json({ message: "Account created successfully", user: sanitizeUser(newUser) });
+      });
+    } catch (error) {
+      console.error("Register error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  // Get current authenticated user endpoint
+  app.get("/api/auth/user", async (req: any, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      res.json(sanitizeUser(user));
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

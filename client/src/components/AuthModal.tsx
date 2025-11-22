@@ -4,17 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-
-const GoogleLogo = () => (
-  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g clipPath="url(#clip0_1)">
-      <path d="M23.745 12.27c0-.79-.07-1.54-.188-2.27h-11.3v4.28h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.6z" fill="#4285F4"/>
-      <path d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-.9.64-2.05 1.04-3.93 1.04-3.02 0-5.57-2.04-6.48-4.78H1.07v3.1C3.05 22.9 7.12 24 12.255 24z" fill="#34A853"/>
-      <path d="M5.775 14.35c-.23-.64-.36-1.33-.36-2.05s.13-1.41.36-2.05V6.15H1.07A11.98 11.98 0 000 12.25c0 1.93.48 3.77 1.33 5.38l4.29-3.28z" fill="#FBBC04"/>
-      <path d="M12.255 5.92c1.7 0 3.21.58 4.41 1.71l3.31-3.31C18.205 1.14 15.495 0 12.255 0 7.12 0 3.05 1.1 1.07 4.87l4.29 3.28c.91-2.74 3.46-4.83 6.48-4.83z" fill="#EA4335"/>
-    </g>
-  </svg>
-);
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,18 +20,79 @@ export function AuthModal({
   title = "Join Trendx to Continue",
   description = "Sign in or create an account to access this feature"
 }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState("email");
-  const [email, setEmail] = useState("");
+  const [activeTab, setActiveTab] = useState("login");
+  const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
+  const [registerUsername, setRegisterUsername] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleReplitSignIn = () => {
-    window.location.href = "/api/login";
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernameOrEmail: loginInput, password }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
+      }
+
+      toast({ title: "Success!", description: "You're now signed in" });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      onOpenChange(false);
+      window.location.reload();
+    } catch (error: any) {
+      toast({ 
+        title: "Login failed", 
+        description: error.message || "Invalid username/email or password",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement email/password login
-    console.log("Login attempt:", { email, password });
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          username: registerUsername,
+          email: registerEmail,
+          password: registerPassword 
+        }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Registration failed");
+      }
+
+      toast({ title: "Success!", description: "Account created! You're now signed in" });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      onOpenChange(false);
+      window.location.reload();
+    } catch (error: any) {
+      toast({ 
+        title: "Registration failed", 
+        description: error.message || "Could not create account",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -53,76 +105,103 @@ export function AuthModal({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="google">Continue with Google</TabsTrigger>
-            <TabsTrigger value="email">Continue with Email</TabsTrigger>
+            <TabsTrigger value="login">Sign In</TabsTrigger>
+            <TabsTrigger value="register">Sign Up</TabsTrigger>
           </TabsList>
 
-          {/* Google Tab */}
-          <TabsContent value="google" className="space-y-4">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={handleReplitSignIn}
-              data-testid="button-auth-google"
-            >
-              <GoogleLogo />
-              Continue with Google
-            </Button>
-          </TabsContent>
-
-          {/* Email Tab */}
-          <TabsContent value="email" className="space-y-4">
+          {/* Sign In Tab */}
+          <TabsContent value="login" className="space-y-4">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm">Email Address</Label>
+                <Label htmlFor="login-input" className="text-sm">Username or Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  data-testid="input-email"
+                  id="login-input"
+                  type="text"
+                  placeholder="username@example.com"
+                  value={loginInput}
+                  onChange={(e) => setLoginInput(e.target.value)}
+                  data-testid="input-login-username-email"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm">Password</Label>
+                <Label htmlFor="login-password" className="text-sm">Password</Label>
                 <Input
-                  id="password"
+                  id="login-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  data-testid="input-password"
+                  data-testid="input-login-password"
+                  required
                 />
               </div>
 
               <Button
                 type="submit"
                 className="w-full"
-                data-testid="button-login"
+                data-testid="button-sign-in"
+                disabled={isLoading}
               >
-                Sign In
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+          </TabsContent>
+
+          {/* Sign Up Tab */}
+          <TabsContent value="register" className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="register-username" className="text-sm">Username</Label>
+                <Input
+                  id="register-username"
+                  type="text"
+                  placeholder="your_username"
+                  value={registerUsername}
+                  onChange={(e) => setRegisterUsername(e.target.value)}
+                  data-testid="input-register-username"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="register-email" className="text-sm">Email</Label>
+                <Input
+                  id="register-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  data-testid="input-register-email"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="register-password" className="text-sm">Password</Label>
+                <Input
+                  id="register-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  data-testid="input-register-password"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                data-testid="button-sign-up"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
-
-        {/* Sign Up Link */}
-        <div className="text-center text-sm text-muted-foreground">
-          Don't have an account yet?{" "}
-          <button
-            onClick={() => {
-              // TODO: Navigate to sign up page
-              console.log("Sign up clicked");
-            }}
-            className="font-semibold text-primary hover:underline"
-            data-testid="button-signup"
-          >
-            Sign up
-          </button>
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -13,6 +13,9 @@ const app = express();
 // Trust proxy for Replit deployment (needed for secure cookies behind reverse proxy)
 app.set("trust proxy", 1);
 
+// Session configuration
+const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-key";
+
 // CORS configuration - MUST come before session middleware
 const allowedOrigins = [
   'https://trendx.social', // Custom domain

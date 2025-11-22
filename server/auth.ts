@@ -24,3 +24,11 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
   next();
 }
+
+export const isAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.session.userId) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+  next();
+};

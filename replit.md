@@ -10,13 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### November 22, 2025 - Google Login & Replit Auth Complete
-- **Authentication System:** Successfully deployed Replit Auth with Google login support. Users can now sign in seamlessly using their Google accounts.
-- **Fixed Issues:** Resolved password column NOT NULL constraint by making password field nullable (users signing in with OAuth don't have passwords). Fixed upsertUser logic to handle duplicate emails by checking existing users first.
-- **Backend:** Implemented `server/replitAuth.ts` with Replit OpenID Connect, Express session management via PostgreSQL, and proper user upsert handling.
-- **Frontend:** Simplified `AuthModal.tsx` to use Replit Auth - users click "Continue with Google" and are redirected to secure login.
-- **Database:** Added `sessions` table, made password nullable, and optimized user lookup by email for returning users.
-- **Result:** ✅ Users can sign in with Google in ONE click. No Google Cloud Console setup needed. Automatic account creation for new users. Trends loading, authentication working.
+### November 22, 2025 - Simple Username/Email + Password Authentication
+- **Authentication Overhaul:** Removed Replit Auth and implemented simple, self-contained username/email + password authentication system.
+- **Backend Endpoints:** Created `/api/auth/login` (login with username or email), `/api/auth/register` (create new account), and `/api/auth/logout` endpoints.
+- **Frontend Login Form:** Redesigned `AuthModal.tsx` with two tabs: "Sign In" (existing users) and "Sign Up" (new users). Both accept username/email and password.
+- **Session Management:** Uses PostgreSQL session storage with `connect-pg-simple` for secure, persistent user sessions.
+- **Password Security:** All passwords are hashed using bcrypt (10 rounds) before storage in database.
+- **Middleware:** Simple `isAuthenticated` middleware checks `req.session.userId` for protected routes.
+- **Result:** ✅ Users can sign up with username/email and password. Login works with either username or email. All authentication self-contained with no external dependencies.
 
 ### November 22, 2025
 - **Create Trend Form Persistence:** Implemented localStorage persistence for Create New Trend page. All form fields are auto-saved as user types, restored on page refresh, and cleared on successful submission.
