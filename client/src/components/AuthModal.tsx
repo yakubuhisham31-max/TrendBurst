@@ -41,16 +41,18 @@ export function AuthModal({
 
         <div className="flex flex-col gap-3">
           <Button
+            variant="outline"
             size="lg"
             className="w-full"
             onClick={handleSignIn}
-            data-testid="button-auth-signin"
+            data-testid="button-auth-google"
           >
-            Sign In
+            <GoogleLogo />
+            Continue with Google
           </Button>
 
           <div className="text-center text-xs text-muted-foreground mt-2">
-            Sign in with Google, GitHub, X, or Apple
+            You can also sign in with GitHub, X, or Apple in the next screen
           </div>
         </div>
       </DialogContent>
