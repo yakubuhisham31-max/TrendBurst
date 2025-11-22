@@ -468,8 +468,13 @@ export default function HomePage() {
         username={user?.username || "Guest"}
         userAvatar={user?.profilePicture || undefined}
         onLogoutClick={async () => {
-          await logout();
-          setLocation("/");
+          try {
+            setMenuOpen(false);
+            await logout();
+            setLocation("/");
+          } catch (error) {
+            console.error("Logout failed:", error);
+          }
         }}
         onAuthModalOpen={() => setAuthModalOpen(true)}
       />

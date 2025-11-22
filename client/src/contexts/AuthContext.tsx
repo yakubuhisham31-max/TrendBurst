@@ -57,10 +57,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await apiRequest("POST", "/api/auth/logout", {});
+    try {
+      // Call logout endpoint
+      await apiRequest("POST", "/api/auth/logout", {});
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with logout even if API fails
+    }
+    
+    // Clear user state immediately
     setUser(null);
-    // Invalidate auth queries so home page refreshes properly
-    await refetch();
+    
+    // Refetch to confirm we're logged out
+    try {
+      await refetch();
+    } catch (error) {
+      console.error("Refetch error:", error);
+    }
   };
 
   const register = async (data: RegisterData) => {
