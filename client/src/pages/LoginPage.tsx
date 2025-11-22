@@ -20,7 +20,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { login, user } = useAuth();
   const { toast } = useToast();
 
@@ -32,16 +32,9 @@ export default function LoginPage() {
     },
   });
 
-  // Get redirect URL from query parameter
-  const getRedirectUrl = () => {
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get("redirect");
-    return redirect || "/";
-  };
-
   useEffect(() => {
     if (user) {
-      setLocation(getRedirectUrl());
+      setLocation("/");
     }
   }, [user, setLocation]);
 
@@ -52,7 +45,7 @@ export default function LoginPage() {
         title: "Success",
         description: "You have been logged in successfully",
       });
-      setLocation(getRedirectUrl());
+      setLocation("/");
     } catch (error: any) {
       toast({
         title: "Error",

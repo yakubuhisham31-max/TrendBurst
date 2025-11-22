@@ -36,8 +36,7 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
   }
 
   // After loading is done, if no user, redirect to login with current location as redirect
-  // Make sure we're not on a public route before redirecting
-  if (!user && location !== "/login" && location !== "/register" && location !== "/signup") {
+  if (!user) {
     return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
   }
 
