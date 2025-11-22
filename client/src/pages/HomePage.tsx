@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Menu, Plus, Search, AlertCircle, LogIn } from "lucide-react";
+import { Menu, Plus, Search, AlertCircle, LogIn, Flame, Sparkles, TrendingUp } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
@@ -18,6 +18,19 @@ import logoImage from "@assets/trendx_background_fully_transparent (1)_176163518
 
 type TrendWithCreator = Trend & {
   creator: Pick<User, "id" | "username" | "profilePicture"> | null;
+};
+
+const categoryIcons: Record<string, JSX.Element> = {
+  "AI": <span className="text-lg">🤖</span>,
+  "Arts": <span className="text-lg">🎨</span>,
+  "Entertainment": <span className="text-lg">🎬</span>,
+  "Fashion": <span className="text-lg">👗</span>,
+  "Food": <span className="text-lg">🍔</span>,
+  "Gaming": <span className="text-lg">🎮</span>,
+  "Photography": <span className="text-lg">📸</span>,
+  "Sports": <span className="text-lg">⚽</span>,
+  "Technology": <span className="text-lg">💻</span>,
+  "Other": <span className="text-lg">✨</span>,
 };
 
 const categories = [
@@ -154,8 +167,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Button
             size="icon"
             variant="ghost"
@@ -167,7 +180,7 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-16 sm:h-18 md:h-20 object-contain"
+            className="h-14 sm:h-16 md:h-18 object-contain"
             data-testid="img-logo"
           />
           {user ? (
@@ -185,15 +198,15 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 pb-3 space-y-3">
+        <div className="max-w-7xl mx-auto px-4 pb-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search"
+              placeholder="Search trends..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 rounded-full"
+              className="pl-11 rounded-full bg-muted/50 border-0 focus-visible:ring-2"
               data-testid="input-search"
             />
           </div>
@@ -202,129 +215,249 @@ export default function HomePage() {
           {user ? (
             <Link href="/create-trend">
               <Button
-                className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2 text-base font-medium transition-shadow"
+                className="w-full h-11 rounded-full shadow-md hover:shadow-lg gap-2 text-sm font-semibold transition-shadow"
                 data-testid="button-create-trend"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 Create New Trend
               </Button>
             </Link>
           ) : (
             <Button
               onClick={() => setAuthModalOpen(true)}
-              className="w-full h-12 rounded-full shadow-lg hover:shadow-xl gap-2 text-base font-medium transition-shadow"
+              className="w-full h-11 rounded-full shadow-md hover:shadow-lg gap-2 text-sm font-semibold transition-shadow"
               data-testid="button-create-trend"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               Create New Trend
             </Button>
           )}
 
-          {/* Subcategories */}
-          <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-            <div className="flex gap-2 min-w-max pb-1">
-              {subcategories.map((subcategory) => (
-                <Button
-                  key={subcategory}
-                  variant={selectedSubcategory === subcategory ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedSubcategory(
-                    selectedSubcategory === subcategory ? null : subcategory
-                  )}
-                  className="whitespace-nowrap rounded-full"
-                  data-testid={`button-subcategory-${subcategory.toLowerCase().replace(' ', '-')}`}
-                >
-                  {subcategory}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Categories */}
-          <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-            <div className="flex gap-2 min-w-max pb-1">
-              {categories.map((category) => {
-                const newCount = category !== "All" && notificationCounts?.category?.[category] || 0;
-                return (
+          {/* Filter Section */}
+          <div className="space-y-2">
+            {/* Subcategories */}
+            <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+              <div className="flex gap-2 min-w-max pb-1">
+                {subcategories.map((subcategory) => (
                   <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
+                    key={subcategory}
+                    variant={selectedSubcategory === subcategory ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                    className="whitespace-nowrap rounded-full relative"
-                    data-testid={`button-category-${category.toLowerCase()}`}
-                  >
-                    {category}
-                    {newCount > 0 && (
-                      <Badge 
-                        className="ml-1.5 h-5 min-w-5 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs"
-                        data-testid={`badge-notification-${category.toLowerCase()}`}
-                      >
-                        {newCount > 99 ? "99+" : newCount}
-                      </Badge>
+                    onClick={() => setSelectedSubcategory(
+                      selectedSubcategory === subcategory ? null : subcategory
                     )}
+                    className="whitespace-nowrap rounded-full text-xs font-medium"
+                    data-testid={`button-subcategory-${subcategory.toLowerCase().replace(' ', '-')}`}
+                  >
+                    {subcategory}
                   </Button>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+
+            {/* Main Categories */}
+            <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+              <div className="flex gap-2 min-w-max pb-1">
+                {categories.map((category) => {
+                  const newCount = category !== "All" && notificationCounts?.category?.[category] || 0;
+                  const icon = category !== "All" ? categoryIcons[category] : null;
+                  return (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category)}
+                      className="whitespace-nowrap rounded-full text-xs font-medium gap-1.5 relative"
+                      data-testid={`button-category-${category.toLowerCase()}`}
+                    >
+                      {icon && <span>{icon}</span>}
+                      {category}
+                      {newCount > 0 && (
+                        <Badge 
+                          className="ml-1 h-4 min-w-4 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs font-bold"
+                          data-testid={`badge-notification-${category.toLowerCase()}`}
+                        >
+                          {newCount > 99 ? "99+" : newCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-4">
+      {/* Hero Section - Logged Out Users */}
+      {!user && !loading && (
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
+          <div className="max-w-7xl mx-auto px-4 py-12 text-center space-y-4">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Discover Viral Trends
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Join millions in creating, voting on, and competing in the hottest trends and challenges
+            </p>
+            <Button
+              size="lg"
+              onClick={() => setAuthModalOpen(true)}
+              className="gap-2 rounded-full"
+              data-testid="button-hero-get-started"
+            >
+              <Sparkles className="w-4 h-4" />
+              Get Started
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
         {error && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <AlertCircle className="w-12 h-12 text-destructive" />
-            <p className="text-lg font-medium text-muted-foreground">Failed to load trends</p>
-            <p className="text-sm text-muted-foreground">{error.message}</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-destructive" />
+            </div>
+            <p className="text-lg font-semibold text-foreground">Failed to load trends</p>
+            <p className="text-sm text-muted-foreground max-w-md text-center">{error.message}</p>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              className="mt-2"
+            >
+              Try Again
+            </Button>
           </div>
         )}
 
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="aspect-[4/3] w-full rounded-lg" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+          <div className="space-y-8">
+            {/* Featured Section Skeleton */}
+            {selectedSubcategory === "Trending" && (
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-40" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="aspect-[16/9] w-full rounded-lg" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
+            {/* Grid Skeleton */}
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-24" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {!isLoading && !error && filteredTrends.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <p className="text-lg font-medium text-muted-foreground">No trends found</p>
-            <p className="text-sm text-muted-foreground">
-              {searchQuery ? "Try a different search term" : "Be the first to create a trend!"}
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-lg font-semibold text-foreground">No trends found</p>
+            <p className="text-sm text-muted-foreground max-w-md text-center">
+              {searchQuery ? "Try adjusting your search or filters" : "Be the first to create a trend!"}
             </p>
+            {!searchQuery && user && (
+              <Link href="/create-trend">
+                <Button className="mt-2 rounded-full gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create First Trend
+                </Button>
+              </Link>
+            )}
           </div>
         )}
 
         {!isLoading && !error && filteredTrends.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTrends.map((trend) => (
-              <TrendCard
-                key={trend.id}
-                id={trend.id}
-                coverImage={trend.coverPicture || undefined}
-                trendName={trend.name}
-                description={trend.description || undefined}
-                username={trend.creator?.username || "Unknown"}
-                userAvatar={trend.creator?.profilePicture || undefined}
-                category={trend.category}
-                views={trend.views || 0}
-                participants={trend.participants || 0}
-                chatCount={trend.chatCount || 0}
-                createdAt={trend.createdAt || new Date()}
-                endDate={trend.endDate || undefined}
-                isTrending={selectedSubcategory === "Trending"}
-                onClick={() => {
-                  setLocation(`/instructions/${trend.id}`);
-                }}
-                onAuthModalOpen={() => setAuthModalOpen(true)}
-              />
-            ))}
+          <div className="space-y-8">
+            {/* Featured Section - Trending */}
+            {selectedSubcategory === "Trending" && filteredTrends.slice(0, 2).length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-yellow-500" />
+                  <h2 className="text-2xl font-bold">Trending Now</h2>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {filteredTrends.slice(0, 2).map((trend) => (
+                    <div
+                      key={trend.id}
+                      className="group relative rounded-xl overflow-hidden cursor-pointer h-64 lg:h-80"
+                      onClick={() => setLocation(`/instructions/${trend.id}`)}
+                    >
+                      <img
+                        src={trend.coverPicture || ""}
+                        alt={trend.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white space-y-2">
+                        <Badge className="w-fit bg-primary">Featured</Badge>
+                        <h3 className="text-xl font-bold line-clamp-2">{trend.name}</h3>
+                        <div className="flex items-center justify-between text-sm text-gray-200">
+                          <span>{trend.creator?.username}</span>
+                          <div className="flex gap-3 text-xs">
+                            <span>{trend.participants || 0} participants</span>
+                            <span>{trend.views || 0} views</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Main Grid */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                {selectedSubcategory === "Trending" ? (
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                ) : (
+                  <Sparkles className="w-5 h-5 text-primary" />
+                )}
+                <h2 className="text-xl font-bold">
+                  {selectedSubcategory === "Trending" ? "Trending Trends" : selectedSubcategory || "All Trends"}
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(selectedSubcategory === "Trending" ? filteredTrends.slice(2) : filteredTrends).map((trend) => (
+                  <TrendCard
+                    key={trend.id}
+                    id={trend.id}
+                    coverImage={trend.coverPicture || undefined}
+                    trendName={trend.name}
+                    description={trend.description || undefined}
+                    username={trend.creator?.username || "Unknown"}
+                    userAvatar={trend.creator?.profilePicture || undefined}
+                    category={trend.category}
+                    views={trend.views || 0}
+                    participants={trend.participants || 0}
+                    chatCount={trend.chatCount || 0}
+                    createdAt={trend.createdAt || new Date()}
+                    endDate={trend.endDate || undefined}
+                    isTrending={selectedSubcategory === "Trending"}
+                    onClick={() => {
+                      setLocation(`/instructions/${trend.id}`);
+                    }}
+                    onAuthModalOpen={() => setAuthModalOpen(true)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </main>
