@@ -22,11 +22,11 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       data: payload.data || {},
     };
 
-    const response = await fetch("https://api.onesignal.com/notifications", {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "ONESIGNAL-REST-API-KEY": process.env.ONESIGNAL_REST_API_KEY,
+        "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
       },
       body: JSON.stringify(requestBody),
     });
