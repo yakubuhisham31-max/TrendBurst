@@ -448,7 +448,7 @@ export default function PostCard({
                 loop
                 muted={isMuted}
                 playsInline
-                preload="metadata"
+                preload="auto"
                 crossOrigin="anonymous"
                 data-testid="video-post"
               />
