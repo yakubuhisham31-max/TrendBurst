@@ -252,6 +252,7 @@ export default function PostFullscreenModal({
                   src={mediaUrl}
                   className="w-full h-full object-contain"
                   controls
+                  autoPlay
                   preload="metadata"
                   crossOrigin="anonymous"
                   data-testid="video-fullscreen"
