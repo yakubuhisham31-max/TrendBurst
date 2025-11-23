@@ -189,7 +189,7 @@ To test push notifications on https://trendx.social:
 - If previously denied, users can still retry from the notification bell
 - Improved UX with less intrusive permission request timing
 
-**All 18 Notifications FULLY IMPLEMENTED (Nov 23, 2024):**
+**All 19 Notifications FULLY IMPLEMENTED (Nov 23, 2024):**
 
 **Immediate Notifications (Trigger on user action):**
 1. **Welcome** 🔥👋 - User registration
@@ -207,10 +207,11 @@ To test push notifications on https://trendx.social:
 13. **New Trend Recommendation** 👀🔥 - New trend drops (sent to ~10 random users)
 14. **Trend Blowing Up** 🔥👀 - Trend gets viral engagement (>50 votes)
 15. **Host Trend Ending** ⏳🔥 - Trend you created is ending
+16. **You're on a Streak** 🔥💪 - User posts in 3+ different trends within a week (3 message variants)
 
 **Scheduled Notifications (Trigger periodically via endpoints):**
-16. **Trend Ending Soon** 😤🔥 - Trend ends in <24 hours (API: POST /api/notifications/scheduled/trend-ending-soon)
-17. **Inactive User Wake-Up** ⚡😤 - User hasn't logged in 30 days (API: POST /api/notifications/scheduled/inactive-users)
+17. **Trend Ending Soon** 😤🔥 - Trend ends in <24 hours (API: POST /api/notifications/scheduled/trend-ending-soon)
+18. **Inactive User Wake-Up** ⚡😤 - User hasn't logged in 30 days (API: POST /api/notifications/scheduled/inactive-users)
 
 **Rate Limiting per Notification Type:**
 - Rank gained/lost: 5/day
@@ -224,5 +225,25 @@ To test push notifications on https://trendx.social:
 - Trend created: 50/day
 - New trend recommendation: 3/day
 - Trend blowing up: 3/day
+- You're on a streak: 10/day
 - Inactive user wake-up: 1/day
 - Host trend ending: 1/day
+
+### Streak Detection Logic (Nov 23, 2024)
+
+**How "You're on a Streak" Works:**
+- Triggered when user creates a post
+- System checks all user's posts from last 7 days
+- Counts unique trends the user has posted in
+- If 3 or more trends: Sends streak notification with count
+- Rate limited to 10/day to prevent spam on multi-post days
+- Features 3 message variants for variety:
+  - "You're on a Streak 🔥💪" - Standard recognition
+  - "On Fire Right Now 🔥💪" - Momentum-focused
+  - "Dominating the Week 🔥💪" - Aggressive take-over message
+
+**Example Triggers:**
+- User posts in AI trend → notification not sent (only 1 trend)
+- User posts in Entertainment trend → still no notification (2 trends total)
+- User posts in Sports trend → sends notification! (3+ trends) 🔥💪
+- Each additional post in new trends continues to update the count

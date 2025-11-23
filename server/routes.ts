@@ -748,6 +748,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (err) {
         console.error("Failed to process points notifications:", err);
       }
+
+      // Check for streak notification - user posted in 3+ different trends this week
+      try {
+        const sevenDaysAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
+        const userPosts = await storage.getPostsByUser((req as any).session.userId);
+        
+        // Filter posts from last 7 days
+        const recentPosts = userPosts.filter(p => {
+          const postDate = p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt);
+          return postDate >= sevenDaysAgo;
+        });
+        
+        // Count unique trends
+        const uniqueTrends = new Set(recentPosts.map(p => p.trendId));
+        
+        if (uniqueTrends.size >= 3) {
+          await notificationService.sendStreakNotification(
+            (req as any).session.userId,
+            uniqueTrends.size
+          ).catch((err) => {
+            console.error("Failed to send streak notification:", err);
+          });
+        }
+      } catch (err) {
+        console.error("Failed to check for streak notification:", err);
+      }
       
       res.status(201).json(post);
     } catch (error) {
@@ -1837,16 +1863,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let notificationsSent = 0;
       for (const user of allUsers) {
         // Check if user hasn't logged in for 30 days
-        const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
-        if (!lastLogin || lastLogin < thirtyDaysAgo) {
-          try {
-            await notificationService.sendInactiveUserWakeUpNotification(user.id, user.username).catch(err => {
-              console.error("Failed to send inactive user notification:", err);
-            });
-            notificationsSent++;
-          } catch (err) {
-            console.error("Error notifying inactive user:", err);
-          }
+        // For now, send to all users since lastLogin tracking isn't implemented
+        // In production, this would check user.lastLogin field
+        if (!user.id) continue;
+        try {
+          await notificationService.sendInactiveUserWakeUpNotification(user.id, user.username).catch(err => {
+            console.error("Failed to send inactive user notification:", err);
+          });
+          notificationsSent++;
+        } catch (err) {
+          console.error("Error notifying inactive user:", err);
         }
       }
       

@@ -277,6 +277,28 @@ export async function sendReplyNotification(userId: string, actorUsername: strin
   await recordNotificationSent(userId, "reply");
 }
 
+export async function sendStreakNotification(userId: string, streakCount: number) {
+  const canSend = await checkRateLimit(userId, "streak", 10);
+  if (!canSend) return;
+
+  const streakMessages = [
+    { title: "You're on a Streak 🔥💪", content: `You've posted in ${streakCount} different trends this week. That's insane consistency — keep the energy up. 😤🔥` },
+    { title: "On Fire Right Now 🔥💪", content: `${streakCount} trends, multiple posts. You're everywhere this week. The momentum is REAL. 💪🔥` },
+    { title: "Dominating the Week 🔥💪", content: `${streakCount} different trends already. You're not just participating — you're taking over. 😤🔥` },
+  ];
+
+  const randomMessage = streakMessages[Math.floor(Math.random() * streakMessages.length)];
+
+  await sendPushNotification({
+    userId,
+    heading: randomMessage.title,
+    content: randomMessage.content,
+    data: { type: "streak", streakCount: String(streakCount) },
+  });
+
+  await recordNotificationSent(userId, "streak");
+}
+
 // Rate limiting and tracking helpers
 async function checkRateLimit(userId: string, type: string, dailyLimit: number): Promise<boolean> {
   const tracking = await getNotificationTracking(userId, type);
