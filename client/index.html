@@ -91,11 +91,13 @@
           }
           
           // Check if OneSignal is ready
-          if (OneSignal.User) {
+          if (OneSignal && OneSignal.User) {
             console.log("👤 OneSignal.User available");
             try {
-              const externalId = await OneSignal.User.getExternalId?.();
-              console.log("👤 External ID:", externalId);
+              if (typeof OneSignal.User.getExternalId === 'function') {
+                const externalId = await OneSignal.User.getExternalId();
+                console.log("👤 External ID:", externalId);
+              }
             } catch (e) {
               console.log("ℹ️  Could not get external ID:", e?.message);
             }
@@ -167,18 +169,38 @@
             }
             
             // OneSignal v16 subscription status
-            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            console.log("🔔 ONESIGNAL SUBSCRIPTION STATUS");
-            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            
-            const subscriptionId = await OneSignal.User.pushSubscription?.getIdAsync?.();
-            console.log("Subscription ID:", subscriptionId || "not yet assigned");
-            
-            const onesignalId = await OneSignal.User.getOnesignalId?.();
-            console.log("OneSignal User ID:", onesignalId || "not yet assigned");
-            
-            const externalId = await OneSignal.User.getExternalId?.();
-            console.log("External ID (Trendx User ID):", externalId || "not yet set");
+            if (OneSignal && OneSignal.User) {
+              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              console.log("🔔 ONESIGNAL SUBSCRIPTION STATUS");
+              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              
+              try {
+                const subscriptionId = typeof OneSignal.User.pushSubscription?.getIdAsync === 'function' 
+                  ? await OneSignal.User.pushSubscription.getIdAsync() 
+                  : null;
+                console.log("Subscription ID:", subscriptionId || "not yet assigned");
+              } catch (e) {
+                console.log("Subscription ID: not yet assigned");
+              }
+              
+              try {
+                const onesignalId = typeof OneSignal.User.getOnesignalId === 'function'
+                  ? await OneSignal.User.getOnesignalId()
+                  : null;
+                console.log("OneSignal User ID:", onesignalId || "not yet assigned");
+              } catch (e) {
+                console.log("OneSignal User ID: not yet assigned");
+              }
+              
+              try {
+                const externalId = typeof OneSignal.User.getExternalId === 'function'
+                  ? await OneSignal.User.getExternalId()
+                  : null;
+                console.log("External ID (Trendx User ID):", externalId || "not yet set");
+              } catch (e) {
+                console.log("External ID (Trendx User ID): not yet set");
+              }
+            }
             
             // The browser has a native subscription - this is enough for push to work!
             if (registration) {
