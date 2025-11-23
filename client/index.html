@@ -145,34 +145,54 @@
           // Establish subscription - this registers the browser for push notifications
           console.log("📬 Establishing push subscription...");
           try {
-            // In OneSignal v16, we need to check and establish the subscription
-            // First check current subscription
-            const currentSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
-            console.log("📬 Current subscription ID:", currentSub);
-            
-            if (!currentSub) {
-              console.log("📢 No subscription found - requesting notification permission...");
-              // Request permission and establish subscription
-              const permission = await OneSignal.Notifications.requestPermission();
-              console.log("📢 Permission granted:", permission);
+            // Check native browser push subscription from service worker
+            if ('serviceWorker' in navigator) {
+              const registration = await navigator.serviceWorker.ready;
+              console.log("📬 Service worker ready for subscription");
               
-              // Wait a moment for subscription to be created
-              await new Promise(r => setTimeout(r, 1000));
+              try {
+                const subscription = await registration.pushManager.getSubscription();
+                console.log("📬 Browser native subscription:", subscription ? "EXISTS" : "NOT FOUND");
+                if (subscription) {
+                  console.log("📬 Subscription endpoint:", subscription.endpoint?.substring(0, 50) + "...");
+                }
+              } catch (pushError) {
+                console.warn("⚠️  Could not check push subscription:", pushError?.message);
+              }
+            }
+            
+            // Check OneSignal subscription status
+            const currentSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
+            console.log("📬 OneSignal subscription ID:", currentSub);
+            
+            // Try to establish subscription using OnSignal's direct method
+            if (!currentSub) {
+              console.log("📢 No OneSignal subscription found - triggering subscription flow...");
+              
+              // Subscribe to push
+              const subResult = await OneSignal.User.pushSubscription?.optIn?.();
+              console.log("📢 OptIn result:", subResult);
+              
+              // Wait for subscription to be created
+              await new Promise(r => setTimeout(r, 2000));
               
               const newSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
-              console.log("✅ New subscription ID created:", newSub);
+              console.log("✅ OneSignal subscription after optIn:", newSub);
             }
             
             const onesignalId = await OneSignal.User.getOnesignalId?.();
             console.log("🆔 OneSignal User ID:", onesignalId);
             
-            if (currentSub || (await OneSignal.User.pushSubscription?.getIdAsync?.())) {
+            const finalSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
+            if (finalSub) {
               console.log("🎉 User successfully subscribed to push notifications!");
+              console.log("✅ Ready to receive push notifications on this device!");
             } else {
-              console.warn("⚠️  Subscription still pending - browser may show permission prompt");
+              console.warn("⚠️  OneSignal subscription not yet established");
+              console.log("ℹ️  This may be normal - subscription might be created after next page load");
             }
           } catch (subError) {
-            console.log("ℹ️  Subscription establishment failed:", subError?.message);
+            console.log("ℹ️  Subscription check failed:", subError?.message);
           }
         } catch (error) {
           console.error("❌ OneSignal SDK initialization failed");
