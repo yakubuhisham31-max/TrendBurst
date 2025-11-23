@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Menu, Plus, Search, AlertCircle, LogIn, Flame, Sparkles, TrendingUp } from "lucide-react";
+import { Menu, Plus, Search, AlertCircle, LogIn, Flame, Sparkles, TrendingUp, Bell } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 
 type TrendWithCreator = Trend & {
@@ -62,6 +63,7 @@ export default function HomePage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [, setLocation] = useLocation();
   const { user, isLoading: loading } = useAuth();
+  const { toast } = useToast();
 
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   
@@ -84,6 +86,27 @@ export default function HomePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/counts"] });
+    },
+  });
+
+  // Test push notification mutation
+  const testPushMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/notifications/test", {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test notification sent!",
+        description: "Check your desktop for the push notification.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to send test notification",
+        description: "Please check that service workers are registered.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -171,7 +194,19 @@ export default function HomePage() {
             data-testid="img-logo"
           />
           {user ? (
-            <NotificationBell />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => testPushMutation.mutate()}
+                disabled={testPushMutation.isPending}
+                title="Send test push notification"
+                data-testid="button-test-push"
+              >
+                <Bell className="w-5 h-5" />
+              </Button>
+            </div>
           ) : (
             <Button
               variant="default"
