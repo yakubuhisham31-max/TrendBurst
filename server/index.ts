@@ -131,11 +131,14 @@ app.use(
   })
 );
 
-// Add cache control headers to prevent browser caching
+// Add cache control headers to prevent browser caching (but exclude service workers)
 app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  // Don't apply strict cache control to service worker files
+  if (!req.path.includes('Worker.js') && req.path !== '/manifest.json') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
   next();
 });
 
