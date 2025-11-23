@@ -142,15 +142,37 @@
             console.log("ℹ️  Notification permission check failed:", permError?.message);
           }
           
-          // Check subscription status
+          // Establish subscription - this registers the browser for push notifications
+          console.log("📬 Establishing push subscription...");
           try {
-            const subscription = await OneSignal.User.pushSubscription?.getIdAsync?.();
-            console.log("📬 User subscription ID:", subscription);
+            // In OneSignal v16, we need to check and establish the subscription
+            // First check current subscription
+            const currentSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
+            console.log("📬 Current subscription ID:", currentSub);
+            
+            if (!currentSub) {
+              console.log("📢 No subscription found - requesting notification permission...");
+              // Request permission and establish subscription
+              const permission = await OneSignal.Notifications.requestPermission();
+              console.log("📢 Permission granted:", permission);
+              
+              // Wait a moment for subscription to be created
+              await new Promise(r => setTimeout(r, 1000));
+              
+              const newSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
+              console.log("✅ New subscription ID created:", newSub);
+            }
             
             const onesignalId = await OneSignal.User.getOnesignalId?.();
             console.log("🆔 OneSignal User ID:", onesignalId);
+            
+            if (currentSub || (await OneSignal.User.pushSubscription?.getIdAsync?.())) {
+              console.log("🎉 User successfully subscribed to push notifications!");
+            } else {
+              console.warn("⚠️  Subscription still pending - browser may show permission prompt");
+            }
           } catch (subError) {
-            console.log("ℹ️  Subscription status check failed:", subError?.message);
+            console.log("ℹ️  Subscription establishment failed:", subError?.message);
           }
         } catch (error) {
           console.error("❌ OneSignal SDK initialization failed");
