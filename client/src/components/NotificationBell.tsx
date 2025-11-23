@@ -58,13 +58,19 @@ function getNotificationMessage(notification: NotificationWithActor): string {
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+  const [showPermissionDeniedMessage, setShowPermissionDeniedMessage] = useState(false);
   const previousUnreadCount = useRef<number | null>(null);
-  const hasRequestedPermission = useRef(false);
+
+  // Check notification permission status
+  useEffect(() => {
+    if (typeof Notification !== "undefined") {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   // Request push notification permission when bell is clicked (OneSignal v16)
   const requestPushPermission = async () => {
-    if (hasRequestedPermission.current) return;
-    
     try {
       if ((window as any).OneSignal && Notification.permission !== "granted") {
         const OS = (window as any).OneSignal;
@@ -76,6 +82,8 @@ export default function NotificationBell() {
         if (permissionGranted) {
           console.log("✅ Push notifications enabled!");
           console.log("⏳ Waiting for OneSignal to create subscription...");
+          setNotificationPermission("granted");
+          setShowPermissionDeniedMessage(false);
           
           // Wait for subscription to be created (OneSignal v16 async process)
           // The subscription ID is assigned after the permission is granted and service worker is registered
@@ -115,9 +123,9 @@ export default function NotificationBell() {
           }
         } else {
           console.log("ℹ️  Push notifications denied by user");
+          setNotificationPermission("denied");
+          setShowPermissionDeniedMessage(true);
         }
-        
-        hasRequestedPermission.current = true;
       }
     } catch (error) {
       console.log("ℹ️  Push permission request:", (error as Error).message);
@@ -190,12 +198,24 @@ export default function NotificationBell() {
 
   const unreadCount = unreadData?.count || 0;
 
-  // Handle popover open - request push permission on first open
+  // Handle popover open - allow re-requesting permission if not yet granted
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
-    if (isOpen) {
+    if (isOpen && Notification.permission !== "granted") {
       requestPushPermission();
     }
+  };
+
+  // Handle opening browser notification settings (for denied permissions)
+  const openNotificationSettings = () => {
+    setShowPermissionDeniedMessage(false);
+    alert(
+      "To enable push notifications:\n\n" +
+      "1. Click the lock/information icon in the address bar\n" +
+      "2. Find \"Notifications\" in the permissions list\n" +
+      "3. Change it to \"Allow\"\n\n" +
+      "Then click the notification bell again to complete setup."
+    );
   };
 
   return (
@@ -235,6 +255,22 @@ export default function NotificationBell() {
           )}
         </div>
         <Separator />
+        {showPermissionDeniedMessage && notificationPermission === "denied" && (
+          <div className="p-4 border-b bg-yellow-50 dark:bg-yellow-950/20">
+            <p className="text-sm text-yellow-900 dark:text-yellow-200 mb-3" data-testid="text-permission-denied">
+              Push notifications were blocked. You can enable them by allowing notifications in your browser settings.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openNotificationSettings}
+              className="w-full"
+              data-testid="button-enable-notifications"
+            >
+              How to Enable Notifications
+            </Button>
+          </div>
+        )}
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground" data-testid="text-no-notifications">
