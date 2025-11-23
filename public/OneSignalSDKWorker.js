@@ -27,22 +27,35 @@ self.addEventListener("push", (event) => {
     return;
   }
   
+  let pushData = null;
+  
   try {
-    const pushData = event.data.json();
-    console.log("[OneSignal SW] 📨 Notification Data:", pushData);
-    
-    // Log important IDs
+    // Try to parse as JSON first
+    pushData = event.data.json();
+    console.log("[OneSignal SW] 📨 Notification Data (parsed JSON):", pushData);
+  } catch (jsonError) {
+    // If JSON parsing fails, try getting text
+    try {
+      const textData = event.data.text();
+      console.log("[OneSignal SW] 📨 Notification Data (text):", textData);
+      pushData = { text: textData };
+    } catch (textError) {
+      console.warn("[OneSignal SW] ⚠️  Could not parse push data:", jsonError);
+      return;
+    }
+  }
+  
+  // Log notification details
+  if (pushData) {
     if (pushData.data) {
       console.log("[OneSignal SW] 🆔 Data Object:", pushData.data);
     }
-    if (pushData.heading) {
-      console.log("[OneSignal SW] 📝 Heading:", pushData.heading);
+    if (pushData.heading || pushData.headings) {
+      console.log("[OneSignal SW] 📝 Heading:", pushData.heading || pushData.headings);
     }
-    if (pushData.contents) {
-      console.log("[OneSignal SW] 📄 Content:", pushData.contents);
+    if (pushData.contents || pushData.content) {
+      console.log("[OneSignal SW] 📄 Content:", pushData.contents || pushData.content);
     }
-  } catch (error) {
-    console.error("[OneSignal SW] Failed to parse push data:", error);
   }
 });
 
