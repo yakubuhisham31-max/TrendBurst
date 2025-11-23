@@ -21,7 +21,7 @@ The core data model includes Users, Trends, Posts, Votes, Comments, and Notifica
 Push notifications are configured for production on `https://trendx.social` using OneSignal v16 SDK. It identifies users via `external_id`, requests permissions, and creates subscriptions automatically. The backend sends notifications via the OneSignal REST API. Notifications appear as system notifications with Trendz branding. Key components include client-side SDK initialization, a NotificationBell component, a service worker, and a custom OneSignal REST API client on the server. The system tracks `oneSignalSubscriptions` in the database, storing `userId`, `subscriptionId`, `oneSignalUserId`, `externalId`, `pushToken`, and `isActive` status.
 
 ### Dark Mode System
-Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS variables defined in `:root` and `.dark` classes. A `ThemeProvider` and `useTheme` hook manage state, providing system preference detection and localStorage persistence. It prevents flash of unstyled content and ensures full color coverage across components.
+Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS variables defined in `:root` and `.dark` classes. A `ThemeProvider` automatically applies the system's dark mode preference (from `prefers-color-scheme: dark`). It prevents flash of unstyled content and ensures full color coverage across all components. Dark mode follows the user's OS setting - no manual toggle required.
 
 ## External Dependencies
 

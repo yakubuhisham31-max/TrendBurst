@@ -9,7 +9,6 @@ import { Menu, Plus, Search, AlertCircle, LogIn, Flame, Sparkles, TrendingUp } f
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -171,22 +170,19 @@ export default function HomePage() {
             className="h-14 sm:h-16 md:h-18 object-contain"
             data-testid="img-logo"
           />
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            {user ? (
-              <NotificationBell />
-            ) : (
-              <Button
-                variant="default"
-                onClick={() => setAuthModalOpen(true)}
-                className="gap-2"
-                data-testid="button-sign-in"
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </Button>
-            )}
-          </div>
+          {user ? (
+            <NotificationBell />
+          ) : (
+            <Button
+              variant="default"
+              onClick={() => setAuthModalOpen(true)}
+              className="gap-2"
+              data-testid="button-sign-in"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </Button>
+          )}
         </div>
 
         <div className="max-w-7xl mx-auto px-4 pb-4 space-y-3">
