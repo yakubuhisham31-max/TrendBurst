@@ -68,4 +68,45 @@ The database schema utilizes PostgreSQL with UUID primary keys, foreign key rela
 *   Cloudflare R2
 
 **Push Notifications:**
-*   OneSignal
+*   OneSignal (v16 SDK)
+
+## Push Notification System
+
+### Production-Only Setup
+Push notifications are configured to work **only on the production domain: https://trendx.social**. This is intentional for security and proper OneSignal app configuration.
+
+**Important:** When testing on development domains (Replit preview URLs), OneSignal SDK will fail to initialize with error: "Can only be used on: https://trendx.social". This is expected behavior.
+
+### How It Works
+
+1. **User Identification:** When users log in, their Trendx user ID is automatically linked to OneSignal as an external_id
+2. **Permission Request:** When users click the notification bell for the first time, they're prompted to allow push notifications
+3. **Subscription Creation:** OneSignal v16 SDK automatically creates the push subscription (no manual VAPID keys needed)
+4. **Backend Delivery:** Server sends notifications via OneSignal REST API using `include_external_user_ids` targeting Trendx user IDs
+5. **System Notifications:** Notifications appear in the phone's system notification bar with Trendz branding
+
+### Key Components
+
+*   **client/index.html:** OneSignal SDK initialization with app configuration
+*   **client/src/App.tsx:** User identification via `OneSignal.login(userId)`
+*   **client/src/components/NotificationBell.tsx:** Permission request flow using `OneSignal.Notifications.requestPermission()`
+*   **public/OneSignalSDKWorker.js:** Service worker that handles push notifications natively
+*   **server/onesignal.ts:** OneSignal REST API client for sending push notifications
+*   **server/notificationService.ts:** Notification business logic and database integration
+
+### OneSignal Configuration
+
+*   **App ID:** 39eb07fa-42bb-4d9d-86bb-87ebbd5e39b9
+*   **Safari Web ID:** web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24
+*   **Allowed Domain:** https://trendx.social (production only)
+*   **SDK Version:** v16 (native subscription management)
+
+### Testing Push Notifications
+
+To test push notifications, you must deploy to production (https://trendx.social):
+1. Sign in to your account
+2. Click the notification bell icon
+3. Allow notifications when prompted
+4. Check browser console for subscription status (should show assigned IDs)
+5. Trigger a notification event (vote, comment, follow)
+6. Notification appears in phone's system notification bar
