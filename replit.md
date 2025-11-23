@@ -88,25 +88,52 @@ Push notifications are configured to work **only on the production domain: https
 ### Key Components
 
 *   **client/index.html:** OneSignal SDK initialization with app configuration
-*   **client/src/App.tsx:** User identification via `OneSignal.login(userId)`
-*   **client/src/components/NotificationBell.tsx:** Permission request flow using `OneSignal.Notifications.requestPermission()`
+*   **client/src/App.tsx:** User identification via `OneSignal.login(userId)` - sets external_id
+*   **client/src/components/NotificationBell.tsx:** Permission request flow using `OneSignal.Notifications.requestPermission()` with ID tracking
 *   **public/OneSignalSDKWorker.js:** Service worker that handles push notifications natively
 *   **server/onesignal.ts:** OneSignal REST API client for sending push notifications
 *   **server/notificationService.ts:** Notification business logic and database integration
+*   **server/routes.ts:** API endpoints for subscription tracking (`POST /api/push/subscribe`, `GET /api/push/subscription`)
+*   **server/storage.ts:** Database operations for oneSignalSubscriptions table
+*   **shared/schema.ts:** Drizzle schema for oneSignalSubscriptions table
+
+### OneSignal Subscription Tracking
+
+When users enable push notifications, the system captures and stores:
+- **userId:** Trendx user ID (primary key)
+- **subscriptionId:** OneSignal's unique subscription ID
+- **oneSignalUserId:** OneSignal's internal user ID
+- **externalId:** Trendx user ID (used for OneSignal targeting)
+- **pushToken:** Platform-specific push token
+- **isActive:** Flag for active subscriptions
+- **timestamps:** Created/updated tracking
+
+This data is stored in the `oneSignalSubscriptions` database table and enables reliable notification delivery using the external_id for targeting.
 
 ### OneSignal Configuration
 
-*   **App ID:** 39eb07fa-42bb-4d9d-86bb-87ebbd5e39b9
+*   **App ID:** 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
 *   **Safari Web ID:** web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24
 *   **Allowed Domain:** https://trendx.social (production only)
 *   **SDK Version:** v16 (native subscription management)
 
 ### Testing Push Notifications
 
-To test push notifications, you must deploy to production (https://trendx.social):
+To test push notifications on https://trendx.social:
 1. Sign in to your account
-2. Click the notification bell icon
+2. Click the notification bell icon in the top right
 3. Allow notifications when prompted
-4. Check browser console for subscription status (should show assigned IDs)
+4. Check browser console (F12) for subscription confirmation with IDs
 5. Trigger a notification event (vote, comment, follow)
 6. Notification appears in phone's system notification bar
+7. Service worker logs will show: `[OneSignal SW] ✅ Notification displayed successfully`
+
+### Recent Updates (Nov 2024)
+
+**OneSignal ID Tracking System:**
+- Added `oneSignalSubscriptions` database table to track all subscription IDs
+- Implemented subscription capture in NotificationBell component
+- Created API endpoints for saving and retrieving subscription data
+- Integrated ID tracking into the permission request flow
+- System now stores: subscriptionId, oneSignalUserId, pushToken, and externalId
+- All IDs are logged to console and persisted in database for reliable notification delivery
