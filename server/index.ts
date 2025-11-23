@@ -170,37 +170,51 @@ app.use((req, res, next) => {
 });
 
 // OneSignal service worker routes and manifest (MUST be before serveStatic - registered synchronously)
-const publicPath = path.resolve(__dirname, "../public");
-const distPath = process.env.NODE_ENV === "production" 
-  ? path.resolve(__dirname)
-  : path.resolve(__dirname, "../dist");
+// Production: serve from dist (where build copies files)
+// Development: serve from public or dist
+const staticFilesPath = process.env.NODE_ENV === "production" 
+  ? path.resolve(__dirname, "../dist")  // Production: dist is at same level as compiled server
+  : path.resolve(__dirname, "../dist");  // Development: dist is at workspace root
 
 app.get("/manifest.json", (_req, res) => {
-  try {
-    // Try public folder first (where source file is)
-    let manifestPath = path.join(publicPath, "manifest.json");
-    let content;
-    
+  const possiblePaths = [
+    path.join(staticFilesPath, "manifest.json"),           // Try dist first
+    path.join(__dirname, "../public/manifest.json"),       // Try public folder
+    path.join(__dirname, "../../public/manifest.json"),    // Try one level up
+    path.join(__dirname, "../dist/manifest.json"),         // Try explicit dist path
+  ];
+
+  let content = null;
+  let usedPath = null;
+
+  for (const manifestPath of possiblePaths) {
     try {
-      content = fs.readFileSync(manifestPath, "utf-8");
-    } catch {
-      // Fall back to dist folder if not in public
-      manifestPath = path.join(distPath, "manifest.json");
-      content = fs.readFileSync(manifestPath, "utf-8");
+      if (fs.existsSync(manifestPath)) {
+        content = fs.readFileSync(manifestPath, "utf-8");
+        usedPath = manifestPath;
+        break;
+      }
+    } catch (err) {
+      // Continue to next path
     }
-    
+  }
+
+  if (content) {
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Cache-Control", "public, max-age=3600");
+    log(`✅ Serving manifest.json from: ${usedPath}`);
     res.send(content);
-  } catch (error) {
-    console.error("Failed to serve manifest.json from", publicPath, "or", distPath, ":", error);
+  } else {
+    console.error("❌ manifest.json not found in any of these paths:", possiblePaths);
+    console.error("Current __dirname:", __dirname);
+    console.error("NODE_ENV:", process.env.NODE_ENV);
     res.status(404).json({ error: "Manifest not found" });
   }
 });
 
 app.get("/OneSignalSDKWorker.js", (_req, res) => {
   try {
-    const workerPath = path.join(distPath, "OneSignalSDKWorker.js");
+    const workerPath = path.join(staticFilesPath, "OneSignalSDKWorker.js");
     const content = fs.readFileSync(workerPath, "utf-8");
     res.setHeader("Content-Type", "application/javascript");
     res.send(content);
@@ -212,7 +226,7 @@ app.get("/OneSignalSDKWorker.js", (_req, res) => {
 
 app.get("/OneSignalSDKUpdaterWorker.js", (_req, res) => {
   try {
-    const workerPath = path.join(distPath, "OneSignalSDKUpdaterWorker.js");
+    const workerPath = path.join(staticFilesPath, "OneSignalSDKUpdaterWorker.js");
     const content = fs.readFileSync(workerPath, "utf-8");
     res.setHeader("Content-Type", "application/javascript");
     res.send(content);
