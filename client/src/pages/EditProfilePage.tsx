@@ -17,7 +17,7 @@ import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
 export default function EditProfilePage() {
   const [, setLocation] = useLocation();
-  const { user, checkAuth } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -72,7 +72,7 @@ export default function EditProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<User> & { profileFile?: File }) => {
-      let profilePictureUrl = data.profilePicture;
+      let profilePictureUrl = data.profilePicture || user?.profilePicture;
       
       // Upload profile picture to R2 if a new file was selected
       if (data.profileFile) {
@@ -81,10 +81,12 @@ export default function EditProfilePage() {
       
       // Remove profileFile from data before sending to API
       const { profileFile, ...apiData } = data;
-      const updateData = {
-        ...apiData,
-        profilePicture: profilePictureUrl,
-      };
+      const updateData: any = { ...apiData };
+      
+      // Only include profilePicture if it's defined or being updated
+      if (profilePictureUrl) {
+        updateData.profilePicture = profilePictureUrl;
+      }
       
       const response = await apiRequest("PATCH", "/api/users/profile", updateData);
       return response.json();
@@ -97,7 +99,6 @@ export default function EditProfilePage() {
       }
       setSelectedProfileFile(null);
       
-      await checkAuth();
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -238,11 +239,11 @@ export default function EditProfilePage() {
               <div className="relative">
                 <Avatar className="w-20 h-20" data-testid="avatar-profile">
                   <AvatarImage 
-                    src={profilePreviewUrl || user.profilePicture || undefined} 
-                    alt={user.username} 
+                    src={profilePreviewUrl || user?.profilePicture || undefined} 
+                    alt={user?.username || "User"} 
                   />
                   <AvatarFallback className="text-xl">
-                    {user.username.slice(0, 2).toUpperCase()}
+                    {user?.username?.slice(0, 2).toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 {profilePreviewUrl && (
@@ -291,7 +292,7 @@ export default function EditProfilePage() {
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  value={user.username}
+                  value={user?.username || ""}
                   disabled
                   placeholder="Enter username"
                   data-testid="input-username"
