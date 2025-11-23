@@ -16,6 +16,11 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
 
     console.log(`📢 Sending push notification: "${payload.heading}" to user ${payload.userId}`);
 
+    // Determine icon URLs based on environment
+    const isProduction = process.env.NODE_ENV === 'production';
+    const domain = isProduction ? 'https://trendx.social' : 'https://trendx.social';
+    const logoUrl = `${domain}/assets/icon.png`;
+
     const requestBody = {
       app_id: process.env.ONESIGNAL_APP_ID,
       include_external_user_ids: [payload.userId],
@@ -23,15 +28,29 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       headings: { en: payload.heading },
       name: `notification_${Date.now()}`,
       data: payload.data || {},
-      // OneSignal v16 web push configuration
+      
+      // ========== BRANDING CONFIGURATION ==========
+      // Main logo/icon that displays in notification
+      chrome_web_icon: logoUrl,
+      chrome_icon: logoUrl,
+      large_icon: logoUrl,
+      adm_small_icon: logoUrl,
+      
+      // Big picture for visual impact on Android
+      big_picture: logoUrl,
+      chrome_web_badge: logoUrl,
+      
+      // Notification appearance
+      ios_attachments: { image: logoUrl },
+      
+      // Platform-specific configuration
       isWebPush: true,
-      // Ensure the notification is properly delivered to browsers
-      chrome_web_icon: "https://cdn.onesignal.com/files/6582c5a0-fdb3-4f01-8f25-d3d82b922bdd/Trendz_Icon_Final.png",
-      adm_small_icon: "https://cdn.onesignal.com/files/6582c5a0-fdb3-4f01-8f25-d3d82b922bdd/Trendz_Icon_Final.png",
+      channelForExternalUserIds: true,
     };
 
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
     console.log(`🔑 API Key first 20 chars: ${apiKey?.substring(0, 20)}...`);
+    console.log(`🖼️ Logo URL: ${logoUrl}`);
     console.log(`📡 Using Authorization header: Bearer ${apiKey?.substring(0, 20)}...`);
 
     const response = await fetch("https://onesignal.com/api/v1/notifications", {

@@ -116,6 +116,13 @@ This data is stored in the `oneSignalSubscriptions` database table and enables r
 *   **Safari Web ID:** web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24
 *   **Allowed Domain:** https://trendx.social (production only)
 *   **SDK Version:** v16 (native subscription management)
+*   **Logo/Branding:** Trendx logo (`/assets/icon.png`) displays in all notifications across Chrome, Android, iOS, and web push notifications
+*   **Icon Configuration:**
+    - `chrome_web_icon` - Chrome notification icon
+    - `large_icon` - Large icon display
+    - `big_picture` - Visual banner on Android notifications
+    - `ios_attachments` - Image attachment for iOS notifications
+    - `chrome_web_badge` - Browser badge icon
 
 ### Testing Push Notifications
 
