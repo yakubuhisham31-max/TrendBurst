@@ -1,4 +1,5 @@
 import { Switch, Route, Redirect, useLocation } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -76,10 +77,68 @@ function Router() {
   );
 }
 
+function UserIdLogger() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Log Trendx User ID (External ID for OneSignal)
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("👤 USER IDENTIFICATION LOGGED");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log(`🆔 Trendx User ID (External ID): ${user.id}`);
+    console.log(`👤 Username: ${user.username}`);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    // Log OneSignal IDs
+    (async () => {
+      try {
+        if ((window as any).OneSignal) {
+          const onesignalId = await (window as any).OneSignal.User.getOnesignalId?.();
+          const externalId = await (window as any).OneSignal.User.getExternalId?.();
+          const subscriptionId = await (window as any).OneSignal.User.pushSubscription?.getIdAsync?.();
+
+          console.log("🔔 ONESIGNAL IDS:");
+          console.log(`   OneSignal User ID: ${onesignalId || "not yet assigned"}`);
+          console.log(`   External ID: ${externalId || "not yet set"}`);
+          console.log(`   Push Subscription ID: ${subscriptionId || "not yet created"}`);
+
+          // Log service worker status
+          if ("serviceWorker" in navigator) {
+            const sws = await navigator.serviceWorker.getRegistrations();
+            console.log(`📡 Service Workers Registered: ${sws.length}`);
+            sws.forEach((sw, i) => {
+              console.log(`   ${i + 1}. Scope: ${sw.scope}, Active: ${sw.active ? "Yes" : "No"}`);
+            });
+          }
+
+          // Log browser push subscription
+          const registration = await navigator.serviceWorker.ready;
+          const browserSub = await registration.pushManager.getSubscription();
+          if (browserSub) {
+            console.log(`🔐 Browser Push Subscription: ACTIVE`);
+            console.log(`   Endpoint: ${browserSub.endpoint.substring(0, 60)}...`);
+          } else {
+            console.log(`⚠️  Browser Push Subscription: NOT CREATED`);
+          }
+        } else {
+          console.log("⚠️  OneSignal SDK not available");
+        }
+      } catch (error) {
+        console.log("ℹ️  Could not fetch OneSignal IDs:", (error as Error).message);
+      }
+    })();
+  }, [user]);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <UserIdLogger />
         <Router />
         <Toaster />
       </TooltipProvider>

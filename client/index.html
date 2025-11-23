@@ -145,16 +145,21 @@
           // Establish subscription - this registers the browser for push notifications
           console.log("📬 Establishing push subscription...");
           try {
+            let registration;
             // Check native browser push subscription from service worker
             if ('serviceWorker' in navigator) {
-              const registration = await navigator.serviceWorker.ready;
+              registration = await navigator.serviceWorker.ready;
               console.log("📬 Service worker ready for subscription");
               
               try {
                 const subscription = await registration.pushManager.getSubscription();
-                console.log("📬 Browser native subscription:", subscription ? "EXISTS" : "NOT FOUND");
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("🔐 BROWSER PUSH SUBSCRIPTION");
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("Status:", subscription ? "ACTIVE" : "NOT CREATED");
                 if (subscription) {
-                  console.log("📬 Subscription endpoint:", subscription.endpoint?.substring(0, 50) + "...");
+                  console.log("Endpoint:", subscription.endpoint?.substring(0, 80) + "...");
+                  console.log("Provider: Firebase Cloud Messaging (FCM)");
                 }
               } catch (pushError) {
                 console.warn("⚠️  Could not check push subscription:", pushError?.message);
@@ -162,30 +167,29 @@
             }
             
             // OneSignal v16 subscription status
-            let currentSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
-            console.log("📬 OneSignal subscription ID:", currentSub);
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("🔔 ONESIGNAL SUBSCRIPTION STATUS");
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            
+            const subscriptionId = await OneSignal.User.pushSubscription?.getIdAsync?.();
+            console.log("Subscription ID:", subscriptionId || "not yet assigned");
+            
+            const onesignalId = await OneSignal.User.getOnesignalId?.();
+            console.log("OneSignal User ID:", onesignalId || "not yet assigned");
+            
+            const externalId = await OneSignal.User.getExternalId?.();
+            console.log("External ID (Trendx User ID):", externalId || "not yet set");
             
             // The browser has a native subscription - this is enough for push to work!
-            // OneSignal SDK will use the browser's subscription even if it doesn't report an ID
             if (registration) {
               const browserSub = await registration.pushManager.getSubscription();
               if (browserSub) {
-                console.log("✅ Browser push subscription is active and ready!");
-                console.log("📍 Push endpoint configured with FCM");
-                console.log("🎯 OneSignal service worker will use this subscription to receive notifications");
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("✅ PUSH NOTIFICATIONS READY");
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("Browser has an active push subscription");
+                console.log("OneSignal service worker will use it to receive notifications");
               }
-            }
-            
-            const onesignalId = await OneSignal.User.getOnesignalId?.();
-            console.log("🆔 OneSignal User ID:", onesignalId);
-            
-            const finalSub = await OneSignal.User.pushSubscription?.getIdAsync?.();
-            if (finalSub) {
-              console.log("🎉 User successfully subscribed to push notifications!");
-              console.log("✅ Ready to receive push notifications on this device!");
-            } else {
-              console.warn("⚠️  OneSignal subscription not yet established");
-              console.log("ℹ️  This may be normal - subscription might be created after next page load");
             }
           } catch (subError) {
             console.log("ℹ️  Subscription check failed:", subError?.message);
