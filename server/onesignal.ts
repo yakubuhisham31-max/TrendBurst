@@ -22,6 +22,13 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       contents: { en: payload.content },
       headings: { en: payload.heading },
       data: payload.data || {},
+      // OneSignal v16 requires these for proper delivery
+      target_channel: "push",
+      isAndroid: true,
+      isIos: true,
+      isWebPush: true,
+      // Ensure web push is properly configured
+      web_push_topic: "web",
     };
 
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
