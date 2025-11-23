@@ -17,7 +17,6 @@ import EditProfilePage from "@/pages/EditProfilePage";
 import InstructionsPage from "@/pages/InstructionsPage";
 import RankingsPage from "@/pages/RankingsPage";
 import FeedChatPage from "@/pages/FeedChatPage";
-import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
@@ -64,7 +63,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />
