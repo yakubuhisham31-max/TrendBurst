@@ -169,19 +169,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve /public folder statically at root (for PWA manifest, service workers, assets)
+const publicPath = path.resolve(__dirname, "../public");
+app.use(express.static(publicPath));
+log(`📁 Serving /public statically from: ${publicPath}`);
+
 // OneSignal service worker routes and manifest (MUST be before serveStatic - registered synchronously)
 // Production: serve from dist (where build copies files)
 // Development: serve from public or dist
-const staticFilesPath = process.env.NODE_ENV === "production" 
+const distPath = process.env.NODE_ENV === "production" 
   ? path.resolve(__dirname, "../dist")  // Production: dist is at same level as compiled server
   : path.resolve(__dirname, "../dist");  // Development: dist is at workspace root
 
+// Serve manifest.json - try public first, then dist
 app.get("/manifest.json", (_req, res) => {
   const possiblePaths = [
-    path.join(staticFilesPath, "manifest.json"),           // Try dist first
-    path.join(__dirname, "../public/manifest.json"),       // Try public folder
-    path.join(__dirname, "../../public/manifest.json"),    // Try one level up
-    path.join(__dirname, "../dist/manifest.json"),         // Try explicit dist path
+    path.join(publicPath, "manifest.json"),       // Try public folder first
+    path.join(distPath, "manifest.json"),         // Try dist folder
+    path.join(__dirname, "../public/manifest.json"), // Alternative public path
   ];
 
   let content = null;
@@ -206,34 +211,50 @@ app.get("/manifest.json", (_req, res) => {
     res.send(content);
   } else {
     console.error("❌ manifest.json not found in any of these paths:", possiblePaths);
-    console.error("Current __dirname:", __dirname);
-    console.error("NODE_ENV:", process.env.NODE_ENV);
     res.status(404).json({ error: "Manifest not found" });
   }
 });
 
-app.get("/OneSignalSDKWorker.js", (_req, res) => {
-  try {
-    const workerPath = path.join(staticFilesPath, "OneSignalSDKWorker.js");
-    const content = fs.readFileSync(workerPath, "utf-8");
-    res.setHeader("Content-Type", "application/javascript");
-    res.send(content);
-  } catch (error) {
-    console.error("Failed to serve OneSignalSDKWorker.js:", error);
-    res.status(404).send("Service worker not found");
+// Serve OneSignal service workers - try public first, then dist
+const serveServiceWorker = (filename: string, req: any, res: Response) => {
+  const possiblePaths = [
+    path.join(publicPath, filename),       // Try public folder first
+    path.join(distPath, filename),         // Try dist folder
+    path.join(__dirname, `../public/${filename}`), // Alternative public path
+  ];
+
+  let content = null;
+  let usedPath = null;
+
+  for (const workerPath of possiblePaths) {
+    try {
+      if (fs.existsSync(workerPath)) {
+        content = fs.readFileSync(workerPath, "utf-8");
+        usedPath = workerPath;
+        break;
+      }
+    } catch (err) {
+      // Continue to next path
+    }
   }
+
+  if (content) {
+    res.setHeader("Content-Type", "application/javascript");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    log(`✅ Serving ${filename} from: ${usedPath}`);
+    res.send(content);
+  } else {
+    console.error(`❌ ${filename} not found in any of these paths:`, possiblePaths);
+    res.status(404).send(`${filename} not found`);
+  }
+};
+
+app.get("/OneSignalSDKWorker.js", (req, res) => {
+  serveServiceWorker("OneSignalSDKWorker.js", req, res);
 });
 
-app.get("/OneSignalSDKUpdaterWorker.js", (_req, res) => {
-  try {
-    const workerPath = path.join(staticFilesPath, "OneSignalSDKUpdaterWorker.js");
-    const content = fs.readFileSync(workerPath, "utf-8");
-    res.setHeader("Content-Type", "application/javascript");
-    res.send(content);
-  } catch (error) {
-    console.error("Failed to serve OneSignalSDKUpdaterWorker.js:", error);
-    res.status(404).send("Service worker not found");
-  }
+app.get("/OneSignalSDKUpdaterWorker.js", (req, res) => {
+  serveServiceWorker("OneSignalSDKUpdaterWorker.js", req, res);
 });
 
 (async () => {

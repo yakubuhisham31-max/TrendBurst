@@ -31,11 +31,23 @@
             serviceWorkerParam: {
               scope: '/'
             },
-            serviceWorkerPath: 'OneSignalSDKWorker.js'
+            serviceWorkerPath: '/OneSignalSDKWorker.js',
+            serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js'
           });
           window.OneSignalInitialized = true;
           console.log("✅ OneSignal SDK initialized successfully");
           console.log("📱 Push notifications are enabled for this domain");
+          
+          // Request notification permission if available
+          try {
+            const permission = await OneSignal.Notifications.permission;
+            if (!permission) {
+              console.log("📢 Requesting notification permission...");
+              await OneSignal.Notifications.requestPermission();
+            }
+          } catch (permError) {
+            console.log("ℹ️  Notification permission not requested yet");
+          }
         } catch (error) {
           console.warn("⚠️ OneSignal SDK not available on this domain");
           console.warn("ℹ️  Push notifications work on production (trendx.social)");
