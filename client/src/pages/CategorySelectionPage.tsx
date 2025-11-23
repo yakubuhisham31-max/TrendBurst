@@ -50,7 +50,7 @@ export default function CategorySelectionPage() {
     },
     onSuccess: async () => {
       await checkAuth();
-      setLocation("/onboarding/role");
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({

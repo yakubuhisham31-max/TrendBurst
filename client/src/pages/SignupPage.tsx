@@ -33,7 +33,7 @@ export default function SignupPage() {
     },
     onSuccess: async () => {
       await checkAuth();
-      setLocation("/onboarding/categories");
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({
