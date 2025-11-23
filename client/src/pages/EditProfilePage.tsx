@@ -88,10 +88,16 @@ export default function EditProfilePage() {
         updateData.profilePicture = profilePictureUrl;
       }
       
-      const response = await apiRequest("PATCH", "/api/users/profile", updateData);
-      return response.json();
+      // Only send request if there's something to update
+      if (Object.keys(updateData).length > 0) {
+        const response = await apiRequest("PATCH", "/api/users/profile", updateData);
+        return response.json();
+      }
+      
+      // If nothing to update, return current user
+      return user;
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       // Clean up preview URL
       if (profilePreviewUrl) {
         URL.revokeObjectURL(profilePreviewUrl);
@@ -103,9 +109,14 @@ export default function EditProfilePage() {
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
-      setLocation("/profile");
+      
+      // Redirect after toast appears
+      setTimeout(() => {
+        setLocation("/profile");
+      }, 500);
     },
     onError: (error: Error) => {
+      console.error("Profile update error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update profile.",

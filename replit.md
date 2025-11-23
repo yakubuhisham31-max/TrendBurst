@@ -68,3 +68,21 @@ Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS v
 
 **Push Notifications:**
 *   OneSignal (v16 SDK)
+
+## Recent Changes (November 23, 2025)
+
+### Bug Fixes
+- **Fixed profile update error handling**: The backend was passing `undefined` values to Drizzle ORM, causing minified errors. Now filters out undefined fields before database update in PATCH /api/users/profile endpoint.
+- **Improved frontend mutation handling**: Enhanced EditProfilePage mutation to:
+  - Only send API request if there's actual data to update
+  - Added delay before redirect to ensure success toast displays
+  - Added console error logging for better debugging
+  - Handles case where user only updates profile picture without changing text fields
+
+### Profile Update Flow
+The profile update endpoint now:
+1. Extracts all potential update fields from request body
+2. Filters out undefined values to prevent database errors
+3. Only updates fields that have actual values defined
+4. Returns sanitized user object on success
+5. Provides proper error handling with helpful messages
