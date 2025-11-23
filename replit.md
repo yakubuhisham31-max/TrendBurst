@@ -180,3 +180,11 @@ To test push notifications on https://trendx.social:
   - `sendReplyNotification()` - 30/day rate limit
 - All notifications include exact emoji combinations for engagement
 - Rate limiting configured per notification type for optimal user experience
+
+**Notification Permission Prompt (Nov 23, 2024):**
+- Added NotificationPermissionPrompt component that displays on app load
+- Shows only once per session and only if permission is "default" (not yet answered)
+- Clean modal dialog with friendly explanation and clear call-to-action
+- Users can still access permission request anytime from notification bell
+- If previously denied, users can still retry from the notification bell
+- Improved UX with less intrusive permission request timing
