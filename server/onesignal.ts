@@ -21,14 +21,13 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       include_external_user_ids: [payload.userId],
       contents: { en: payload.content },
       headings: { en: payload.heading },
+      name: `notification_${Date.now()}`,
       data: payload.data || {},
-      // OneSignal v16 requires these for proper delivery
-      target_channel: "push",
-      isAndroid: true,
-      isIos: true,
+      // OneSignal v16 web push configuration
       isWebPush: true,
-      // Ensure web push is properly configured
-      web_push_topic: "web",
+      // Ensure the notification is properly delivered to browsers
+      chrome_web_icon: "https://cdn.onesignal.com/files/6582c5a0-fdb3-4f01-8f25-d3d82b922bdd/Trendz_Icon_Final.png",
+      adm_small_icon: "https://cdn.onesignal.com/files/6582c5a0-fdb3-4f01-8f25-d3d82b922bdd/Trendz_Icon_Final.png",
     };
 
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
