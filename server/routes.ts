@@ -1446,7 +1446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PATCH /api/users/profile - Update current user profile (protected)
   app.patch("/api/users/profile", isAuthenticated, async (req, res) => {
     try {
-      const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
+      const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role, notificationsEnabled } = req.body;
 
       // Only include fields that are actually defined (not undefined)
       const updateData: any = {};
@@ -1460,6 +1460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;
       if (categories !== undefined) updateData.categories = categories;
       if (role !== undefined) updateData.role = role;
+      if (notificationsEnabled !== undefined) updateData.notificationsEnabled = notificationsEnabled ? 1 : 0;
 
       const updatedUser = await storage.updateUser((req as any).session.userId, updateData);
 

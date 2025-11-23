@@ -86,3 +86,10 @@ The complete flow now works seamlessly:
 4. React Query automatically refetches latest data
 5. ProfilePage updates with new profile picture, bio, and social handles
 6. No manual refresh needed - changes appear instantly
+
+### Notification Settings Feature
+1. **Added notifications preference toggle**: Users can now enable/disable push notifications in EditProfilePage
+2. **Database schema updated**: Added `notifications_enabled` field (default: 1) to users table
+3. **Backend support**: PATCH /api/users/profile now accepts `notificationsEnabled` parameter to save user preference
+4. **Frontend UI**: New "Notifications" card in EditProfilePage with toggle switch, description, and Bell icon
+5. **User experience**: Toggle persists across sessions, users can adjust at any time in settings
