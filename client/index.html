@@ -19,9 +19,13 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalInitialized = false;
       
+      console.log("📢 OneSignal SDK loading...");
+      
       OneSignalDeferred.push(async function(OneSignal) {
         try {
-          await OneSignal.init({
+          console.log("🔄 OneSignal.init() starting...");
+          
+          const config = {
             appId: "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9",
             allowLocalhostAsSecureOrigin: true,
             autoResubscribe: true,
@@ -33,26 +37,48 @@
             },
             serviceWorkerPath: '/OneSignalSDKWorker.js',
             serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js'
-          });
+          };
+          
+          console.log("📋 OneSignal config:", config);
+          
+          const result = await OneSignal.init(config);
+          
+          console.log("🎉 OneSignal.init() completed", result);
           window.OneSignalInitialized = true;
           console.log("✅ OneSignal SDK initialized successfully");
           console.log("📱 Push notifications are enabled for this domain");
           
+          // Log service worker status
+          try {
+            const sw = await navigator.serviceWorker?.getRegistrations?.();
+            console.log("📡 Service workers registered:", sw?.length ?? 0);
+            sw?.forEach((reg, i) => {
+              console.log(`  ${i + 1}. Scope: ${reg.scope}`);
+              console.log(`     Active: ${reg.active ? 'Yes' : 'No'}`);
+            });
+          } catch (swError) {
+            console.log("ℹ️  Service worker check failed:", swError?.message);
+          }
+          
           // Request notification permission if available
           try {
             const permission = await OneSignal.Notifications.permission;
+            console.log("🔔 Current permission:", permission);
             if (!permission) {
               console.log("📢 Requesting notification permission...");
-              await OneSignal.Notifications.requestPermission();
+              const result = await OneSignal.Notifications.requestPermission();
+              console.log("📢 Permission result:", result);
             }
           } catch (permError) {
-            console.log("ℹ️  Notification permission not requested yet");
+            console.log("ℹ️  Notification permission check failed:", permError?.message);
           }
         } catch (error) {
+          console.error("❌ OneSignal SDK initialization failed");
+          console.error("Error:", error?.message);
+          console.error("Stack:", error?.stack);
           console.warn("⚠️ OneSignal SDK not available on this domain");
           console.warn("ℹ️  Push notifications work on production (trendx.social)");
           console.warn("ℹ️  Backend notification system is working - HTTP 200 responses confirmed");
-          console.warn("ℹ️  To enable on this dev domain, add it to OneSignal dashboard > Settings > Site URL");
           
           // Store error for debugging but don't block app
           window.OneSignalInitError = error;
