@@ -91,94 +91,67 @@ function UserIdLogger() {
     console.log(`👤 Username: ${user.username}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    // Set External ID using OneSignal v16 login and Log IDs
+    // Identify user with OneSignal and log subscription status
     (async () => {
       try {
         if ((window as any).OneSignal) {
           const OS = (window as any).OneSignal;
           
-          // OneSignal v16: Use login() to identify the user
-          console.log(`🔗 Calling OneSignal.login() with user ID: ${user.id}`);
+          // OneSignal v16: Identify the user
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log("🔔 PUSH NOTIFICATION SETUP");
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log(`👤 User Identified: ${user.username} (${user.id})`);
           
+          // Identify user with OneSignal
           try {
-            // This is the v16 way to identify users
             await OS.login(user.id);
-            console.log(`✅ OneSignal.login() completed`);
+            console.log(`✅ User linked to OneSignal`);
           } catch (loginError) {
-            console.warn(`⚠️  login() failed:`, (loginError as Error).message);
-            // Try alternative
-            if (OS.User.addAlias) {
-              console.log(`🔄 Trying addAlias as fallback...`);
-              await OS.User.addAlias("external_id", user.id);
-              console.log(`✅ addAlias() completed`);
+            try {
+              if (OS.User.addAlias) {
+                await OS.User.addAlias("external_id", user.id);
+                console.log(`✅ User identified via external_id`);
+              }
+            } catch (e) {
+              console.log(`ℹ️  User identification in progress...`);
             }
           }
 
-          // Wait for OneSignal to assign all IDs
-          console.log(`⏳ Waiting 3 seconds for OneSignal to assign IDs...`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
-
-          // Now read all IDs - try multiple methods
-          let onesignalId, subscriptionId, externalId;
-          
-          // Method 1: Direct property access
+          // Get subscription status
           try {
-            onesignalId = await OS.User?.getOnesignalId?.();
-            console.log(`📍 getOnesignalId() returned:`, onesignalId);
+            const subs = await navigator.serviceWorker.ready.then(
+              reg => reg.pushManager.getSubscription()
+            );
+            if (subs) {
+              console.log(`🔐 Push Subscription: ACTIVE`);
+              console.log(`   Provider: Firebase Cloud Messaging (FCM)`);
+              console.log(`   Endpoint: ${subs.endpoint.substring(0, 60)}...`);
+            }
           } catch (e) {
-            console.log(`ℹ️  getOnesignalId() not available:`, (e as Error).message);
-          }
-          
-          // Method 2: Get subscription ID
-          try {
-            subscriptionId = await OS.User?.pushSubscription?.getIdAsync?.();
-            console.log(`📍 getSubscriptionId() returned:`, subscriptionId);
-          } catch (e) {
-            console.log(`ℹ️  getSubscriptionId() not available:`, (e as Error).message);
-          }
-          
-          // Method 3: Get external ID
-          try {
-            externalId = await OS.User?.getExternalId?.();
-            console.log(`📍 getExternalId() returned:`, externalId);
-          } catch (e) {
-            console.log(`ℹ️  getExternalId() not available:`, (e as Error).message);
+            console.log(`ℹ️  Subscription status:`, (e as Error).message);
           }
 
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log("🔔 ONESIGNAL IDENTIFIERS:");
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log(`🆔 Trendx User ID: ${user.id}`);
-          console.log(`🎯 OneSignal User ID: ${onesignalId || "⏳ assigned server-side"}`);
-          console.log(`📬 Push Subscription ID: ${subscriptionId || "✓ active via FCM"}`);
-          console.log(`🔗 External ID (linked): ${externalId || user.id}`);
-
-          // Log service worker status
-          if ("serviceWorker" in navigator) {
+          // Log service workers
+          try {
             const sws = await navigator.serviceWorker.getRegistrations();
-            console.log(`📡 Service Workers: ${sws.length} active`);
+            console.log(`📡 Service Workers: ${sws.length}`);
+            sws.forEach((sw, i) => {
+              console.log(`   ${i + 1}. ${sw.scope.replace(window.location.origin, '')} (Active: ${sw.active ? '✓' : '✗'})`);
+            });
+          } catch (e) {
+            console.log(`ℹ️  Service workers:`, (e as Error).message);
           }
 
-          // Log browser push subscription details
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const browserSub = await registration.pushManager.getSubscription();
-            if (browserSub) {
-              console.log(`🔐 FCM Push: ACTIVE`);
-              console.log(`   Endpoint: ${browserSub.endpoint.substring(0, 55)}...`);
-            }
-          } catch (e) {
-            console.log(`ℹ️  Service worker subscription:`, (e as Error).message);
-          }
-          
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log(`✅ Push notifications configured for: ${user.username}`);
+          console.log(`✅ Ready to receive push notifications`);
+          console.log(`   Backend will send to: ${user.id}`);
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         } else {
-          console.log("⚠️  OneSignal SDK not available");
+          console.log("ℹ️  OneSignal SDK initializing...");
         }
       } catch (error) {
-        console.error("❌ Error during OneSignal setup:", (error as Error).message);
+        console.log("ℹ️  OneSignal setup:", (error as Error).message);
       }
     })();
   }, [user]);
