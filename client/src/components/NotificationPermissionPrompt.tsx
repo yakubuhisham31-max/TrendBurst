@@ -13,17 +13,22 @@ import {
 export default function NotificationPermissionPrompt() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [hasShown, setHasShown] = useState(false);
 
   useEffect(() => {
-    if (!user || hasShown) return;
+    if (!user) return;
 
-    // Only show prompt if notifications are not granted and not previously denied (permission is "default")
-    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+    // Check if we've already shown the prompt this session
+    const promptShownKey = `notif_prompt_shown_${user.id}`;
+    const hasShownThisSession = sessionStorage.getItem(promptShownKey);
+
+    // Only show prompt if:
+    // 1. We haven't shown it yet this session
+    // 2. Notifications are not granted and not previously denied (permission is "default")
+    if (!hasShownThisSession && typeof Notification !== "undefined" && Notification.permission === "default") {
       setOpen(true);
-      setHasShown(true);
+      sessionStorage.setItem(promptShownKey, "true");
     }
-  }, [user, hasShown]);
+  }, [user]);
 
   const handleAllow = async () => {
     try {
