@@ -91,9 +91,15 @@ function UserIdLogger() {
     console.log(`👤 Username: ${user.username}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    // Set up OneSignal user identification (subscription created via user action in notification bell)
+    // Set up OneSignal user identification after SDK is fully initialized
     (async () => {
       try {
+        // Wait for OneSignal SDK to be fully initialized
+        if ((window as any).OneSignalDeferred) {
+          const OneSignalDeferred = (window as any).OneSignalDeferred;
+          await OneSignalDeferred;
+        }
+
         if ((window as any).OneSignal) {
           const OS = (window as any).OneSignal;
           
@@ -101,13 +107,28 @@ function UserIdLogger() {
           console.log("🔔 ONESIGNAL USER IDENTIFICATION");
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           console.log(`👤 User: ${user.username} (${user.id})`);
+          console.log(`⏳ Waiting for OneSignal SDK initialization...`);
           
-          // Identify user with OneSignal (link Trendx user ID to OneSignal)
-          try {
-            await OS.login(user.id);
-            console.log(`✅ User linked to OneSignal with external_id: ${user.id}`);
-          } catch (loginError) {
-            console.log(`ℹ️  OneSignal.login() status:`, (loginError as Error).message);
+          // Wait for OneSignal to be fully initialized (with retry)
+          let retries = 0;
+          const maxRetries = 10;
+          
+          while (retries < maxRetries) {
+            try {
+              // Try to identify user with OneSignal
+              await OS.login(user.id);
+              console.log(`✅ User linked to OneSignal with external_id: ${user.id}`);
+              break;
+            } catch (loginError) {
+              retries++;
+              if (retries >= maxRetries) {
+                console.log(`ℹ️  Could not link user after ${maxRetries} attempts`);
+                console.log(`   Error:`, (loginError as Error).message);
+              } else {
+                // Wait 500ms before retrying
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+            }
           }
 
           // Log service workers
@@ -126,7 +147,7 @@ function UserIdLogger() {
           console.log(`   Backend sends to external_id: ${user.id}`);
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         } else {
-          console.log("ℹ️  OneSignal SDK initializing...");
+          console.log("ℹ️  OneSignal SDK not available on this domain");
         }
       } catch (error) {
         console.log("ℹ️  OneSignal setup:", (error as Error).message);
