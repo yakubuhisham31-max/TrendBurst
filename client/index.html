@@ -21,6 +21,21 @@
       
       console.log("📢 OneSignal SDK loading...");
       
+      // Test basic service worker registration first
+      if ('serviceWorker' in navigator) {
+        console.log("✅ Browser supports Service Workers");
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          console.log("📊 Existing service worker registrations before OneSignal init:", regs.length);
+          regs.forEach((reg, i) => {
+            console.log(`  ${i + 1}. ${reg.scope}`);
+          });
+        }).catch(err => {
+          console.error("❌ Error checking service worker registrations:", err);
+        });
+      } else {
+        console.warn("⚠️  Browser does NOT support Service Workers!");
+      }
+      
       OneSignalDeferred.push(async function(OneSignal) {
         try {
           console.log("🔄 OneSignal.init() starting...");
