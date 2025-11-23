@@ -166,13 +166,14 @@ export default function EditProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updateData: Partial<User> & { profileFile?: File } = {
-      bio: formData.bio,
-      instagramUrl: formData.instagram,
-      tiktokUrl: formData.tiktok,
-      twitterUrl: formData.twitter,
-      youtubeUrl: formData.youtube,
-    };
+    const updateData: any = {};
+    
+    // Only include fields that have been changed or are not empty
+    if (formData.bio !== undefined) updateData.bio = formData.bio;
+    if (formData.instagram) updateData.instagramUrl = formData.instagram;
+    if (formData.tiktok) updateData.tiktokUrl = formData.tiktok;
+    if (formData.twitter) updateData.twitterUrl = formData.twitter;
+    if (formData.youtube) updateData.youtubeUrl = formData.youtube;
     
     // Include new profile picture file if selected
     if (selectedProfileFile) {
