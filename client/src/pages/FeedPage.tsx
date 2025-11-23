@@ -84,18 +84,56 @@ export default function FeedPage() {
     });
   }, [fullscreenPostId]);
 
-  // Vote increment mutation
+  // Vote increment mutation with optimistic updates
   const voteUpMutation = useMutation({
     mutationFn: async (postId: string) => {
       if (!trendId) throw new Error("Trend ID is required");
       const response = await apiRequest("POST", "/api/votes/increment", { postId, trendId });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+    onMutate: async (postId: string) => {
+      // Cancel any outgoing refetches so they don't overwrite optimistic update
+      await queryClient.cancelQueries({ queryKey: ["/api/posts/trend", trendId] });
+      await queryClient.cancelQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+
+      // Snapshot the previous value
+      const previousPosts = queryClient.getQueryData<PostWithUser[]>(["/api/posts/trend", trendId]);
+      const previousVoteCount = queryClient.getQueryData<{ count: number }>(["/api/votes/trend", trendId, "count"]);
+
+      // Optimistically update posts
+      if (previousPosts) {
+        queryClient.setQueryData<PostWithUser[]>(
+          ["/api/posts/trend", trendId],
+          previousPosts.map(post =>
+            post.id === postId
+              ? { ...post, votes: (post.votes || 0) + 1, userVoted: true }
+              : post
+          )
+        );
+      }
+
+      // Optimistically update vote count
+      if (previousVoteCount) {
+        queryClient.setQueryData<{ count: number }>(
+          ["/api/votes/trend", trendId, "count"],
+          { count: previousVoteCount.count + 1 }
+        );
+      }
+
+      return { previousPosts, previousVoteCount };
     },
-    onError: (error: Error) => {
+    onSuccess: () => {
+      // Keep the optimistic update, no need to refetch
+    },
+    onError: (error: Error, variables, context) => {
+      // Rollback on error
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["/api/posts/trend", trendId], context.previousPosts);
+      }
+      if (context?.previousVoteCount) {
+        queryClient.setQueryData(["/api/votes/trend", trendId, "count"], context.previousVoteCount);
+      }
+      
       toast({
         title: "Vote failed",
         description: error.message,
@@ -104,16 +142,54 @@ export default function FeedPage() {
     },
   });
 
-  // Vote decrement mutation
+  // Vote decrement mutation with optimistic updates
   const voteDownMutation = useMutation({
     mutationFn: async (postId: string) => {
       await apiRequest("POST", "/api/votes/decrement", { postId });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+    onMutate: async (postId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/posts/trend", trendId] });
+      await queryClient.cancelQueries({ queryKey: ["/api/votes/trend", trendId, "count"] });
+
+      // Snapshot the previous value
+      const previousPosts = queryClient.getQueryData<PostWithUser[]>(["/api/posts/trend", trendId]);
+      const previousVoteCount = queryClient.getQueryData<{ count: number }>(["/api/votes/trend", trendId, "count"]);
+
+      // Optimistically update posts
+      if (previousPosts) {
+        queryClient.setQueryData<PostWithUser[]>(
+          ["/api/posts/trend", trendId],
+          previousPosts.map(post =>
+            post.id === postId
+              ? { ...post, votes: Math.max((post.votes || 0) - 1, 0), userVoted: false }
+              : post
+          )
+        );
+      }
+
+      // Optimistically update vote count
+      if (previousVoteCount) {
+        queryClient.setQueryData<{ count: number }>(
+          ["/api/votes/trend", trendId, "count"],
+          { count: Math.max(previousVoteCount.count - 1, 0) }
+        );
+      }
+
+      return { previousPosts, previousVoteCount };
     },
-    onError: (error: Error) => {
+    onSuccess: () => {
+      // Keep the optimistic update, no need to refetch
+    },
+    onError: (error: Error, variables, context) => {
+      // Rollback on error
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["/api/posts/trend", trendId], context.previousPosts);
+      }
+      if (context?.previousVoteCount) {
+        queryClient.setQueryData(["/api/votes/trend", trendId, "count"], context.previousVoteCount);
+      }
+
       toast({
         title: "Failed to remove vote",
         description: error.message,
