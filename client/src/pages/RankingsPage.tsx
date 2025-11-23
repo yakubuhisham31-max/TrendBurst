@@ -110,16 +110,15 @@ export default function RankingsPage() {
   const maxVotes = getMaxVotes();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
           <Button
             size="icon"
             variant="ghost"
             onClick={() => window.history.back()}
             data-testid="button-back"
-            className="text-gray-600 hover:text-gray-900"
           >
             <ChevronLeft className="w-6 h-6" />
           </Button>
@@ -136,7 +135,7 @@ export default function RankingsPage() {
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
         {/* Your Entry */}
         {currentUserPost && (
-          <div className="rank-item-card rounded-lg p-4 border-2 border-primary/50 bg-gray-50">
+          <div className="rank-item-card rounded-lg p-4 border-2 border-primary/50 bg-card">
             <div className="flex items-start gap-4">
               <div className="relative">
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-primary/60 to-primary/40 flex items-center justify-center">
@@ -175,8 +174,8 @@ export default function RankingsPage() {
               )}
 
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900">{currentUserPost.post.user?.username}</p>
-                <p className="text-sm text-gray-600 line-clamp-1">{currentUserPost.post.caption}</p>
+                <p className="font-bold text-foreground">{currentUserPost.post.user?.username}</p>
+                <p className="text-sm text-muted-foreground line-clamp-1">{currentUserPost.post.caption}</p>
                 <div className="mt-3 space-y-2">
                   <div className="vote-progress-bar">
                     <div
@@ -259,7 +258,7 @@ export default function RankingsPage() {
                   </div>
 
                   {/* Username */}
-                  <p className={`${isFirst ? "text-base font-bold" : "text-sm font-semibold"} text-gray-900 text-center line-clamp-1 max-w-[160px]`}>
+                  <p className={`${isFirst ? "text-base font-bold" : "text-sm font-semibold"} text-foreground text-center line-clamp-1 max-w-[160px]`}>
                     {entry.post.user?.username}
                   </p>
 
@@ -270,9 +269,9 @@ export default function RankingsPage() {
 
                   {/* Votes */}
                   <p className={`${isFirst ? "text-sm font-bold" : "text-xs font-bold"} ${
-                    badge === "gold" ? "text-yellow-600" :
-                    badge === "silver" ? "text-gray-600" :
-                    "text-orange-600"
+                    badge === "gold" ? "text-yellow-600 dark:text-yellow-400" :
+                    badge === "silver" ? "text-gray-600 dark:text-gray-400" :
+                    "text-orange-600 dark:text-orange-400"
                   }`}>
                     {entry.post.votes || 0} votes
                   </p>
@@ -296,10 +295,10 @@ export default function RankingsPage() {
         {restOfRankings.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider">More Rankings</h2>
+              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">More Rankings</h2>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">Percentage shows votes relative to the #1 ranked post</p>
@@ -316,9 +315,9 @@ export default function RankingsPage() {
                 data-testid={`ranking-item-${entry.rank}`}
               >
                 {/* Rank Number */}
-                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex flex-col items-center justify-center group-hover:bg-gray-200 transition-colors">
-                  <span className="text-lg font-bold text-gray-900">{entry.rank}</span>
-                  <span className="text-xs text-gray-600">{getRankBadge(entry.rank)}</span>
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-card hover:bg-accent/50 flex flex-col items-center justify-center transition-colors">
+                  <span className="text-lg font-bold text-foreground">{entry.rank}</span>
+                  <span className="text-xs text-muted-foreground">{getRankBadge(entry.rank)}</span>
                 </div>
 
                 {/* Media */}
@@ -360,13 +359,13 @@ export default function RankingsPage() {
                       <AvatarImage src={entry.post.user?.profilePicture || undefined} alt={entry.post.user?.username} />
                       <AvatarFallback className="text-xs">{entry.post.user?.username.slice(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <p className="text-sm font-bold text-gray-900 truncate">{entry.post.user?.username}</p>
+                    <p className="text-sm font-bold text-foreground truncate">{entry.post.user?.username}</p>
                     {entry.post.user?.id === rankingsData?.trendHostId && (
                       <Star className="w-3 h-3 fill-yellow-500 text-yellow-500 flex-shrink-0" data-testid="icon-host" />
                     )}
                   </div>
 
-                  <p className="text-xs text-gray-600 line-clamp-1 mb-2">
+                  <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
                     {entry.post.caption || "No caption"}
                   </p>
 
