@@ -169,10 +169,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// OneSignal service worker routes (MUST be before serveStatic - registered synchronously)
+// OneSignal service worker routes and manifest (MUST be before serveStatic - registered synchronously)
 const distPath = process.env.NODE_ENV === "production" 
   ? path.resolve(__dirname)
   : path.resolve(__dirname, "../dist");
+
+app.get("/manifest.json", (_req, res) => {
+  try {
+    const manifestPath = path.join(distPath, "manifest.json");
+    const content = fs.readFileSync(manifestPath, "utf-8");
+    res.setHeader("Content-Type", "application/json");
+    res.send(content);
+  } catch (error) {
+    console.error("Failed to serve manifest.json:", error);
+    res.status(404).send("Manifest not found");
+  }
+});
 
 app.get("/OneSignalSDKWorker.js", (_req, res) => {
   try {
