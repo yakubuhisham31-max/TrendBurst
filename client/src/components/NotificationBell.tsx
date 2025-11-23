@@ -75,27 +75,31 @@ export default function NotificationBell() {
         
         if (permissionGranted) {
           console.log("✅ Push notifications enabled!");
+          console.log("⏳ Waiting for OneSignal to create subscription...");
+          
+          // Wait for subscription to be created (OneSignal v16 async process)
+          // The subscription ID is assigned after the permission is granted and service worker is registered
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
           // Capture all necessary IDs for tracking
           try {
-            // Get OneSignal User ID
-            const oneSignalUserId = OS.User.PushSubscription.id;
-            console.log(`   🆔 OneSignal User ID: ${oneSignalUserId}`);
+            // Get the push subscription ID (this is the unique subscription identifier)
+            const subscriptionId = OS.User.PushSubscription.id;
+            console.log(`   📱 Push Subscription ID: ${subscriptionId || 'pending assignment'}`);
             
-            // Get Push Subscription ID
-            const pushSubscriptionId = OS.User.PushSubscription.id;
-            console.log(`   📱 Push Subscription ID: ${pushSubscriptionId}`);
+            // Get OneSignal's internal user ID
+            const oneSignalUserId = OS.User.onesignal_id;
+            console.log(`   🆔 OneSignal User ID: ${oneSignalUserId || 'pending'}`);
             
-            // Get the OneSignal user's onesignal_id
-            const oneSignalUserInfo = OS.User;
-            const onesignalUserId = oneSignalUserInfo?.onesignal_id;
-            console.log(`   🔑 OneSignal User Info: ${onesignalUserId}`);
+            // Get push token if available
+            const pushToken = OS.User.PushSubscription.token;
+            console.log(`   🔑 Push Token: ${pushToken ? '✓ present' : '✗ not available'}`);
             
             // Save subscription IDs to backend
             const response = await apiRequest("POST", "/api/push/subscribe", {
-              subscriptionId: pushSubscriptionId,
-              oneSignalUserId: onesignalUserId,
-              pushToken: pushSubscriptionId,
+              subscriptionId: subscriptionId || 'pending',
+              oneSignalUserId: oneSignalUserId,
+              pushToken: pushToken,
             });
             
             const data = await response.json();
