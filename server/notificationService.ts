@@ -32,7 +32,7 @@ export async function sendWelcomeNotification(userId: string) {
 }
 
 export async function sendHostNewPostNotification(hostId: string, trendName: string, postId: string, trendId: string) {
-  const canSend = await checkRateLimit(hostId, "host_new_post", 50); // No daily limit for host posts
+  const canSend = await checkRateLimit(hostId, "host_new_post", 8); // 8 per day max for host posts
   if (!canSend) return;
 
   await sendPushNotification({
@@ -46,7 +46,7 @@ export async function sendHostNewPostNotification(hostId: string, trendName: str
 }
 
 export async function sendNewPostNotification(userId: string, trendName: string, postId: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "new_post", 50);
+  const canSend = await checkRateLimit(userId, "new_post", 8);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -124,7 +124,7 @@ export async function sendHostTrendEndingSoonNotification(hostId: string, trendN
 }
 
 export async function sendNonWinnerNotification(userId: string, username: string, trendName: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "non_winner", 50);
+  const canSend = await checkRateLimit(userId, "non_winner", 15);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -138,7 +138,7 @@ export async function sendNonWinnerNotification(userId: string, username: string
 }
 
 export async function sendWinnerNotification(userId: string, trendName: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "winner", 50);
+  const canSend = await checkRateLimit(userId, "winner", 15);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -180,7 +180,7 @@ export async function sendTrendBlowingUpNotification(userId: string, trendName: 
 }
 
 export async function sendPostCreatedNotification(userId: string, trendName: string, trendId: string, postId: string) {
-  const canSend = await checkRateLimit(userId, "post_created", 50);
+  const canSend = await checkRateLimit(userId, "post_created", 10);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -194,7 +194,7 @@ export async function sendPostCreatedNotification(userId: string, trendName: str
 }
 
 export async function sendTrendCreatedNotification(userId: string, trendName: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "trend_created", 50);
+  const canSend = await checkRateLimit(userId, "trend_created", 10);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -208,7 +208,7 @@ export async function sendTrendCreatedNotification(userId: string, trendName: st
 }
 
 export async function sendNewFollowerNotification(userId: string, followerUsername: string, followerId: string) {
-  const canSend = await checkRateLimit(userId, "new_follower", 50);
+  const canSend = await checkRateLimit(userId, "new_follower", 10);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -222,7 +222,7 @@ export async function sendNewFollowerNotification(userId: string, followerUserna
 }
 
 export async function sendFollowedUserPostedNotification(userId: string, actorUsername: string, trendName: string, postId: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "followed_user_posted", 30);
+  const canSend = await checkRateLimit(userId, "followed_user_posted", 10);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -250,7 +250,7 @@ export async function sendInactiveUserWakeUpNotification(userId: string, usernam
 }
 
 export async function sendMentionNotification(userId: string, actorUsername: string, trendName: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "mention", 20);
+  const canSend = await checkRateLimit(userId, "mention", 10);
   if (!canSend) return;
 
   await sendPushNotification({
@@ -264,7 +264,7 @@ export async function sendMentionNotification(userId: string, actorUsername: str
 }
 
 export async function sendReplyNotification(userId: string, actorUsername: string, trendName: string, trendId: string) {
-  const canSend = await checkRateLimit(userId, "reply", 30);
+  const canSend = await checkRateLimit(userId, "reply", 10);
   if (!canSend) return;
 
   await sendPushNotification({
