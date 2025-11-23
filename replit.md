@@ -71,18 +71,18 @@ Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS v
 
 ## Recent Changes (November 23, 2025)
 
-### Bug Fixes
-- **Fixed profile update error handling**: The backend was passing `undefined` values to Drizzle ORM, causing minified errors. Now filters out undefined fields before database update in PATCH /api/users/profile endpoint.
-- **Improved frontend mutation handling**: Enhanced EditProfilePage mutation to:
-  - Only send API request if there's actual data to update
-  - Added delay before redirect to ensure success toast displays
-  - Added console error logging for better debugging
-  - Handles case where user only updates profile picture without changing text fields
+### Bug Fixes - Profile Update Issues
+1. **Fixed backend undefined values error**: PATCH /api/users/profile now filters out undefined fields before Drizzle ORM, preventing "n is not a function" minified error
+2. **Fixed frontend cache invalidation**: Now properly invalidates BOTH cache keys:
+   - `/api/auth/user` (for useAuth hook)
+   - `/api/users/:username` (for ProfilePage display)
+   - This ensures profile changes (pic, bio, social handles) appear immediately without refresh
 
 ### Profile Update Flow
-The profile update endpoint now:
-1. Extracts all potential update fields from request body
-2. Filters out undefined values to prevent database errors
-3. Only updates fields that have actual values defined
-4. Returns sanitized user object on success
-5. Provides proper error handling with helpful messages
+The complete flow now works seamlessly:
+1. User saves profile changes on EditProfilePage
+2. Backend validates and saves to database (200 OK)
+3. Frontend invalidates both user caches
+4. React Query automatically refetches latest data
+5. ProfilePage updates with new profile picture, bio, and social handles
+6. No manual refresh needed - changes appear instantly

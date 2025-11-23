@@ -106,7 +106,11 @@ export default function EditProfilePage() {
       setSelectedProfileFile(null);
       
       // Invalidate user cache to fetch latest profile data
+      // Invalidate both /api/auth/user and /api/users/:username caches
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      if (user?.username) {
+        queryClient.invalidateQueries({ queryKey: ["/api/users", user.username] });
+      }
       
       toast({
         title: "Profile updated",
