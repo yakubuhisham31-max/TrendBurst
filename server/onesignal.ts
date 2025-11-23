@@ -19,7 +19,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     // Determine icon URLs based on environment
     const isProduction = process.env.NODE_ENV === 'production';
     const domain = isProduction ? 'https://trendx.social' : 'https://trendx.social';
-    const logoUrl = `${domain}/assets/icon.png`;
+    const logoUrl = `${domain}/favicon.png`;
 
     const requestBody = {
       app_id: process.env.ONESIGNAL_APP_ID,
