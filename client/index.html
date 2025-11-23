@@ -24,10 +24,17 @@
       OneSignalDeferred.push(async function(OneSignal) {
         try {
           console.log("🔄 OneSignal.init() starting...");
+          console.log("📍 Current domain:", window.location.origin);
+          console.log("🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9");
+          
+          // Determine if we're on production domain
+          const isProduction = window.location.hostname === 'trendx.social';
+          console.log("🔐 Is production domain (trendx.social)?", isProduction);
           
           const config = {
             appId: "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9",
-            allowLocalhostAsSecureOrigin: true,
+            // Only allow localhost on dev, not on production
+            allowLocalhostAsSecureOrigin: !isProduction,
             autoResubscribe: true,
             notifyButton: {
               enable: false
@@ -39,26 +46,59 @@
             serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js'
           };
           
-          console.log("📋 OneSignal config:", config);
+          console.log("📋 OneSignal config:", {
+            ...config,
+            allowLocalhostAsSecureOrigin: `${config.allowLocalhostAsSecureOrigin} (production: ${isProduction})`
+          });
+          
+          // Check if site is HTTPS
+          if (window.location.protocol !== 'https:') {
+            console.warn("⚠️  WARNING: Site is not HTTPS! OneSignal requires HTTPS for service workers.");
+          } else {
+            console.log("✅ Site is HTTPS - OneSignal can register service workers");
+          }
           
           const result = await OneSignal.init(config);
           
-          console.log("🎉 OneSignal.init() completed", result);
+          console.log("🎉 OneSignal.init() completed");
+          console.log("Init result:", result);
           window.OneSignalInitialized = true;
           console.log("✅ OneSignal SDK initialized successfully");
           console.log("📱 Push notifications are enabled for this domain");
           
-          // Log service worker status
-          try {
-            const sw = await navigator.serviceWorker?.getRegistrations?.();
-            console.log("📡 Service workers registered:", sw?.length ?? 0);
-            sw?.forEach((reg, i) => {
-              console.log(`  ${i + 1}. Scope: ${reg.scope}`);
-              console.log(`     Active: ${reg.active ? 'Yes' : 'No'}`);
-            });
-          } catch (swError) {
-            console.log("ℹ️  Service worker check failed:", swError?.message);
+          // Check if OneSignal is ready
+          if (OneSignal.User) {
+            console.log("👤 OneSignal.User available");
+            try {
+              const externalId = await OneSignal.User.getExternalId?.();
+              console.log("👤 External ID:", externalId);
+            } catch (e) {
+              console.log("ℹ️  Could not get external ID:", e?.message);
+            }
           }
+          
+          // Log service worker status AFTER a small delay
+          setTimeout(async () => {
+            try {
+              const sw = await navigator.serviceWorker?.getRegistrations?.();
+              console.log("📡 Service workers registered:", sw?.length ?? 0);
+              if (sw?.length === 0) {
+                console.warn("⚠️  NO SERVICE WORKERS REGISTERED!");
+                console.warn("Possible causes:");
+                console.warn("1. OneSignal Site URL in dashboard doesn't match current domain");
+                console.warn("2. OneSignal app hasn't verified this domain");
+                console.warn("3. Browser doesn't support service workers");
+                console.warn("Current domain:", window.location.origin);
+                console.warn("Expected in dashboard: https://trendx.social");
+              }
+              sw?.forEach((reg, i) => {
+                console.log(`  ${i + 1}. Scope: ${reg.scope}`);
+                console.log(`     Active: ${reg.active ? 'Yes' : 'No'}`);
+              });
+            } catch (swError) {
+              console.log("ℹ️  Service worker check failed:", swError?.message);
+            }
+          }, 1000);
           
           // Request notification permission if available
           try {
