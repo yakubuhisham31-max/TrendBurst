@@ -42,27 +42,17 @@
           console.log("📍 Current domain:", window.location.origin);
           console.log("🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9");
           
-          // Determine if we're on production domain
-          const isProduction = window.location.hostname === 'trendx.social';
-          console.log("🔐 Is production domain (trendx.social)?", isProduction);
-          
           const config = {
             appId: "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9",
-            autoResubscribe: true,
+            safari_web_id: "web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24",
+            serviceWorkerPath: '/OneSignalSDKWorker.js',
+            serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
             notifyButton: {
               enable: false
-            },
-            serviceWorkerParam: {
-              scope: '/'
-            },
-            serviceWorkerPath: '/OneSignalSDKWorker.js',
-            serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js'
+            }
           };
           
-          console.log("📋 OneSignal config:", {
-            ...config,
-            allowLocalhostAsSecureOrigin: `${config.allowLocalhostAsSecureOrigin} (production: ${isProduction})`
-          });
+          console.log("📋 OneSignal config:", config);
           
           // Check if site is HTTPS
           if (window.location.protocol !== 'https:') {
