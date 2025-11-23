@@ -141,6 +141,17 @@
           } catch (permError) {
             console.log("ℹ️  Notification permission check failed:", permError?.message);
           }
+          
+          // Check subscription status
+          try {
+            const subscription = await OneSignal.User.pushSubscription?.getIdAsync?.();
+            console.log("📬 User subscription ID:", subscription);
+            
+            const onesignalId = await OneSignal.User.getOnesignalId?.();
+            console.log("🆔 OneSignal User ID:", onesignalId);
+          } catch (subError) {
+            console.log("ℹ️  Subscription status check failed:", subError?.message);
+          }
         } catch (error) {
           console.error("❌ OneSignal SDK initialization failed");
           console.error("Error:", error?.message);
