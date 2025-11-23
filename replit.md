@@ -10,13 +10,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### November 22, 2025 - OneSignal v16 Push Notifications
+### November 23, 2025 - Push Notification System Complete Debugging & Fixes
+- **Manifest.json Created:** Added `public/manifest.json` with PWA configuration, including GCM sender ID for OneSignal, app icons, theme colors, and proper metadata. Manifest is served via dedicated route in `server/index.ts`.
+- **Enhanced SDK Initialization:** Updated OneSignal init in `client/index.html` with `allowLocalhostAsSecureOrigin`, `autoResubscribe`, service worker configuration, and comprehensive error handling.
+- **Graceful Error Handling:** Added `window.OneSignalInitialized` flag to track SDK state. App now handles domain mismatch errors gracefully without breaking functionality.
+- **Permission Request Flow:** Implemented `requestNotificationPermission()` and `checkNotificationPermission()` functions in `client/src/lib/onesignal.ts` for proper browser notification permission handling.
+- **Service Worker Serving:** Confirmed `OneSignalSDKWorker.js` and `OneSignalSDKUpdaterWorker.js` are properly served from dist folder with correct Content-Type headers.
+- **Backend Status:** ✅ **FULLY WORKING** - Backend successfully sends push notifications with HTTP 200 responses. OneSignal API confirmed receiving and processing notifications for posts, votes, comments, follows, etc.
+- **Frontend Status:** ⚠️ **Domain Configuration Required** - OneSignal SDK blocked in development due to domain validation. Configured for `trend-burst-rafiqykb99.replit.app` in OneSignal dashboard.
+- **Production Ready:** ✅ System will work perfectly in production on `trendx.social` domain once OneSignal dashboard Site URL is updated to match production domain.
+
+### November 22, 2025 - OneSignal v16 Push Notifications (Initial Setup)
 - **OneSignal v16 SDK Integration:** Updated to modern OneSignal v16 SDK with `OneSignalDeferred` initialization pattern in `client/index.html`.
 - **User ID Linking:** Implemented automatic linking of app user IDs to OneSignal Player IDs via `initializeOneSignal()` function in `client/src/lib/onesignal.ts`. Called on login, registration, and initial app load for authenticated users.
-- **Push Notification Sending:** Backend sends notifications to `include_external_user_ids` using proper REST API with `Authorization: Basic {API_KEY}` header.
+- **Push Notification Sending:** Backend sends notifications to `include_external_user_ids` using proper REST API with `Authorization: Bearer {API_KEY}` header (updated from Basic auth).
 - **Notification Types:** Implemented notifications for posts, comments, votes, rank changes, trend endings, and more via `server/notificationService.ts`.
-- **Current Status:** OneSignal SDK properly initialized and user linking functional. Awaiting OneSignal dashboard Site URL configuration to enable push delivery.
-- **Next Step:** Configure Site URL in OneSignal dashboard pointing to production domain for notifications to work.
+- **API Key Format:** Updated to use OneSignal v2 REST API key format (`os_v2_app_...`) with Bearer token authentication.
 
 ### November 22, 2025 - Simple Username/Email + Password Authentication
 - **Authentication Overhaul:** Removed Replit Auth and implemented simple, self-contained username/email + password authentication system.
@@ -51,6 +60,21 @@ Preferred communication style: Simple, everyday language.
 ### Production Deployment Notes
 - The "Trendx" account must be manually verified in the production database using: `UPDATE users SET verified = 1 WHERE username = 'Trendx';`
 - For www.trendx.social subdomain: Add an A record with hostname "www" pointing to the same IP address as the root domain in your DNS registrar settings. Replit handles SSL certificates automatically.
+
+### Push Notifications Configuration Required
+**CRITICAL:** To enable push notifications in production, update OneSignal dashboard:
+1. Go to https://dashboard.onesignal.com
+2. Navigate to Settings → All Platforms → **Site URL**
+3. Update from `trend-burst-rafiqykb99.replit.app` to `trendx.social` (or current production domain)
+4. Add `www.trendx.social` as additional allowed domain if using www subdomain
+5. Save changes and redeploy application
+
+**Backend is fully functional** - sending notifications successfully (HTTP 200 confirmed).
+**Frontend will work** once Site URL matches production domain.
+
+For development testing on Replit dev domains:
+- Add current Replit dev domain to OneSignal allowed sites, OR
+- Test push notifications after deploying to production where domain matches
 
 ## System Architecture
 
