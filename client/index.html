@@ -42,6 +42,14 @@
           console.log("📍 Current domain:", window.location.origin);
           console.log("🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9");
           
+          // Verify service worker files exist before init
+          try {
+            const swResponse = await fetch('/OneSignalSDKWorker.js');
+            console.log("📡 OneSignalSDKWorker.js check:", swResponse.status, swResponse.ok ? "✓" : "✗");
+          } catch (e) {
+            console.error("❌ Failed to fetch OneSignalSDKWorker.js:", e);
+          }
+          
           const config = {
             appId: "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9",
             safari_web_id: "web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24",
@@ -63,9 +71,10 @@
             console.log("✅ Site is HTTPS - OneSignal can register service workers");
           }
           
+          console.log("📢 Calling OneSignal.init() with config...");
           const result = await OneSignal.init(config);
           
-          console.log("🎉 OneSignal.init() completed");
+          console.log("🎉 OneSignal.init() completed successfully!");
           console.log("Init result:", result);
           window.OneSignalInitialized = true;
           console.log("✅ OneSignal SDK initialized successfully");
@@ -82,28 +91,33 @@
             }
           }
           
-          // Log service worker status AFTER a small delay
-          setTimeout(async () => {
-            try {
-              const sw = await navigator.serviceWorker?.getRegistrations?.();
-              console.log("📡 Service workers registered:", sw?.length ?? 0);
-              if (sw?.length === 0) {
-                console.warn("⚠️  NO SERVICE WORKERS REGISTERED!");
-                console.warn("Possible causes:");
-                console.warn("1. OneSignal Site URL in dashboard doesn't match current domain");
-                console.warn("2. OneSignal app hasn't verified this domain");
-                console.warn("3. Browser doesn't support service workers");
-                console.warn("Current domain:", window.location.origin);
-                console.warn("Expected in dashboard: https://trendx.social");
-              }
-              sw?.forEach((reg, i) => {
-                console.log(`  ${i + 1}. Scope: ${reg.scope}`);
-                console.log(`     Active: ${reg.active ? 'Yes' : 'No'}`);
-              });
-            } catch (swError) {
-              console.log("ℹ️  Service worker check failed:", swError?.message);
-            }
-          }, 1000);
+          // Log service worker status AFTER delays
+          const checkServiceWorkers = async (delayMs, label) => {
+            return new Promise(resolve => {
+              setTimeout(async () => {
+                try {
+                  const sw = await navigator.serviceWorker?.getRegistrations?.();
+                  console.log(`📡 [${label}] Service workers registered: ${sw?.length ?? 0}`);
+                  if (sw?.length === 0) {
+                    console.warn(`⚠️  [${label}] NO SERVICE WORKERS REGISTERED!`);
+                  }
+                  sw?.forEach((reg, i) => {
+                    console.log(`  [${label}] ${i + 1}. Scope: ${reg.scope}`);
+                    console.log(`  [${label}]    Active: ${reg.active ? 'Yes' : 'No'}`);
+                  });
+                  resolve(sw?.length ?? 0);
+                } catch (swError) {
+                  console.error(`❌ [${label}] Service worker check failed:`, swError?.message);
+                  resolve(0);
+                }
+              }, delayMs);
+            });
+          };
+          
+          // Check at multiple intervals
+          await checkServiceWorkers(500, "500ms");
+          await checkServiceWorkers(2000, "2s");
+          await checkServiceWorkers(5000, "5s");
           
           // Request notification permission if available
           try {
