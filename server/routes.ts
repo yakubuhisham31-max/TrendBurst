@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/register", async (req: any, res) => {
     try {
-      const { username, email, password } = req.body;
+      const { username, email, password, fullName, profilePicture } = req.body;
 
       if (!username || !email || !password) {
         return res.status(400).json({ message: "Username, email, and password required" });
@@ -94,6 +94,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username,
         email,
         password: hashedPassword,
+        fullName: fullName || undefined,
+        profilePicture: profilePicture || undefined,
       });
 
       // Set session
