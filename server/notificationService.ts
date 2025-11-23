@@ -221,6 +221,62 @@ export async function sendNewFollowerNotification(userId: string, followerUserna
   await recordNotificationSent(userId, "new_follower");
 }
 
+export async function sendFollowedUserPostedNotification(userId: string, actorUsername: string, trendName: string, postId: string, trendId: string) {
+  const canSend = await checkRateLimit(userId, "followed_user_posted", 30);
+  if (!canSend) return;
+
+  await sendPushNotification({
+    userId,
+    heading: "📸✨ Someone You Follow Just Posted!",
+    content: `${actorUsername} just dropped a new post in ${trendName} 👀🔥\nSlide in before they start farming all the clout.`,
+    data: { type: "followed_user_posted", postId, trendId },
+  });
+
+  await recordNotificationSent(userId, "followed_user_posted");
+}
+
+export async function sendInactiveUserWakeUpNotification(userId: string, username: string) {
+  const canSend = await checkRateLimit(userId, "inactive_user_wakeup", 1);
+  if (!canSend) return;
+
+  await sendPushNotification({
+    userId,
+    heading: "⚡😤 Trendx Lowkey Missed You…",
+    content: `It's been a minute, ${username} 😭🔥\nTrendx have been going crazy without you — come back.`,
+    data: { type: "inactive_user_wakeup" },
+  });
+
+  await recordNotificationSent(userId, "inactive_user_wakeup");
+}
+
+export async function sendMentionNotification(userId: string, actorUsername: string, trendName: string, trendId: string) {
+  const canSend = await checkRateLimit(userId, "mention", 20);
+  if (!canSend) return;
+
+  await sendPushNotification({
+    userId,
+    heading: "🎯👀 You Got Tagged!",
+    content: `${actorUsername} just mentioned you in ${trendName} 😭🔥\nGet in there before everyone else starts talking.`,
+    data: { type: "mention", trendId },
+  });
+
+  await recordNotificationSent(userId, "mention");
+}
+
+export async function sendReplyNotification(userId: string, actorUsername: string, trendName: string, trendId: string) {
+  const canSend = await checkRateLimit(userId, "reply", 30);
+  if (!canSend) return;
+
+  await sendPushNotification({
+    userId,
+    heading: "🎬💬 Someone Replied to You",
+    content: `${actorUsername} replied your message in ${trendName} 😤🔥\nDon't leave them hanging.`,
+    data: { type: "reply", trendId },
+  });
+
+  await recordNotificationSent(userId, "reply");
+}
+
 // Rate limiting and tracking helpers
 async function checkRateLimit(userId: string, type: string, dailyLimit: number): Promise<boolean> {
   const tracking = await getNotificationTracking(userId, type);

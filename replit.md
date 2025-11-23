@@ -128,6 +128,40 @@ To test push notifications on https://trendx.social:
 6. Notification appears in phone's system notification bar
 7. Service worker logs will show: `[OneSignal SW] ✅ Notification displayed successfully`
 
+### Notification Types (18 Total)
+
+**Rank & Competition (6):**
+- "You're Climbing! 🔥" - post jumped up rankings
+- "You Just Passed Someone 👀🔥" - overtook another post
+- "They're Slipping… You're Not 😭🔥" - someone's losing spot
+- "They Just Passed You 😭🔥" - someone snatched your spot
+- "Someone Just Passed You… AGAIN 😒🔥" - dropped, they climbed
+- "You Got Overtaken 👀🔥" - another post jumped ahead
+
+**Achievements (3):**
+- "Welcome to Trendx 🔥👋" - new users/notifications enabled
+- "🏆 You Dominated the Trend 🏆🔥" - trend winner
+- "You Didn't Win… But You Weren't Far 😭🔥" - close second place
+
+**Core Activity (5):**
+- "New Post Just Dropped in Your Trend 👀🔥" - for trend hosts
+- "A Fresh Post Just Landed 🔥" - new post in trend
+- "A New Trend Just Dropped 👀🔥" - trend recommendation
+- "This Trend Is Cooking HARD 🔥👀" - trending now
+- "Final Hours. No More Excuses 😤🔥" - trend ending soon
+
+**Social & Engagement (4 NEW):**
+- "📸✨ Someone You Follow Just Posted!" - followed user posted
+- "⚡😤 Trendx Lowkey Missed You…" - inactive user re-engagement
+- "🎯👀 You Got Tagged!" - mention/tag notifications
+- "🎬💬 Someone Replied to You" - reply notifications
+
+**Creation & Following (4):**
+- "Your Post Is Live 🔥" - post creation confirmation
+- "Your Trend Is Live 🔥" - trend creation confirmation
+- "New Follower 👀🔥" - new follower
+- "Your Trend Is Wrapping Up Soon ⏳🔥" - host trend ending
+
 ### Recent Updates (Nov 2024)
 
 **OneSignal ID Tracking System:**
@@ -137,3 +171,12 @@ To test push notifications on https://trendx.social:
 - Integrated ID tracking into the permission request flow
 - System now stores: subscriptionId, oneSignalUserId, pushToken, and externalId
 - All IDs are logged to console and persisted in database for reliable notification delivery
+
+**Expanded Notification Types (Nov 23, 2024):**
+- Added 4 new notification functions with branded emojis:
+  - `sendFollowedUserPostedNotification()` - 30/day rate limit
+  - `sendInactiveUserWakeUpNotification()` - 1/day rate limit
+  - `sendMentionNotification()` - 20/day rate limit
+  - `sendReplyNotification()` - 30/day rate limit
+- All notifications include exact emoji combinations for engagement
+- Rate limiting configured per notification type for optimal user experience
