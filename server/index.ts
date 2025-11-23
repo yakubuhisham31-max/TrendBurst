@@ -170,19 +170,31 @@ app.use((req, res, next) => {
 });
 
 // OneSignal service worker routes and manifest (MUST be before serveStatic - registered synchronously)
+const publicPath = path.resolve(__dirname, "../public");
 const distPath = process.env.NODE_ENV === "production" 
   ? path.resolve(__dirname)
   : path.resolve(__dirname, "../dist");
 
 app.get("/manifest.json", (_req, res) => {
   try {
-    const manifestPath = path.join(distPath, "manifest.json");
-    const content = fs.readFileSync(manifestPath, "utf-8");
+    // Try public folder first (where source file is)
+    let manifestPath = path.join(publicPath, "manifest.json");
+    let content;
+    
+    try {
+      content = fs.readFileSync(manifestPath, "utf-8");
+    } catch {
+      // Fall back to dist folder if not in public
+      manifestPath = path.join(distPath, "manifest.json");
+      content = fs.readFileSync(manifestPath, "utf-8");
+    }
+    
     res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "public, max-age=3600");
     res.send(content);
   } catch (error) {
-    console.error("Failed to serve manifest.json:", error);
-    res.status(404).send("Manifest not found");
+    console.error("Failed to serve manifest.json from", publicPath, "or", distPath, ":", error);
+    res.status(404).json({ error: "Manifest not found" });
   }
 });
 
