@@ -145,7 +145,8 @@ export default function FeedPage() {
   // Vote decrement mutation with optimistic updates
   const voteDownMutation = useMutation({
     mutationFn: async (postId: string) => {
-      await apiRequest("POST", "/api/votes/decrement", { postId });
+      if (!trendId) throw new Error("Trend ID is required");
+      await apiRequest("POST", "/api/votes/decrement", { postId, trendId });
     },
     onMutate: async (postId: string) => {
       // Cancel any outgoing refetches

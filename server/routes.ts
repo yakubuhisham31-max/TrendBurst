@@ -782,11 +782,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You have reached the maximum of 10 votes for this trend" });
       }
 
+      // Get all posts in trend BEFORE vote
+      const postsBeforeVote = await storage.getPostsByTrend(trendId);
+      const rankedBefore = [...postsBeforeVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      const rankBefore = rankedBefore.findIndex(p => p.id === postId) + 1;
+
       const vote = await storage.incrementVote(postId, (req as any).session.userId, trendId);
       
-      // Create notification for vote on post
+      // Get all posts in trend AFTER vote
+      const postsAfterVote = await storage.getPostsByTrend(trendId);
+      const rankedAfter = [...postsAfterVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      const rankAfter = rankedAfter.findIndex(p => p.id === postId) + 1;
+
+      // Get the post and trend info for notifications
       const post = await storage.getPost(postId);
+      const trend = await storage.getTrend(trendId);
       const voter = await storage.getUser((req as any).session.userId);
+      
+      // Create notification for vote on post
       if (post && post.userId !== (req as any).session.userId) {
         await storage.createNotification({
           userId: post.userId,
@@ -805,8 +818,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Send rank change notifications if rank improved
+      if (post && rankAfter < rankBefore && trend) {
+        await notificationService.sendRankGainedNotification(post.userId, trend.name || "Unknown Trend", trendId);
+      }
+      
+      // Check if other posts' ranks got worse (someone else's post dropped in rank due to this vote)
+      for (let i = 0; i < Math.min(rankedBefore.length, rankedAfter.length); i++) {
+        const postBefore = rankedBefore[i];
+        const postAfter = rankedAfter.find(p => p.id === postBefore.id);
+        if (postAfter) {
+          const oldRank = i + 1;
+          const newRank = rankedAfter.findIndex(p => p.id === postBefore.id) + 1;
+          
+          // If rank got worse and it's not the post we just voted on
+          if (newRank > oldRank && postBefore.id !== postId && trend) {
+            await notificationService.sendRankLostNotification(postBefore.userId, trend.name || "Unknown Trend", trendId);
+          }
+        }
+      }
+      
       res.status(201).json(vote);
     } catch (error) {
+      console.error("Vote increment error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -814,20 +848,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/votes/decrement - Decrement vote on post (protected)
   app.post("/api/votes/decrement", isAuthenticated, async (req, res) => {
     try {
-      const { postId } = req.body;
+      const { postId, trendId } = req.body;
 
       if (!postId) {
         return res.status(400).json({ message: "postId is required" });
       }
 
+      // Get the post to find trendId if not provided
+      const post = await storage.getPost(postId);
+      const actualTrendId = trendId || (post?.trendId as string);
+
+      if (!actualTrendId) {
+        return res.status(400).json({ message: "Unable to determine trend" });
+      }
+
+      // Get all posts in trend BEFORE vote removal
+      const postsBeforeVote = await storage.getPostsByTrend(actualTrendId);
+      const rankedBefore = [...postsBeforeVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      const rankBefore = rankedBefore.findIndex(p => p.id === postId) + 1;
+
       const vote = await storage.decrementVote(postId, (req as any).session.userId);
       
+      // Get all posts in trend AFTER vote removal
+      const postsAfterVote = await storage.getPostsByTrend(actualTrendId);
+      const rankedAfter = [...postsAfterVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      const rankAfter = rankedAfter.findIndex(p => p.id === postId) + 1;
+
+      // Get trend info for notifications
+      const trend = await storage.getTrend(actualTrendId);
+
+      // Send rank change notifications if rank worsened
+      if (post && rankAfter > rankBefore && trend && vote !== null) {
+        await notificationService.sendRankLostNotification(post.userId, trend.name || "Unknown Trend", actualTrendId);
+      }
+
+      // Check if other posts' ranks improved (someone else's post improved due to this vote removal)
+      for (let i = 0; i < Math.min(rankedBefore.length, rankedAfter.length); i++) {
+        const postBefore = rankedBefore[i];
+        const postAfter = rankedAfter.find(p => p.id === postBefore.id);
+        if (postAfter) {
+          const oldRank = i + 1;
+          const newRank = rankedAfter.findIndex(p => p.id === postBefore.id) + 1;
+          
+          // If rank improved and it's not the post we just removed the vote from
+          if (newRank < oldRank && postBefore.id !== postId && trend) {
+            await notificationService.sendRankGainedNotification(postBefore.userId, trend.name || "Unknown Trend", actualTrendId);
+          }
+        }
+      }
+
       if (vote === null) {
         return res.json({ message: "Vote removed or decreased to zero" });
       }
 
       res.json(vote);
     } catch (error) {
+      console.error("Vote decrement error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
