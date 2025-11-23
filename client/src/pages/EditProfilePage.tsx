@@ -11,7 +11,7 @@ import { ChevronLeft, Upload } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
@@ -104,6 +104,9 @@ export default function EditProfilePage() {
         setProfilePreviewUrl("");
       }
       setSelectedProfileFile(null);
+      
+      // Invalidate user cache to fetch latest profile data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
       toast({
         title: "Profile updated",
