@@ -4,15 +4,15 @@ import * as schema from "@shared/schema";
 
 // Variant rotation system for notifications
 const RANK_GAINED_VARIANTS = [
-  { title: "You're Climbing", content: "Your post just jumped up the rankings. Keep applying pressure." },
-  { title: "You Just Passed Someone", content: "Nice move - you overtook another post. Stay hot." },
-  { title: "They're Slipping... You're Not", content: "Your post climbed again. Someone's losing their spot - not you." },
+  { title: "📈 You're Climbing", content: "Your post just jumped up the rankings. Keep applying pressure." },
+  { title: "🚀 You Just Passed Someone", content: "Nice move - you overtook another post. Stay hot." },
+  { title: "⚡ They're Slipping... You're Not", content: "Your post climbed again. Someone's losing their spot - not you." },
 ];
 
 const RANK_LOST_VARIANTS = [
-  { title: "They Just Passed You", content: "Someone snatched your spot. You gonna let that slide?" },
-  { title: "Someone Just Passed You... AGAIN", content: "You dropped. They're climbing - you're not. Fix that ASAP." },
-  { title: "You Got Overtaken", content: "Another post just jumped ahead of you. Fight back while you still can." },
+  { title: "📉 They Just Passed You", content: "Someone snatched your spot. You gonna let that slide?" },
+  { title: "⬇️ Someone Just Passed You... AGAIN", content: "You dropped. They're climbing - you're not. Fix that ASAP." },
+  { title: "🔻 You Got Overtaken", content: "Another post just jumped ahead of you. Fight back while you still can." },
 ];
 
 const getNextVariant = (lastVariant: number, totalVariants: number): number => {
@@ -25,7 +25,7 @@ export async function sendWelcomeNotification(userId: string) {
 
   await sendPushNotification({
     userId,
-    heading: "Welcome to Trendx",
+    heading: "🎉 Welcome to Trendx",
     content: `You're in, ${user.username}. Jump into a trend and make your mark. The spotlight's waiting.`,
     data: { type: "welcome" },
   });
@@ -37,7 +37,7 @@ export async function sendHostNewPostNotification(hostId: string, trendName: str
 
   await sendPushNotification({
     userId: hostId,
-    heading: "New Post Just Dropped in Your Trend",
+    heading: "🎬 New Post Just Dropped in Your Trend",
     content: `Someone just posted in ${trendName}. Your trend is heating up - check it out.`,
     data: { type: "host_new_post", postId, trendId },
   });
@@ -51,7 +51,7 @@ export async function sendNewPostNotification(userId: string, trendName: string,
 
   await sendPushNotification({
     userId,
-    heading: "A Fresh Post Just Landed",
+    heading: "📸 A Fresh Post Just Landed",
     content: `A new post was added in ${trendName}. Jump in before you fall behind.`,
     data: { type: "new_post", postId, trendId },
   });
@@ -65,7 +65,7 @@ export async function sendTrendEndingSoonNotification(userId: string, trendName:
 
   await sendPushNotification({
     userId,
-    heading: "Final Hours. No More Excuses",
+    heading: "⏰ Final Hours. No More Excuses",
     content: `${trendName} ends in ${timeLeft}. Someone is catching up fast - push now or lose your spot.`,
     data: { type: "trend_ending_soon", trendId },
   });
@@ -115,7 +115,7 @@ export async function sendHostTrendEndingSoonNotification(hostId: string, trendN
 
   await sendPushNotification({
     userId: hostId,
-    heading: "Your Trend Is Wrapping Up Soon",
+    heading: "👑 Your Trend Is Wrapping Up Soon",
     content: `${trendName} is almost over. Check the final rankings and get ready to crown your winners.`,
     data: { type: "host_trend_ending_soon", trendId },
   });
@@ -129,7 +129,7 @@ export async function sendNonWinnerNotification(userId: string, username: string
 
   await sendPushNotification({
     userId,
-    heading: "You Didn't Win... But You Weren't Far",
+    heading: "🎯 You Didn't Win... But You Weren't Far",
     content: `No crown this time, ${username}, but you were close. Jump into the next trend - redemption arc loading.`,
     data: { type: "non_winner", trendId },
   });
@@ -143,7 +143,7 @@ export async function sendWinnerNotification(userId: string, trendName: string, 
 
   await sendPushNotification({
     userId,
-    heading: "You Dominated the Trend",
+    heading: "🏆 You Dominated the Trend",
     content: `You didn't just compete - you crushed everyone in ${trendName}. Congrats, you earned it.`,
     data: { type: "winner", trendId },
   });
@@ -157,7 +157,7 @@ export async function sendNewTrendNotification(userId: string, trendName: string
 
   await sendPushNotification({
     userId,
-    heading: "A New Trend Just Dropped",
+    heading: "⚡ A New Trend Just Dropped",
     content: `${trendName} is live. Get in early and secure an easy top rank.`,
     data: { type: "new_trend", trendId },
   });
@@ -171,7 +171,7 @@ export async function sendTrendBlowingUpNotification(userId: string, trendName: 
 
   await sendPushNotification({
     userId,
-    heading: "This Trend Is Cooking HARD",
+    heading: "🔥 This Trend Is Cooking HARD",
     content: `${trendName} is blowing up right now. If you sleep, you miss the wave.`,
     data: { type: "trend_blowing_up", trendId },
   });
@@ -185,7 +185,7 @@ export async function sendPostCreatedNotification(userId: string, trendName: str
 
   await sendPushNotification({
     userId,
-    heading: "Your Post Is Live",
+    heading: "🚀 Your Post Is Live",
     content: `You just entered ${trendName} - now go get those votes.`,
     data: { type: "post_created", postId, trendId },
   });
@@ -199,7 +199,7 @@ export async function sendTrendCreatedNotification(userId: string, trendName: st
 
   await sendPushNotification({
     userId,
-    heading: "Your Trend Is Live",
+    heading: "🎬 Your Trend Is Live",
     content: `Your challenge ${trendName} is up - share it and let the battle begin.`,
     data: { type: "trend_created", trendId },
   });
@@ -213,7 +213,7 @@ export async function sendNewFollowerNotification(userId: string, followerUserna
 
   await sendPushNotification({
     userId,
-    heading: "New Follower",
+    heading: "👥 New Follower",
     content: `${followerUsername} just followed you. You're on their radar now - keep the heat coming.`,
     data: { type: "new_follower", userId: followerId },
   });
