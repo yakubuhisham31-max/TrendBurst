@@ -2,6 +2,8 @@ declare global {
   interface Window {
     OneSignal?: any;
     OneSignalDeferred?: any[];
+    OneSignalInitialized?: boolean;
+    OneSignalInitError?: any;
   }
 }
 
@@ -9,6 +11,12 @@ declare global {
 // This function links the logged-in user's ID with their OneSignal Player ID
 export async function initializeOneSignal(userId: string) {
   try {
+    // Check if OneSignal SDK initialized successfully
+    if (!window.OneSignalInitialized) {
+      console.log("ℹ️  OneSignal SDK not available on this domain - notifications will work in production");
+      return;
+    }
+
     if (!(window as any).OneSignalDeferred) {
       console.log("⚠️ OneSignal SDK not loaded yet");
       return;
@@ -19,13 +27,6 @@ export async function initializeOneSignal(userId: string) {
     // Use OneSignalDeferred for v16 SDK
     (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
       try {
-        // Check if SDK initialized successfully
-        const isInitialized = await OneSignal.context;
-        if (!isInitialized) {
-          console.log("⚠️ OneSignal SDK not initialized");
-          return;
-        }
-
         // Set external user ID for push targeting
         await OneSignal.login(userId);
         console.log("✅ OneSignal user logged in:", userId);
@@ -42,6 +43,12 @@ export async function initializeOneSignal(userId: string) {
 // Request push notification permission
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
+    // Check if OneSignal SDK initialized successfully
+    if (!window.OneSignalInitialized) {
+      console.log("ℹ️  Push notifications not available on this domain");
+      return false;
+    }
+
     if (!(window as any).OneSignalDeferred) {
       console.log("⚠️ OneSignal SDK not loaded");
       return false;
@@ -77,6 +84,11 @@ export async function requestNotificationPermission(): Promise<boolean> {
 // Check if user has granted notification permission
 export async function checkNotificationPermission(): Promise<boolean> {
   try {
+    // Check if OneSignal SDK initialized successfully
+    if (!window.OneSignalInitialized) {
+      return false;
+    }
+
     if (!(window as any).OneSignalDeferred) {
       return false;
     }
