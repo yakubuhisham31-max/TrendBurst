@@ -40,6 +40,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
   upsertUser(user: Partial<User>): Promise<User>;
+  getAllUsers(): Promise<User[]>;
   
   // Trends
   getTrend(id: string): Promise<Trend | undefined>;
@@ -185,6 +186,10 @@ export class DbStorage implements IStorage {
       })
       .returning();
     return result[0];
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(schema.users);
   }
 
   // Trends
