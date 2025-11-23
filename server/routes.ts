@@ -624,38 +624,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Create notification for followers
+      // Send notification to followers when they post
       try {
         const followers = await storage.getFollowers((req as any).session.userId);
         const postAuthor = await storage.getUser((req as any).session.userId);
-        for (const follow of followers) {
-          await storage.createNotification({
-            userId: follow.followerId,
-            actorId: (req as any).session.userId,
-            type: 'new_post_from_following',
-            postId: post.id,
-            trendId: result.data.trendId,
-          });
-          // Send push notification (wrapped to not break post creation)
-          try {
-            await sendPushNotification({
+        if (postAuthor && trend) {
+          for (const follow of followers) {
+            // Create notification in database
+            await storage.createNotification({
               userId: follow.followerId,
-              heading: "New Post",
-              content: `${postAuthor?.username} posted in a trend you follow`,
-              data: { postId: post.id, trendId: result.data.trendId },
+              actorId: (req as any).session.userId,
+              type: 'new_post_from_following',
+              postId: post.id,
+              trendId: result.data.trendId,
             });
-          } catch (err) {
-            console.error("Failed to send follower push notification:", err);
+            // Send branded push notification
+            try {
+              await notificationService.sendFollowedUserPostedNotification(
+                follow.followerId,
+                postAuthor.username,
+                trend.name,
+                post.id,
+                trend.id
+              );
+            } catch (err) {
+              console.error("Failed to send followed user posted notification:", err);
+            }
           }
         }
       } catch (err) {
         console.error("Failed to process follower notifications:", err);
       }
       
-      // Create notification for trend host (if not posting in their own trend)
+      // Notify trend host of new post
       try {
         const trend = await storage.getTrend(result.data.trendId);
         if (trend && trend.userId !== (req as any).session.userId) {
+          // Create notification in database
           await storage.createNotification({
             userId: trend.userId,
             actorId: (req as any).session.userId,
@@ -663,17 +668,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             postId: post.id,
             trendId: result.data.trendId,
           });
-          // Send push notification
+          // Send branded push notification
           try {
-            const postAuthor = await storage.getUser((req as any).session.userId);
-            await sendPushNotification({
-              userId: trend.userId,
-              heading: "New Submission",
-              content: `${postAuthor?.username} posted in your trend`,
-              data: { postId: post.id, trendId: result.data.trendId },
-            });
+            await notificationService.sendHostNewPostNotification(
+              trend.userId,
+              trend.name,
+              post.id,
+              trend.id
+            );
           } catch (err) {
-            console.error("Failed to send host push notification:", err);
+            console.error("Failed to send host new post notification:", err);
           }
         }
       } catch (err) {
@@ -1005,10 +1009,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Check if this is a reply to another comment
+      // Send notification if this is a reply to another comment
       if (comment.parentId) {
         const parentComment = await storage.getComment(comment.parentId);
         if (parentComment && parentComment.userId !== (req as any).session.userId) {
+          // Create notification in database
           await storage.createNotification({
             userId: parentComment.userId,
             actorId: (req as any).session.userId,
@@ -1017,14 +1022,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             postId: comment.postId,
             trendId: comment.trendId,
           });
-          // Send push notification
-          if (commenter?.username) {
-            await sendPushNotification({
-              userId: parentComment.userId,
-              heading: "Reply to Comment",
-              content: `${commenter.username} replied to your comment`,
-              data: { postId: String(comment.postId), trendId: String(comment.trendId) },
-            });
+          // Send branded push notification
+          if (commenter?.username && comment.trendId) {
+            try {
+              const trendForReply = await storage.getTrend(comment.trendId);
+              if (trendForReply) {
+                await notificationService.sendReplyNotification(
+                  parentComment.userId,
+                  commenter.username,
+                  trendForReply.name,
+                  comment.trendId
+                );
+              }
+            } catch (err) {
+              console.error("Failed to send reply notification:", err);
+            }
           }
         }
       }
@@ -1035,6 +1047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const username of mentions) {
           const mentionedUser = await storage.getUserByUsername(username);
           if (mentionedUser && mentionedUser.id !== (req as any).session.userId) {
+            // Create notification in database
             await storage.createNotification({
               userId: mentionedUser.id,
               actorId: (req as any).session.userId,
@@ -1043,14 +1056,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               postId: comment.postId,
               trendId: comment.trendId,
             });
-            // Send push notification
-            if (commenter?.username) {
-              await sendPushNotification({
-                userId: mentionedUser.id,
-                heading: "Mentioned",
-                content: `${commenter.username} mentioned you in a comment`,
-                data: { postId: String(comment.postId), trendId: String(comment.trendId) },
-              });
+            // Send branded push notification
+            if (commenter?.username && comment.trendId) {
+              try {
+                const trendForMention = await storage.getTrend(comment.trendId);
+                if (trendForMention) {
+                  await notificationService.sendMentionNotification(
+                    mentionedUser.id,
+                    commenter.username,
+                    trendForMention.name,
+                    comment.trendId
+                  );
+                }
+              } catch (err) {
+                console.error("Failed to send mention notification:", err);
+              }
             }
           }
         }
