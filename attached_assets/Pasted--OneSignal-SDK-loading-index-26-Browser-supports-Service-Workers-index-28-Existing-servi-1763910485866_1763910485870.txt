@@ -1,0 +1,105 @@
+ OneSignal SDK loading...
+(index):26 ✅ Browser supports Service Workers
+(index):28 📊 Existing service worker registrations before OneSignal init: 1
+(index):30   1. https://trendx.social/
+(index):41 🔄 OneSignal.init() starting...
+(index):42 📍 Current domain: https://trendx.social
+(index):43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+(index):48 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):63 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+(index):69 ✅ Site is HTTPS - OneSignal can register service workers
+(index):72 📢 Calling OneSignal.init() with config...
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-D54xrCQr.js:379 👤 USER IDENTIFICATION LOGGED
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-D54xrCQr.js:379 🆔 Trendx User ID (External ID): ad35e8d5-82a0-4452-91de-5d808a439bef
+index-D54xrCQr.js:379 👤 Username: new nigger
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-D54xrCQr.js:379 🔔 PUSH NOTIFICATION SETUP
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-D54xrCQr.js:379 👤 User Identified: new nigger (ad35e8d5-82a0-4452-91de-5d808a439bef)
+index-D54xrCQr.js:379 ✅ User linked to OneSignal
+index-D54xrCQr.js:379 🔐 Push Subscription: ACTIVE
+index-D54xrCQr.js:379    Provider: Firebase Cloud Messaging (FCM)
+index-D54xrCQr.js:379    Endpoint: https://fcm.googleapis.com/fcm/send/eShZVGzIWA0:APA91bH1EbEE...
+index-D54xrCQr.js:379 📡 Service Workers: 1
+index-D54xrCQr.js:379    1. / (Active: ✓)
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-D54xrCQr.js:379 ✅ Ready to receive push notifications
+index-D54xrCQr.js:379    Backend will send to: ad35e8d5-82a0-4452-91de-5d808a439bef
+index-D54xrCQr.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:4 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:5 [OneSignal SW] Service worker loaded and ready
+OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:6 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:81 [OneSignal SW] ✅ Event listeners registered for push and notification clicks
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:10 [OneSignal SW] Service worker installing...
+(index):75 🎉 OneSignal.init() completed successfully!
+(index):76 Init result: undefined
+(index):78 ✅ OneSignal SDK initialized successfully
+(index):79 📱 Push notifications are enabled for this domain
+(index):82 🔧 Attempting manual service worker registration...
+(index):85 📝 Registering /OneSignalSDKWorker.js...
+OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:15 [OneSignal SW] Service worker activating and claiming clients
+OneSignalSDKWorker.js:4 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js:5 [OneSignal SW] Service worker loaded and ready
+OneSignalSDKWorker.js:6 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js:81 [OneSignal SW] ✅ Event listeners registered for push and notification clicks
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+(index):87 ✅ OneSignalSDKWorker registered: https://trendx.social/
+(index):95 👤 OneSignal.User available
+(index):98 👤 External ID: undefined
+OneSignalSDKWorker.js:10 [OneSignal SW] Service worker installing...
+(index):110 📡 [500ms] Service workers registered: 1
+(index):115   [500ms] 1. Scope: https://trendx.social/
+(index):116   [500ms]    Active: Yes
+OneSignalSDKWorker.js:15 [OneSignal SW] Service worker activating and claiming clients
+(index):110 📡 [2s] Service workers registered: 1
+(index):115   [2s] 1. Scope: https://trendx.social/
+(index):116   [2s]    Active: Yes
+(index):110 📡 [5s] Service workers registered: 1
+(index):115   [5s] 1. Scope: https://trendx.social/
+(index):116   [5s]    Active: Yes
+(index):135 🔔 Current permission: true
+(index):146 📬 Establishing push subscription...
+(index):152 📬 Service worker ready for subscription
+(index):156 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):157 🔐 BROWSER PUSH SUBSCRIPTION
+(index):158 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):159 Status: ACTIVE
+(index):161 Endpoint: https://fcm.googleapis.com/fcm/send/eShZVGzIWA0:APA91bH1EbEE0umQ9hc4nU4h3hwei91f...
+(index):162 Provider: Firebase Cloud Messaging (FCM)
+(index):170 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):171 🔔 ONESIGNAL SUBSCRIPTION STATUS
+(index):172 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):175 Subscription ID: not yet assigned
+(index):178 OneSignal User ID: not yet assigned
+(index):181 External ID (Trendx User ID): not yet set
+(index):187 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):188 ✅ PUSH NOTIFICATIONS READY
+(index):189 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):190 Browser has an active push subscription
+(index):191 OneSignal service worker will use it to receive notifications
+OneSignalSDKWorker.js:21 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js:22 [OneSignal SW] 🔔 PUSH NOTIFICATION RECEIVED
+OneSignalSDKWorker.js:23 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js:40 [OneSignal SW] 📨 Notification Data (text): Test push message from DevTools.
+OneSignalSDKWorker.js:21 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js:22 [OneSignal SW] 🔔 PUSH NOTIFICATION RECEIVED
+OneSignalSDKWorker.js:23 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDKWorker.js:40 [OneSignal SW] 📨 Notification Data (text): Test push message from DevTools.
