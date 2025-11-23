@@ -211,6 +211,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send notification to trend creator
       await notificationService.sendTrendCreatedNotification((req as any).session.userId, result.data.name, trend.id);
       
+      // Send recommendation notification to random users
+      try {
+        const allUsers = await storage.getAllUsers();
+        const creator = await storage.getUser((req as any).session.userId);
+        // Notify up to 10 random users about the new trend (excluding the creator)
+        const targetUsers = allUsers
+          .filter(u => u.id !== (req as any).session.userId)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 10);
+        
+        for (const targetUser of targetUsers) {
+          await notificationService.sendNewTrendNotification(targetUser.id, result.data.name, trend.id).catch(err => {
+            console.error("Failed to send new trend notification:", err);
+          });
+        }
+      } catch (err) {
+        console.error("Failed to send trend recommendations:", err);
+      }
+      
       // Create notification for followers
       const followers = await storage.getFollowers((req as any).session.userId);
       const actor = await storage.getUser((req as any).session.userId);
@@ -221,13 +240,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'new_trend_from_following',
           trendId: trend.id,
         });
-        // Send push notification
-        await sendPushNotification({
-          userId: follow.followerId,
-          heading: "New Trend",
-          content: `${actor?.username} created a new trend: ${result.data.name}`,
-          data: { trendId: trend.id },
-        });
+        // Send branded push notification for followers
+        try {
+          await notificationService.sendFollowedUserPostedNotification(
+            follow.followerId,
+            actor?.username || "Someone",
+            result.data.name,
+            "",
+            trend.id
+          );
+        } catch (err) {
+          console.error("Failed to send follower trend notification:", err);
+        }
       }
       
       res.status(201).json(trend);
@@ -450,6 +474,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         }
+      }
+
+      // Send notification to trend host that trend is wrapping up
+      try {
+        await notificationService.sendHostTrendEndingSoonNotification(trend.userId, trend.name, req.params.id).catch((err) => {
+          console.error("Failed to send host trend ending notification:", err);
+        });
+      } catch (err) {
+        console.error("Failed to notify trend host:", err);
       }
 
       // NOW mark points as awarded after distribution
@@ -840,6 +873,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await notificationService.sendRankLostNotification(postBefore.userId, trend.name || "Unknown Trend", trendId);
           }
         }
+      }
+
+      // Notify users if trend is "blowing up" (high engagement)
+      try {
+        if (trend && trend.name) {
+          const totalVotes = postsAfterVote.reduce((sum, p) => sum + (p.votes || 0), 0);
+          // If total votes > 50 and post count > 3, notify about trend momentum
+          if (totalVotes > 50 && postsAfterVote.length > 3) {
+            const allUsers = await storage.getAllUsers?.() || [];
+            const randomUsers = allUsers
+              .filter(u => u.id !== post?.userId)
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 5);
+            
+            for (const user of randomUsers) {
+              await notificationService.sendTrendBlowingUpNotification(user.id, trend.name, trendId).catch(err => {
+                console.error("Failed to send trend blowing up notification:", err);
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check trend momentum:", err);
       }
       
       res.status(201).json(vote);
@@ -1719,6 +1775,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error sending test notification:", error);
       res.status(500).json({ message: "Failed to send test notification" });
+    }
+  });
+
+  // POST /api/notifications/scheduled/trend-ending-soon - Send trend ending soon notifications (can be called by cron)
+  app.post("/api/notifications/scheduled/trend-ending-soon", async (req, res) => {
+    try {
+      // Get all active trends that end within next 24 hours
+      const trends = await storage.getAllTrends();
+      const now = new Date();
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      
+      let notificationsSent = 0;
+      for (const trend of trends) {
+        if (trend.endDate) {
+          const endDate = new Date(trend.endDate);
+          // If trend ends between now and tomorrow and hasn't ended yet
+          if (endDate > now && endDate <= tomorrow) {
+            // Get participants
+            const posts = await storage.getPostsByTrend(trend.id);
+            const participants = new Set(posts.map(p => p.userId));
+            
+            // Send notification to each participant
+            for (const participantId of Array.from(participants)) {
+              const timeLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+              try {
+                await notificationService.sendTrendEndingSoonNotification(
+                  participantId,
+                  trend.name,
+                  `${timeLeft} hour${timeLeft !== 1 ? 's' : ''}`,
+                  trend.id
+                ).catch(err => {
+                  console.error("Failed to send trend ending soon notification:", err);
+                });
+                notificationsSent++;
+              } catch (err) {
+                console.error("Error notifying participant:", err);
+              }
+            }
+          }
+        }
+      }
+      
+      res.json({ 
+        message: "Trend ending soon notifications sent",
+        count: notificationsSent 
+      });
+    } catch (error) {
+      console.error("Error sending trend ending notifications:", error);
+      res.status(500).json({ message: "Failed to send trend ending notifications" });
+    }
+  });
+
+  // POST /api/notifications/scheduled/inactive-users - Send re-engagement notifications (can be called by cron)
+  app.post("/api/notifications/scheduled/inactive-users", async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers?.() || [];
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      let notificationsSent = 0;
+      for (const user of allUsers) {
+        // Check if user hasn't logged in for 30 days
+        const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
+        if (!lastLogin || lastLogin < thirtyDaysAgo) {
+          try {
+            await notificationService.sendInactiveUserWakeUpNotification(user.id, user.username).catch(err => {
+              console.error("Failed to send inactive user notification:", err);
+            });
+            notificationsSent++;
+          } catch (err) {
+            console.error("Error notifying inactive user:", err);
+          }
+        }
+      }
+      
+      res.json({ 
+        message: "Inactive user wake-up notifications sent",
+        count: notificationsSent 
+      });
+    } catch (error) {
+      console.error("Error sending inactive user notifications:", error);
+      res.status(500).json({ message: "Failed to send inactive user notifications" });
     }
   });
 

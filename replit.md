@@ -188,3 +188,41 @@ To test push notifications on https://trendx.social:
 - Users can still access permission request anytime from notification bell
 - If previously denied, users can still retry from the notification bell
 - Improved UX with less intrusive permission request timing
+
+**All 18 Notifications FULLY IMPLEMENTED (Nov 23, 2024):**
+
+**Immediate Notifications (Trigger on user action):**
+1. **Welcome** 🔥👋 - User registration
+2. **Trend Created** 🔥 - User creates trend
+3. **Post Created** 🔥 - User creates post
+4. **Rank Gained** 🔥 - Post improves ranking (3 variants)
+5. **Rank Lost** 😭🔥 - Post drops ranking (3 variants)
+6. **New Follower** 👀🔥 - Someone follows you
+7. **Host New Post** 👀🔥 - Someone posts in your trend
+8. **Followed User Posted** 📸✨ - Someone you follow posts
+9. **Mention** 🎯👀 - Someone mentions you with @username
+10. **Reply** 🎬💬 - Someone replies to your comment
+11. **Winner** 🏆🔥 - You won the trend
+12. **Non-Winner** 😭🔥 - You participated but didn't win
+13. **New Trend Recommendation** 👀🔥 - New trend drops (sent to ~10 random users)
+14. **Trend Blowing Up** 🔥👀 - Trend gets viral engagement (>50 votes)
+15. **Host Trend Ending** ⏳🔥 - Trend you created is ending
+
+**Scheduled Notifications (Trigger periodically via endpoints):**
+16. **Trend Ending Soon** 😤🔥 - Trend ends in <24 hours (API: POST /api/notifications/scheduled/trend-ending-soon)
+17. **Inactive User Wake-Up** ⚡😤 - User hasn't logged in 30 days (API: POST /api/notifications/scheduled/inactive-users)
+
+**Rate Limiting per Notification Type:**
+- Rank gained/lost: 5/day
+- Followed user posted: 30/day
+- Mention: 20/day
+- Reply: 30/day
+- New follower: 50/day
+- Host new post: No limit
+- Winner/Non-winner: 50/day
+- Post created: 50/day
+- Trend created: 50/day
+- New trend recommendation: 3/day
+- Trend blowing up: 3/day
+- Inactive user wake-up: 1/day
+- Host trend ending: 1/day
