@@ -80,6 +80,26 @@
           console.log("✅ OneSignal SDK initialized successfully");
           console.log("📱 Push notifications are enabled for this domain");
           
+          // Manually register service workers if OneSignal doesn't do it
+          console.log("🔧 Attempting manual service worker registration...");
+          if ('serviceWorker' in navigator) {
+            try {
+              console.log("📝 Registering /OneSignalSDKWorker.js...");
+              const swReg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
+              console.log("✅ OneSignalSDKWorker registered:", swReg.scope);
+            } catch (swError) {
+              console.warn("⚠️  OneSignalSDKWorker registration failed:", swError?.message);
+            }
+            
+            try {
+              console.log("📝 Registering /OneSignalSDKUpdaterWorker.js...");
+              const updaterReg = await navigator.serviceWorker.register('/OneSignalSDKUpdaterWorker.js', { scope: '/' });
+              console.log("✅ OneSignalSDKUpdaterWorker registered:", updaterReg.scope);
+            } catch (updaterError) {
+              console.warn("⚠️  OneSignalSDKUpdaterWorker registration failed:", updaterError?.message);
+            }
+          }
+          
           // Check if OneSignal is ready
           if (OneSignal.User) {
             console.log("👤 OneSignal.User available");
