@@ -59,6 +59,33 @@ function getNotificationMessage(notification: NotificationWithActor): string {
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const previousUnreadCount = useRef<number | null>(null);
+  const hasRequestedPermission = useRef(false);
+
+  // Request push notification permission when bell is clicked (OneSignal v16)
+  const requestPushPermission = async () => {
+    if (hasRequestedPermission.current) return;
+    
+    try {
+      if ((window as any).OneSignal && Notification.permission !== "granted") {
+        const OS = (window as any).OneSignal;
+        console.log("🔔 Requesting push notification permission...");
+        
+        // OneSignal v16 native permission request (creates subscription automatically)
+        const permissionGranted = await OS.Notifications.requestPermission();
+        
+        if (permissionGranted) {
+          console.log("✅ Push notifications enabled!");
+          console.log("   Subscriptions will appear in console logger");
+        } else {
+          console.log("ℹ️  Push notifications denied by user");
+        }
+        
+        hasRequestedPermission.current = true;
+      }
+    } catch (error) {
+      console.log("ℹ️  Push permission request:", (error as Error).message);
+    }
+  };
 
   // Fetch unread count
   const { data: unreadData } = useQuery<{ count: number }>({
@@ -126,8 +153,16 @@ export default function NotificationBell() {
 
   const unreadCount = unreadData?.count || 0;
 
+  // Handle popover open - request push permission on first open
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      requestPushPermission();
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
