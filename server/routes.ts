@@ -1528,6 +1528,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/push/subscribe - Save OneSignal subscription (protected)
+  app.post("/api/push/subscribe", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const { subscriptionId, oneSignalUserId, pushToken } = req.body;
+
+      if (!subscriptionId) {
+        return res.status(400).json({ message: "subscriptionId required" });
+      }
+
+      const subscription = await storage.saveOneSignalSubscription({
+        userId,
+        subscriptionId,
+        oneSignalUserId: oneSignalUserId || undefined,
+        externalId: userId,
+        pushToken: pushToken || undefined,
+        isActive: 1,
+      });
+
+      console.log(`✅ OneSignal subscription saved for user ${userId}`);
+      console.log(`   📱 Subscription ID: ${subscriptionId}`);
+      console.log(`   🆔 OneSignal User ID: ${oneSignalUserId || 'pending'}`);
+      console.log(`   🔑 Push Token: ${pushToken ? '✓ present' : '✗ not provided'}`);
+
+      res.json({ 
+        message: "Subscription saved successfully", 
+        subscription,
+        ids: {
+          userId,
+          subscriptionId,
+          oneSignalUserId: oneSignalUserId || 'not assigned yet',
+          externalId: userId,
+        }
+      });
+    } catch (error) {
+      console.error("Error saving subscription:", error);
+      res.status(500).json({ message: "Failed to save subscription" });
+    }
+  });
+
+  // GET /api/push/subscription - Get user's OneSignal subscription (protected)
+  app.get("/api/push/subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const subscription = await storage.getOneSignalSubscription(userId);
+      
+      if (!subscription) {
+        return res.json({ 
+          subscription: null, 
+          message: "No active subscription",
+          ids: {
+            userId,
+            subscriptionId: null,
+            oneSignalUserId: null,
+          }
+        });
+      }
+
+      res.json({ 
+        subscription,
+        ids: {
+          userId: subscription.userId,
+          subscriptionId: subscription.subscriptionId,
+          oneSignalUserId: subscription.oneSignalUserId,
+          externalId: subscription.externalId,
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription" });
+    }
+  });
+
   // POST /api/notifications/test - Send test notification (protected, for debugging)
   app.post("/api/notifications/test", isAuthenticated, async (req, res) => {
     try {

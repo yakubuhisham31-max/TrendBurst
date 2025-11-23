@@ -142,6 +142,18 @@ export const notificationTracking = pgTable("notification_tracking", {
   lastVariant: integer("last_variant").default(0),
 });
 
+export const oneSignalSubscriptions = pgTable("one_signal_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  subscriptionId: text("subscription_id").notNull(),
+  oneSignalUserId: text("one_signal_user_id"),
+  externalId: text("external_id").notNull(), // Trendx user ID
+  pushToken: text("push_token"),
+  isActive: integer("is_active").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -244,3 +256,15 @@ export const insertNotificationTrackingSchema = createInsertSchema(notificationT
   id: true,
   lastSentAt: true,
 });
+
+export type OneSignalSubscription = typeof oneSignalSubscriptions.$inferSelect;
+export const insertOneSignalSubscriptionSchema = createInsertSchema(oneSignalSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial({
+  oneSignalUserId: true,
+  pushToken: true,
+});
+
+export type InsertOneSignalSubscription = z.infer<typeof insertOneSignalSubscriptionSchema>;

@@ -22,6 +22,8 @@ import type {
   SavedPost,
   Notification,
   InsertNotification,
+  OneSignalSubscription,
+  InsertOneSignalSubscription,
 } from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
@@ -105,6 +107,11 @@ export interface IStorage {
   deleteNotification(notificationId: string): Promise<void>;
   getNotificationTracking(userId: string, type: string): Promise<any>;
   recordNotificationSent(userId: string, type: string, variant?: number): Promise<void>;
+
+  // OneSignal Subscriptions
+  saveOneSignalSubscription(subscription: InsertOneSignalSubscription): Promise<OneSignalSubscription>;
+  getOneSignalSubscription(userId: string): Promise<OneSignalSubscription | undefined>;
+  getActiveOneSignalSubscriptions(limit?: number): Promise<OneSignalSubscription[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -690,6 +697,48 @@ export class DbStorage implements IStorage {
     } catch (error) {
       console.error("Failed to record notification sent:", error);
     }
+  }
+
+  // OneSignal Subscriptions
+  async saveOneSignalSubscription(subscription: InsertOneSignalSubscription): Promise<OneSignalSubscription> {
+    const existing = await db
+      .select()
+      .from(schema.oneSignalSubscriptions)
+      .where(eq(schema.oneSignalSubscriptions.userId, subscription.userId));
+
+    if (existing.length > 0) {
+      // Update existing subscription
+      const result = await db
+        .update(schema.oneSignalSubscriptions)
+        .set({ ...subscription, updatedAt: new Date() })
+        .where(eq(schema.oneSignalSubscriptions.userId, subscription.userId))
+        .returning();
+      return result[0];
+    } else {
+      // Insert new subscription
+      const result = await db
+        .insert(schema.oneSignalSubscriptions)
+        .values(subscription)
+        .returning();
+      return result[0];
+    }
+  }
+
+  async getOneSignalSubscription(userId: string): Promise<OneSignalSubscription | undefined> {
+    const result = await db
+      .select()
+      .from(schema.oneSignalSubscriptions)
+      .where(eq(schema.oneSignalSubscriptions.userId, userId));
+    return result[0];
+  }
+
+  async getActiveOneSignalSubscriptions(limit: number = 100): Promise<OneSignalSubscription[]> {
+    const result = await db
+      .select()
+      .from(schema.oneSignalSubscriptions)
+      .where(eq(schema.oneSignalSubscriptions.isActive, 1))
+      .limit(limit);
+    return result;
   }
 }
 

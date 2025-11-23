@@ -75,7 +75,40 @@ export default function NotificationBell() {
         
         if (permissionGranted) {
           console.log("✅ Push notifications enabled!");
-          console.log("   Subscriptions will appear in console logger");
+          
+          // Capture all necessary IDs for tracking
+          try {
+            // Get OneSignal User ID
+            const oneSignalUserId = OS.User.PushSubscription.id;
+            console.log(`   🆔 OneSignal User ID: ${oneSignalUserId}`);
+            
+            // Get Push Subscription ID
+            const pushSubscriptionId = OS.User.PushSubscription.id;
+            console.log(`   📱 Push Subscription ID: ${pushSubscriptionId}`);
+            
+            // Get the OneSignal user's onesignal_id
+            const oneSignalUserInfo = OS.User;
+            const onesignalUserId = oneSignalUserInfo?.onesignal_id;
+            console.log(`   🔑 OneSignal User Info: ${onesignalUserId}`);
+            
+            // Save subscription IDs to backend
+            const response = await apiRequest("POST", "/api/push/subscribe", {
+              subscriptionId: pushSubscriptionId,
+              oneSignalUserId: onesignalUserId,
+              pushToken: pushSubscriptionId,
+            });
+            
+            const data = await response.json();
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("✅ SUBSCRIPTION SAVED TO DATABASE");
+            console.log(`   Trendx User ID: ${data.ids.userId}`);
+            console.log(`   OneSignal External ID: ${data.ids.externalId}`);
+            console.log(`   Subscription ID: ${data.ids.subscriptionId}`);
+            console.log(`   OneSignal User ID: ${data.ids.oneSignalUserId}`);
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          } catch (idError) {
+            console.log("ℹ️  Could not capture subscription IDs:", (idError as Error).message);
+          }
         } else {
           console.log("ℹ️  Push notifications denied by user");
         }
