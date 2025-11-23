@@ -91,18 +91,29 @@ function UserIdLogger() {
     console.log(`👤 Username: ${user.username}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    // Log OneSignal IDs
+    // Set External ID and Log OneSignal IDs
     (async () => {
       try {
         if ((window as any).OneSignal) {
+          // IMPORTANT: Explicitly set the external ID to link Trendx User to OneSignal
+          console.log(`🔗 Setting OneSignal External ID to: ${user.id}`);
+          await (window as any).OneSignal.User.addAlias("external_id", user.id);
+          console.log(`✅ External ID set successfully`);
+
+          // Give it a moment to update
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Now read and log all IDs
           const onesignalId = await (window as any).OneSignal.User.getOnesignalId?.();
           const externalId = await (window as any).OneSignal.User.getExternalId?.();
           const subscriptionId = await (window as any).OneSignal.User.pushSubscription?.getIdAsync?.();
 
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           console.log("🔔 ONESIGNAL IDS:");
-          console.log(`   OneSignal User ID: ${onesignalId || "not yet assigned"}`);
-          console.log(`   External ID: ${externalId || "not yet set"}`);
-          console.log(`   Push Subscription ID: ${subscriptionId || "not yet created"}`);
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log(`   OneSignal User ID: ${onesignalId || "⏳ pending assignment"}`);
+          console.log(`   External ID: ${externalId || "⏳ pending"}`);
+          console.log(`   Push Subscription ID: ${subscriptionId || "⏳ pending creation"}`);
 
           // Log service worker status
           if ("serviceWorker" in navigator) {
@@ -122,11 +133,12 @@ function UserIdLogger() {
           } else {
             console.log(`⚠️  Browser Push Subscription: NOT CREATED`);
           }
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         } else {
           console.log("⚠️  OneSignal SDK not available");
         }
       } catch (error) {
-        console.log("ℹ️  Could not fetch OneSignal IDs:", (error as Error).message);
+        console.log("ℹ️  Could not set External ID or fetch IDs:", (error as Error).message);
       }
     })();
   }, [user]);
