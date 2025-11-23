@@ -1448,18 +1448,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
 
-      const updatedUser = await storage.updateUser((req as any).session.userId, {
-        email,
-        fullName,
-        bio,
-        profilePicture,
-        instagramUrl,
-        tiktokUrl,
-        twitterUrl,
-        youtubeUrl,
-        categories,
-        role,
-      });
+      // Only include fields that are actually defined (not undefined)
+      const updateData: any = {};
+      if (email !== undefined) updateData.email = email;
+      if (fullName !== undefined) updateData.fullName = fullName;
+      if (bio !== undefined) updateData.bio = bio;
+      if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+      if (instagramUrl !== undefined) updateData.instagramUrl = instagramUrl;
+      if (tiktokUrl !== undefined) updateData.tiktokUrl = tiktokUrl;
+      if (twitterUrl !== undefined) updateData.twitterUrl = twitterUrl;
+      if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;
+      if (categories !== undefined) updateData.categories = categories;
+      if (role !== undefined) updateData.role = role;
+
+      const updatedUser = await storage.updateUser((req as any).session.userId, updateData);
 
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
