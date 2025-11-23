@@ -91,70 +91,29 @@ function UserIdLogger() {
     console.log(`👤 Username: ${user.username}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    // Identify user with OneSignal and ensure push subscription
+    // Set up OneSignal user identification (subscription created via user action in notification bell)
     (async () => {
       try {
         if ((window as any).OneSignal) {
           const OS = (window as any).OneSignal;
           
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log("🔔 PUSH NOTIFICATION SETUP");
+          console.log("🔔 ONESIGNAL USER IDENTIFICATION");
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log(`👤 User Identified: ${user.username} (${user.id})`);
+          console.log(`👤 User: ${user.username} (${user.id})`);
           
-          // Step 1: Request notification permission from the user
-          try {
-            const permission = await Notification.requestPermission();
-            console.log(`🔔 Notification permission: ${permission}`);
-          } catch (permError) {
-            console.log(`ℹ️  Permission request failed:`, (permError as Error).message);
-          }
-
-          // Step 2: Ensure service worker is registered and subscription exists
-          try {
-            if ('serviceWorker' in navigator && 'pushManager' in ServiceWorkerRegistration.prototype) {
-              const reg = await navigator.serviceWorker.ready;
-              let subscription = await reg.pushManager.getSubscription();
-              
-              if (!subscription) {
-                console.log("📬 No subscription found, creating new push subscription...");
-                try {
-                  const vapidPublicKey = "BN7u6gR0gp6YYzXLKhPcFqKzJQj4iEA_DPEEDYzJKZhJmGVvFBf3vLqZ6XH1oX8S_l7ZCFOV8Iv8r5WCVCA2LO4";
-                  subscription = await reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: vapidPublicKey,
-                  });
-                  console.log("✅ New push subscription created!");
-                } catch (subError) {
-                  console.log("ℹ️  Could not create subscription:", (subError as Error).message);
-                }
-              }
-              
-              if (subscription) {
-                console.log(`🔐 Push Subscription: ACTIVE`);
-                console.log(`   Provider: Firebase Cloud Messaging (FCM)`);
-                console.log(`   Endpoint: ${subscription.endpoint.substring(0, 60)}...`);
-              }
-            }
-          } catch (e) {
-            console.log(`ℹ️  Service worker/subscription check:`, (e as Error).message);
-          }
-
-          // Step 3: Wait a bit for OneSignal to settle, then identify the user
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Identify user with OneSignal
+          // Identify user with OneSignal (link Trendx user ID to OneSignal)
           try {
             await OS.login(user.id);
-            console.log(`✅ User linked to OneSignal`);
+            console.log(`✅ User linked to OneSignal with external_id: ${user.id}`);
           } catch (loginError) {
-            console.log(`ℹ️  OneSignal.login() pending:`, (loginError as Error).message);
+            console.log(`ℹ️  OneSignal.login() status:`, (loginError as Error).message);
           }
 
-          // Step 4: Log final subscription status
+          // Log service workers
           try {
             const sws = await navigator.serviceWorker.getRegistrations();
-            console.log(`📡 Service Workers: ${sws.length}`);
+            console.log(`📡 Service Workers registered: ${sws.length}`);
             sws.forEach((sw, i) => {
               console.log(`   ${i + 1}. ${sw.scope.replace(window.location.origin, '')} (Active: ${sw.active ? '✓' : '✗'})`);
             });
@@ -163,8 +122,8 @@ function UserIdLogger() {
           }
 
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log(`✅ Push notifications enabled`);
-          console.log(`   Backend will send to: ${user.id}`);
+          console.log(`ℹ️  Click notification bell to subscribe to push`);
+          console.log(`   Backend sends to external_id: ${user.id}`);
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         } else {
           console.log("ℹ️  OneSignal SDK initializing...");
