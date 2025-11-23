@@ -45,7 +45,7 @@ export default function MediaLightbox({ mediaUrl, mediaType = "image", isOpen, o
       <Button
         size="icon"
         variant="ghost"
-        className="absolute top-4 right-4 text-white hover:bg-white/10"
+        className="fixed top-4 right-4 z-50 text-white hover:bg-white/10"
         onClick={onClose}
         data-testid="button-close-lightbox"
       >
