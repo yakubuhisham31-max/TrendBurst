@@ -1827,11 +1827,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST /api/notifications/debug - Debug notification (for testing, no auth required)
+  // POST /api/notifications/debug - Debug notification (for testing)
   app.post("/api/notifications/debug", async (req, res) => {
     try {
-      const testUserId = "4fe4ef1b-7eac-45a1-916f-95009bdbe457"; // Icey
-      const user = await storage.getUser(testUserId);
+      // Try to use logged-in user, fall back to test user if not authenticated
+      const userId = (req as any).session?.userId || "fe48a989-b30c-41f7-a4a0-f4f1fedf38a6";
+      const user = await storage.getUser(userId);
       
       if (!user) {
         console.log("❌ Debug test failed: User not found");
@@ -1839,7 +1840,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("\n🎯🎯🎯 DEBUG NOTIFICATION TEST STARTED 🎯🎯🎯");
-      console.log(`   👤 Test User: ${user.username} (ID: ${testUserId})`);
+      console.log(`   👤 Test User: ${user.username} (ID: ${userId})`);
       console.log(`   ⏰ Time: ${new Date().toISOString()}`);
       console.log(`   🔐 Checking OneSignal credentials...`);
       console.log(`   APP_ID: ${process.env.ONESIGNAL_APP_ID ? '✓ SET' : '✗ MISSING'}`);
@@ -1847,7 +1848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`\n   📤 Attempting to send test push notification...\n`);
       await sendPushNotification({
-        userId: testUserId,
+        userId,
         heading: "🎯 Debug Test Notification",
         content: `Debug test for ${user.username}. If you see this, the system works! 🔥`,
         data: { type: "debug_test" },
@@ -1855,9 +1856,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`\n✅ Debug test completed!`);
       res.json({ 
-        message: "Debug test completed - check server logs above!", 
-        userId: testUserId,
-        username: user.username
+        message: "Debug test completed - check server logs and check for push notification!", 
+        userId,
+        username: user.username,
+        loggedIn: !!(req as any).session?.userId
       });
     } catch (error) {
       console.error("\n❌ Debug test failed:");
