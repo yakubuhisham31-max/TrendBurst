@@ -37,6 +37,16 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalInitialized = false;
       
+      // Suppress OneSignal Worker Messenger warnings (non-fatal, don't affect functionality)
+      const originalError = console.error;
+      console.error = function(...args) {
+        const message = args[0]?.toString?.() || '';
+        if (message.includes('[Worker Messenger]')) {
+          return; // Suppress these specific warnings
+        }
+        originalError.apply(console, args);
+      };
+      
       console.log("📢 OneSignal SDK loading...");
       
       // Test basic service worker registration first
