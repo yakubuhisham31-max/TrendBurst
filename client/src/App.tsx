@@ -96,63 +96,72 @@ function UserIdLogger() {
     // Set up OneSignal user identification after SDK is fully initialized
     (async () => {
       try {
-        // Wait for OneSignal SDK to be fully initialized
-        if ((window as any).OneSignalDeferred) {
-          const OneSignalDeferred = (window as any).OneSignalDeferred;
-          await OneSignalDeferred;
+        // Check if OneSignal is available
+        const OS = (window as any).OneSignal;
+        if (!OS) {
+          console.log("ℹ️  OneSignal SDK not available on this domain");
+          return;
         }
-
-        if ((window as any).OneSignal) {
-          const OS = (window as any).OneSignal;
-          
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log("🔔 ONESIGNAL USER IDENTIFICATION");
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log(`👤 User: ${user.username} (${user.id})`);
-          console.log(`⏳ Waiting for OneSignal SDK initialization...`);
-          
-          // Wait for OneSignal to be fully initialized (with retry)
-          let retries = 0;
-          const maxRetries = 10;
-          
-          while (retries < maxRetries) {
-            try {
+        
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("🔔 ONESIGNAL USER IDENTIFICATION");
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log(`👤 User: ${user.username} (${user.id})`);
+        console.log(`⏳ Waiting for OneSignal SDK initialization...`);
+        
+        // Wait for OneSignal to be fully initialized before trying to login
+        let retries = 0;
+        const maxRetries = 20;
+        let loginSuccess = false;
+        
+        while (retries < maxRetries && !loginSuccess) {
+          try {
+            // Check if OneSignal.User is available and ready
+            if (OS.User && typeof OS.User.getExternalId === 'function') {
               // Try to identify user with OneSignal
               await OS.login(user.id);
               console.log(`✅ User linked to OneSignal with external_id: ${user.id}`);
-              break;
-            } catch (loginError) {
+              loginSuccess = true;
+            } else {
+              // SDK not fully ready yet
+              console.log(`⏳ [${retries + 1}/${maxRetries}] OneSignal.User not ready, retrying...`);
               retries++;
-              if (retries >= maxRetries) {
-                console.log(`ℹ️  Could not link user after ${maxRetries} attempts`);
-                console.log(`   Error:`, (loginError as Error).message);
-              } else {
-                // Wait 500ms before retrying
-                await new Promise(resolve => setTimeout(resolve, 500));
-              }
+              await new Promise(resolve => setTimeout(resolve, 250));
+            }
+          } catch (loginError) {
+            retries++;
+            const errorMsg = (loginError as any)?.message || String(loginError);
+            if (retries >= maxRetries) {
+              console.log(`ℹ️  Could not link user after ${maxRetries} attempts`);
+              console.log(`   Error:`, errorMsg);
+            } else {
+              // Wait before retrying
+              await new Promise(resolve => setTimeout(resolve, 250));
             }
           }
-
-          // Log service workers
-          try {
-            const sws = await navigator.serviceWorker.getRegistrations();
-            console.log(`📡 Service Workers registered: ${sws.length}`);
-            sws.forEach((sw, i) => {
-              console.log(`   ${i + 1}. ${sw.scope.replace(window.location.origin, '')} (Active: ${sw.active ? '✓' : '✗'})`);
-            });
-          } catch (e) {
-            console.log(`ℹ️  Service workers:`, (e as Error).message);
-          }
-
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log(`ℹ️  Click notification bell to subscribe to push`);
-          console.log(`   Backend sends to external_id: ${user.id}`);
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        } else {
-          console.log("ℹ️  OneSignal SDK not available on this domain");
         }
+
+        // Log service workers status
+        try {
+          const sws = await navigator.serviceWorker.getRegistrations();
+          console.log(`📡 Service Workers registered: ${sws.length}`);
+          sws.forEach((sw, i) => {
+            console.log(`   ${i + 1}. ${sw.scope.replace(window.location.origin, '')} (Active: ${sw.active ? '✓' : '✗'})`);
+          });
+          
+          if (sws.length === 0) {
+            console.warn(`⚠️  No service workers registered - push notifications will not work!`);
+          }
+        } catch (e) {
+          console.log(`ℹ️  Service workers:`, (e as Error).message);
+        }
+
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log(`ℹ️  Click notification bell to subscribe to push`);
+        console.log(`   Backend sends to external_id: ${user.id}`);
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
       } catch (error) {
-        console.log("ℹ️  OneSignal setup:", (error as Error).message);
+        console.log("ℹ️  OneSignal setup error:", (error as Error).message);
       }
     })();
   }, [user]);

@@ -32,56 +32,94 @@ export default function NotificationPermissionPrompt() {
 
   const handleAllow = async () => {
     try {
-      if ((window as any).OneSignal && Notification.permission === "default") {
-        const OS = (window as any).OneSignal;
+      const OS = (window as any).OneSignal;
+      
+      if (!OS) {
+        console.log("⚠️  [Prompt] OneSignal SDK not available");
+        setOpen(false);
+        return;
+      }
+      
+      if (Notification.permission === "default") {
         console.log("🔔 [Prompt] Requesting push notification permission...");
         
-        const permissionGranted = await OS.Notifications.requestPermission();
-        
-        if (permissionGranted) {
-          console.log("✅ [Prompt] Push notifications enabled!");
+        try {
+          const permissionGranted = await OS.Notifications.requestPermission();
           
-          // Wait for subscription to be created
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Capture subscription IDs
-          try {
-            const subscriptionId = OS.User.PushSubscription.id;
-            const oneSignalUserId = OS.User.onesignal_id;
-            const pushToken = OS.User.PushSubscription.token;
+          if (permissionGranted) {
+            console.log("✅ [Prompt] Push notifications enabled!");
+            
+            // Wait for subscription to be fully created and propagated
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Capture subscription IDs with multiple attempts
+            let subscriptionId = null;
+            let oneSignalUserId = null;
+            let pushToken = null;
+            
+            // Try multiple times to get subscription details
+            for (let attempt = 0; attempt < 5; attempt++) {
+              try {
+                if (OS.User && OS.User.PushSubscription) {
+                  subscriptionId = OS.User.PushSubscription.id;
+                  oneSignalUserId = OS.User.onesignal_id;
+                  pushToken = OS.User.PushSubscription.token;
+                  
+                  if (subscriptionId) {
+                    console.log(`✅ [Attempt ${attempt + 1}] Got subscription ID: ${subscriptionId}`);
+                    break;
+                  }
+                }
+              } catch (e) {
+                // Continue trying
+              }
+              
+              if (attempt < 4) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+              }
+            }
             
             console.log(`   📱 Push Subscription ID: ${subscriptionId || 'pending'}`);
             console.log(`   🆔 OneSignal User ID: ${oneSignalUserId || 'pending'}`);
             
             // Save subscription IDs to backend
-            const response = await fetch("/api/push/subscribe", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                subscriptionId: subscriptionId || 'pending',
-                oneSignalUserId,
-                pushToken,
-              }),
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-              console.log("✅ SUBSCRIPTION SAVED (FROM PROMPT)");
-              console.log(`   Trendx User ID: ${data.ids.userId}`);
-              console.log(`   Subscription ID: ${data.ids.subscriptionId}`);
-              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            try {
+              const response = await fetch("/api/push/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  subscriptionId: subscriptionId || 'pending',
+                  oneSignalUserId: oneSignalUserId || undefined,
+                  pushToken: pushToken || undefined,
+                }),
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("✅ SUBSCRIPTION SAVED (FROM PROMPT)");
+                console.log(`   Trendx User ID: ${data.ids.userId}`);
+                console.log(`   Subscription ID: ${data.ids.subscriptionId}`);
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              } else {
+                const error = await response.json();
+                console.error("❌ Failed to save subscription:", error);
+              }
+            } catch (saveError) {
+              console.error("❌ Error saving subscription:", (saveError as Error).message);
             }
-          } catch (idError) {
-            console.log("ℹ️  Could not capture subscription IDs:", (idError as Error).message);
+          } else {
+            console.log("ℹ️  [Prompt] Push notifications denied by user");
           }
-        } else {
-          console.log("ℹ️  [Prompt] Push notifications denied by user");
+        } catch (permissionError) {
+          console.error("❌ [Prompt] Permission request failed:", (permissionError as Error).message);
         }
+      } else {
+        console.log("ℹ️  [Prompt] Permission already granted or denied");
       }
     } catch (error) {
-      console.log("ℹ️  [Prompt] Permission request error:", (error as Error).message);
+      console.error("❌ [Prompt] Unexpected error:", (error as Error).message);
     }
     
     setOpen(false);
