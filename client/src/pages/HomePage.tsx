@@ -18,7 +18,7 @@ import { differenceInDays, differenceInHours } from "date-fns";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 
 type TrendWithCreator = Trend & {
-  creator: Pick<User, "id" | "username" | "profilePicture"> | null;
+  creator: Pick<User, "id" | "username" | "profilePicture" | "verified"> | null;
 };
 
 const categoryIcons: Record<string, JSX.Element> = {
