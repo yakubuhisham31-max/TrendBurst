@@ -219,10 +219,11 @@ export default function NotificationBell() {
 
   const unreadCount = unreadData?.count || 0;
 
-  // Handle popover open - allow re-requesting permission anytime
+  // Handle popover open - request permission or save subscription
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
-    if (isOpen && Notification.permission !== "granted") {
+    if (isOpen) {
+      // Always try to save subscription, whether permission is new or already granted
       requestPushPermission();
     }
   };
