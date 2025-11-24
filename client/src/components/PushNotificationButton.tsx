@@ -115,16 +115,42 @@ export default function PushNotificationButton() {
   const handleEnablePushNotifications = async () => {
     setIsLoading(true);
     try {
-      if (!(window as any).OneSignal) {
+      const OS = (window as any).OneSignal;
+      
+      // Check if OneSignal is available and properly initialized
+      if (!OS) {
+        console.log("❌ OneSignal SDK not loaded");
         toast({
-          title: "OneSignal not available",
+          title: "Push notifications not available",
           description: "Push notifications are only available on https://trendx.social",
           variant: "destructive"
         });
+        setIsLoading(false);
         return;
       }
 
-      const OS = (window as any).OneSignal;
+      // Verify OneSignal has the required methods
+      if (!OS.Notifications || typeof OS.Notifications.requestPermission !== 'function') {
+        console.log("❌ OneSignal SDK incomplete or not properly initialized");
+        toast({
+          title: "Push notifications not available",
+          description: "Push notifications are only available on https://trendx.social",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if browser supports notifications
+      if (!('Notification' in window)) {
+        toast({
+          title: "Not supported",
+          description: "Your browser doesn't support push notifications",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
 
       if (Notification.permission !== "granted") {
         console.log("🔔 Requesting push notification permission...");
@@ -135,6 +161,7 @@ export default function PushNotificationButton() {
             title: "Permission denied",
             description: "You declined push notifications. You can enable them later in browser settings.",
           });
+          setIsLoading(false);
           return;
         }
         console.log("✅ Push notifications enabled!");
@@ -150,12 +177,23 @@ export default function PushNotificationButton() {
         description: "You'll now receive notifications for posts, followers, and more.",
       });
     } catch (error) {
-      toast({
-        title: "Failed to enable notifications",
-        description: (error as Error).message,
-        variant: "destructive"
-      });
-      console.error("❌ Push permission error:", (error as Error).message);
+      const errorMsg = (error as Error).message;
+      console.error("❌ Push permission error:", errorMsg);
+      
+      // Check for domain restriction error
+      if (errorMsg.includes("Can only be used on")) {
+        toast({
+          title: "Production only",
+          description: "Push notifications work on https://trendx.social",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Failed to enable notifications",
+          description: errorMsg || "An error occurred while enabling push notifications",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
