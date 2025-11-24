@@ -116,10 +116,11 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 - Verification badges preserved across all comment levels
 
 ### 3. Push Notification Button Improvements
-- Fixed "Enable Push" button to handle missing OneSignal gracefully
-- Added validation to check if OneSignal SDK is properly initialized before calling
-- Clear error messages when OneSignal is not available on dev/test domains
-- Production domain restriction clearly communicated to users
+- Fixed "Enable Push" button to request browser permission FIRST (shows Allow/Block dialog)
+- Button now requests browser's native notification permission before OneSignal registration
+- Handles graceful fallback for development mode (OneSignal only available on production)
+- Clear messages explaining production-only restrictions
+- Works seamlessly on production (https://trendx.social) with full OneSignal integration
 
 ### 3. Automatic Notification Permission Modal
 - New `NotificationPermissionModal` component prompts users after signup

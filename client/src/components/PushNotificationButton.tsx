@@ -115,32 +115,6 @@ export default function PushNotificationButton() {
   const handleEnablePushNotifications = async () => {
     setIsLoading(true);
     try {
-      const OS = (window as any).OneSignal;
-      
-      // Check if OneSignal is available and properly initialized
-      if (!OS) {
-        console.log("❌ OneSignal SDK not loaded");
-        toast({
-          title: "Push notifications not available",
-          description: "Push notifications are only available on https://trendx.social",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Verify OneSignal has the required methods
-      if (!OS.Notifications || typeof OS.Notifications.requestPermission !== 'function') {
-        console.log("❌ OneSignal SDK incomplete or not properly initialized");
-        toast({
-          title: "Push notifications not available",
-          description: "Push notifications are only available on https://trendx.social",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
-
       // Check if browser supports notifications
       if (!('Notification' in window)) {
         toast({
@@ -152,66 +126,83 @@ export default function PushNotificationButton() {
         return;
       }
 
+      // Request browser notification permission first (this shows the Allow/Block dialog)
       if (Notification.permission !== "granted") {
-        console.log("🔔 Requesting push notification permission...");
-        try {
-          const permissionGranted = await OS.Notifications.requestPermission();
-          
-          if (!permissionGranted) {
-            toast({
-              title: "Permission denied",
-              description: "You can enable notifications in browser settings.",
-            });
-            setIsLoading(false);
-            return;
-          }
-          console.log("✅ Push notifications enabled!");
-        } catch (permError) {
-          const errorMsg = (permError as Error).message;
-          console.log("ℹ️ Permission error:", errorMsg);
-          
-          // Permission blocked is user declining - not a fatal error
-          if (errorMsg.includes("Permission blocked") || errorMsg.includes("denied")) {
-            toast({
-              title: "Permission denied",
-              description: "You can enable notifications in browser settings.",
-            });
-            setIsLoading(false);
-            return;
-          }
-          
-          // Re-throw other unexpected errors
-          throw permError;
+        console.log("🔔 Requesting browser notification permission...");
+        const permission = await Notification.requestPermission();
+        
+        if (permission !== "granted") {
+          console.log("❌ User denied notification permission");
+          toast({
+            title: "Permission denied",
+            description: "You can enable notifications in browser settings.",
+          });
+          setIsLoading(false);
+          return;
         }
-      } else {
-        console.log("✅ Push notifications already enabled - saving subscription...");
+        console.log("✅ Browser permission granted!");
       }
 
-      await saveSubscriptionToBackend(OS);
-      setIsEnabled(true);
+      // Now try to register with OneSignal for production notifications
+      const OS = (window as any).OneSignal;
       
-      toast({
-        title: "Push notifications enabled!",
-        description: "You'll now receive notifications for posts, followers, and more.",
-      });
+      // Check if OneSignal is available
+      if (!OS) {
+        console.log("⚠️  OneSignal SDK not loaded - push notifications work on production only");
+        toast({
+          title: "Development mode",
+          description: "Push notifications work on https://trendx.social. Browser notifications are ready!",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Verify OneSignal has the required methods
+      if (!OS.Notifications || typeof OS.Notifications.requestPermission !== 'function') {
+        console.log("⚠️  OneSignal SDK incomplete - available on production");
+        toast({
+          title: "Development mode",
+          description: "Push notifications work on https://trendx.social. Browser notifications are ready!",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Try to save subscription to OneSignal (production only)
+      try {
+        await saveSubscriptionToBackend(OS);
+        setIsEnabled(true);
+        
+        toast({
+          title: "Push notifications enabled!",
+          description: "You'll now receive notifications for posts, followers, and more.",
+        });
+      } catch (error) {
+        const errorMsg = (error as Error).message;
+        
+        // Check for domain restriction error
+        if (errorMsg.includes("Can only be used on")) {
+          toast({
+            title: "Production only",
+            description: "Push notifications work on https://trendx.social",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Failed to register with service",
+            description: errorMsg || "An error occurred",
+            variant: "destructive"
+          });
+        }
+      }
     } catch (error) {
       const errorMsg = (error as Error).message;
-      console.error("❌ Push permission error:", errorMsg);
-      
-      // Check for domain restriction error
-      if (errorMsg.includes("Can only be used on")) {
-        toast({
-          title: "Production only",
-          description: "Push notifications work on https://trendx.social",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Failed to enable notifications",
-          description: errorMsg || "An error occurred while enabling push notifications",
-          variant: "destructive"
-        });
-      }
+      console.error("❌ Error:", errorMsg);
+      toast({
+        title: "Failed to enable notifications",
+        description: errorMsg || "An error occurred while enabling push notifications",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
