@@ -396,7 +396,7 @@ export default function TrendCard({
                 data-testid="badge-days-left"
               >
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{daysLeft} day{daysLeft !== 1 ? 's' : ''}</span>
+                <span>{daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>
               </div>
             )}
           </div>
