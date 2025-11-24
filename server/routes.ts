@@ -1443,14 +1443,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/users/:username - Get user by username
   app.get("/api/users/:username", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername(req.params.username);
+      const requestedUsername = req.params.username;
+      console.log(`[PROFILE_LOOKUP] Searching for username: "${requestedUsername}"`);
+      
+      const user = await storage.getUserByUsername(requestedUsername);
 
       if (!user) {
+        console.log(`[PROFILE_LOOKUP] ❌ User not found for: "${requestedUsername}"`);
         return res.status(404).json({ message: "User not found" });
       }
 
+      console.log(`[PROFILE_LOOKUP] ✅ Found user: "${user.username}" (ID: ${user.id})`);
       res.json(sanitizeUser(user));
     } catch (error) {
+      console.log(`[PROFILE_LOOKUP] 💥 Error:`, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
