@@ -32,15 +32,33 @@ export function NotificationPermissionModal({ isOpen, onOpenChange }: Notificati
       // Request browser permission
       if (Notification.permission !== "granted") {
         console.log("🔔 Requesting push notification permission...");
-        const permissionGranted = await OS.Notifications.requestPermission();
-        
-        if (!permissionGranted) {
-          toast({
-            title: "Skipped",
-            description: "You can enable notifications anytime from your profile settings.",
-          });
-          onOpenChange(false);
-          return;
+        try {
+          const permissionGranted = await OS.Notifications.requestPermission();
+          
+          if (!permissionGranted) {
+            toast({
+              title: "Notifications skipped",
+              description: "You can enable them anytime in your settings.",
+            });
+            onOpenChange(false);
+            return;
+          }
+        } catch (permError) {
+          const errorMsg = (permError as Error).message;
+          console.log("ℹ️ Permission request:", errorMsg);
+          
+          // Permission blocked is not a fatal error - user just declined
+          if (errorMsg.includes("Permission blocked") || errorMsg.includes("denied")) {
+            toast({
+              title: "Notifications not enabled",
+              description: "You can enable them anytime in your settings.",
+            });
+            onOpenChange(false);
+            return;
+          }
+          
+          // Re-throw other unexpected errors
+          throw permError;
         }
       }
 

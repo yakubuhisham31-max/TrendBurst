@@ -154,17 +154,35 @@ export default function PushNotificationButton() {
 
       if (Notification.permission !== "granted") {
         console.log("🔔 Requesting push notification permission...");
-        const permissionGranted = await OS.Notifications.requestPermission();
-        
-        if (!permissionGranted) {
-          toast({
-            title: "Permission denied",
-            description: "You declined push notifications. You can enable them later in browser settings.",
-          });
-          setIsLoading(false);
-          return;
+        try {
+          const permissionGranted = await OS.Notifications.requestPermission();
+          
+          if (!permissionGranted) {
+            toast({
+              title: "Permission denied",
+              description: "You can enable notifications in browser settings.",
+            });
+            setIsLoading(false);
+            return;
+          }
+          console.log("✅ Push notifications enabled!");
+        } catch (permError) {
+          const errorMsg = (permError as Error).message;
+          console.log("ℹ️ Permission error:", errorMsg);
+          
+          // Permission blocked is user declining - not a fatal error
+          if (errorMsg.includes("Permission blocked") || errorMsg.includes("denied")) {
+            toast({
+              title: "Permission denied",
+              description: "You can enable notifications in browser settings.",
+            });
+            setIsLoading(false);
+            return;
+          }
+          
+          // Re-throw other unexpected errors
+          throw permError;
         }
-        console.log("✅ Push notifications enabled!");
       } else {
         console.log("✅ Push notifications already enabled - saving subscription...");
       }
