@@ -17,6 +17,9 @@ export default function PushNotificationButton() {
   }, []);
 
   const saveSubscriptionToBackend = async (OS: any) => {
+    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📤 SAVING SUBSCRIPTION TO BACKEND");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("⏳ Waiting for OneSignal to create subscription (up to 10s)...");
     
     let subscriptionId = null;
@@ -25,18 +28,20 @@ export default function PushNotificationButton() {
       const id = OS.User.PushSubscription.id;
       if (id && id !== 'pending') {
         subscriptionId = id;
-        console.log(`✅ Got subscription ID after ${(i + 1) * 500}ms`);
+        console.log(`✅ Got subscription ID after ${(i + 1) * 500}ms: ${subscriptionId}`);
         break;
       }
     }
     
     if (!subscriptionId) {
-      console.error("❌ OneSignal subscription ID not available after 10s");
-      throw new Error("Subscription ID not available");
+      const error = "OneSignal subscription ID not available after 10 seconds";
+      console.error("❌", error);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+      throw new Error(error);
     }
     
     try {
-      console.log(`   📱 Push Subscription ID: ${subscriptionId}`);
+      console.log(`   📱 Subscription ID: ${subscriptionId}`);
       
       // Wait for OneSignal User ID to be assigned (up to 5 seconds)
       let oneSignalUserId = null;
@@ -44,32 +49,44 @@ export default function PushNotificationButton() {
         const id = OS.User.onesignal_id;
         if (id && id !== 'pending') {
           oneSignalUserId = id;
-          console.log(`✅ Got OneSignal User ID after ${(i + 1) * 500}ms: ${oneSignalUserId}`);
+          console.log(`✅ OneSignal User ID assigned after ${(i + 1) * 500}ms: ${oneSignalUserId}`);
           break;
         }
         if (i < 9) await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      console.log(`   🆔 OneSignal User ID: ${oneSignalUserId || 'not assigned yet (will assign on backend)'}`);
+      if (!oneSignalUserId) {
+        console.log(`   ⚠️  OneSignal User ID not assigned yet (will be assigned by backend)`);
+      }
       
       const pushToken = OS.User.PushSubscription.token;
-      console.log(`   🔑 Push Token: ${pushToken ? '✓ present' : '✗ not available'}`);
+      console.log(`   🔑 Push Token: ${pushToken ? 'present' : 'not available'}`);
+      console.log(`   📤 Sending to backend...`);
       
       const response = await apiRequest("POST", "/api/push/subscribe", {
         subscriptionId,
         oneSignalUserId: oneSignalUserId || undefined,
         pushToken: pushToken,
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Backend returned error (${response.status}):`, errorText);
+        throw new Error(`Backend error: ${response.status}`);
+      }
       
       const data = await response.json();
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("✅ PUSH NOTIFICATIONS ENABLED");
-      console.log(`   Subscription ID: ${data.ids.subscriptionId}`);
+      console.log("✅ PUSH NOTIFICATIONS ENABLED!");
+      console.log(`   Subscription saved: ${data.ids.subscriptionId}`);
+      console.log(`   External ID (Trendx): ${data.ids.externalId}`);
       console.log(`   OneSignal User ID: ${data.ids.oneSignalUserId}`);
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("   Status: READY TO RECEIVE NOTIFICATIONS 🚀");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
       return true;
     } catch (error) {
       console.error("❌ Failed to save subscription:", (error as Error).message);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
       throw error;
     }
   };
