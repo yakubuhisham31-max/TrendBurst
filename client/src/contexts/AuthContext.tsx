@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
-import { initializeOneSignal, updateOneSignalUserId } from "@/lib/onesignal";
 import type { User } from "@shared/schema";
 
 export interface RegisterData {
@@ -40,7 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (data?.user) {
       setUser(data.user);
-      initializeOneSignal(data.user.id);
     } else {
       setUser(null);
     }
@@ -53,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const { user } = await response.json();
     setUser(user);
-    initializeOneSignal(user.id);
   };
 
   const logout = async () => {
@@ -65,7 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await apiRequest("POST", "/api/auth/register", data);
     const { user } = await response.json();
     setUser(user);
-    initializeOneSignal(user.id);
   };
 
   const checkAuth = async () => {

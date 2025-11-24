@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Menu, Plus, Search, AlertCircle, LogIn, Flame, Sparkles, TrendingUp } from "lucide-react";
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
-import NotificationBell from "@/components/NotificationBell";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -170,9 +169,7 @@ export default function HomePage() {
             className="h-14 sm:h-16 md:h-18 object-contain"
             data-testid="img-logo"
           />
-          {user ? (
-            <NotificationBell />
-          ) : (
+          {!user && (
             <Button
               variant="default"
               onClick={() => setAuthModalOpen(true)}

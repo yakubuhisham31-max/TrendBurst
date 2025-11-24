@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
-import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import HomePage from "@/pages/HomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
@@ -85,85 +84,12 @@ function UserIdLogger() {
   useEffect(() => {
     if (!user) return;
 
-    // Log Trendx User ID (External ID for OneSignal)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("👤 USER IDENTIFICATION LOGGED");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`🆔 Trendx User ID (External ID): ${user.id}`);
+    console.log(`🆔 Trendx User ID: ${user.id}`);
     console.log(`👤 Username: ${user.username}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-    // Set up OneSignal user identification after SDK is fully initialized
-    (async () => {
-      try {
-        // Check if OneSignal is available
-        const OS = (window as any).OneSignal;
-        if (!OS) {
-          console.log("ℹ️  OneSignal SDK not available on this domain");
-          return;
-        }
-        
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log("🔔 ONESIGNAL USER IDENTIFICATION");
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log(`👤 User: ${user.username} (${user.id})`);
-        console.log(`⏳ Waiting for OneSignal SDK initialization...`);
-        
-        // Wait for OneSignal to be fully initialized before trying to login
-        let retries = 0;
-        const maxRetries = 20;
-        let loginSuccess = false;
-        
-        while (retries < maxRetries && !loginSuccess) {
-          try {
-            // Check if OneSignal.User is available and ready
-            if (OS.User && typeof OS.User.getExternalId === 'function') {
-              // Try to identify user with OneSignal
-              await OS.login(user.id);
-              console.log(`✅ User linked to OneSignal with external_id: ${user.id}`);
-              loginSuccess = true;
-            } else {
-              // SDK not fully ready yet
-              console.log(`⏳ [${retries + 1}/${maxRetries}] OneSignal.User not ready, retrying...`);
-              retries++;
-              await new Promise(resolve => setTimeout(resolve, 250));
-            }
-          } catch (loginError) {
-            retries++;
-            const errorMsg = (loginError as any)?.message || String(loginError);
-            if (retries >= maxRetries) {
-              console.log(`ℹ️  Could not link user after ${maxRetries} attempts`);
-              console.log(`   Error:`, errorMsg);
-            } else {
-              // Wait before retrying
-              await new Promise(resolve => setTimeout(resolve, 250));
-            }
-          }
-        }
-
-        // Log service workers status
-        try {
-          const sws = await navigator.serviceWorker.getRegistrations();
-          console.log(`📡 Service Workers registered: ${sws.length}`);
-          sws.forEach((sw, i) => {
-            console.log(`   ${i + 1}. ${sw.scope.replace(window.location.origin, '')} (Active: ${sw.active ? '✓' : '✗'})`);
-          });
-          
-          if (sws.length === 0) {
-            console.warn(`⚠️  No service workers registered - push notifications will not work!`);
-          }
-        } catch (e) {
-          console.log(`ℹ️  Service workers:`, (e as Error).message);
-        }
-
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log(`ℹ️  Click notification bell to subscribe to push`);
-        console.log(`   Backend sends to external_id: ${user.id}`);
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      } catch (error) {
-        console.log("ℹ️  OneSignal setup error:", (error as Error).message);
-      }
-    })();
   }, [user]);
 
   return null;
@@ -175,7 +101,6 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <UserIdLogger />
-          <NotificationPermissionPrompt />
           <Router />
           <Toaster />
         </TooltipProvider>
