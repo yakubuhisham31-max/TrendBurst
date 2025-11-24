@@ -111,7 +111,14 @@ export default function NotificationBell() {
               pushToken: pushToken,
             });
             
-            const data = await response.json();
+            const responseText = await response.text();
+            
+            if (!response.ok) {
+              console.error("❌ Subscription save failed:", response.status, responseText);
+              throw new Error(responseText || "Failed to save subscription");
+            }
+            
+            const data = JSON.parse(responseText);
             console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             console.log("✅ SUBSCRIPTION SAVED TO DATABASE");
             console.log(`   Trendx User ID: ${data.ids.userId}`);
