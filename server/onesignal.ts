@@ -7,16 +7,19 @@ export interface PushNotificationPayload {
 
 export async function sendPushNotification(payload: PushNotificationPayload) {
   try {
+    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📤 sendPushNotification() called");
+    console.log(`   📢 Heading: "${payload.heading}"`);
+    console.log(`   👤 To external_id: ${payload.userId}`);
+    console.log(`   📝 Content: "${payload.content}"`);
+    
     if (!process.env.ONESIGNAL_APP_ID || !process.env.ONESIGNAL_REST_API_KEY) {
       console.log("⚠️ OneSignal not configured - missing APP_ID or API_KEY");
-      console.log(`APP_ID: ${process.env.ONESIGNAL_APP_ID ? '✓ set' : '✗ missing'}`);
-      console.log(`REST_API_KEY: ${process.env.ONESIGNAL_REST_API_KEY ? '✓ set' : '✗ missing'}`);
+      console.log(`   APP_ID: ${process.env.ONESIGNAL_APP_ID ? '✓ set' : '✗ MISSING'}`);
+      console.log(`   REST_API_KEY: ${process.env.ONESIGNAL_REST_API_KEY ? '✓ set' : '✗ MISSING'}`);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
       return;
     }
-
-    console.log(`📢 Sending push notification: "${payload.heading}"`);
-    console.log(`   👤 To user: ${payload.userId}`);
-    console.log(`   📝 Message: ${payload.content}`);
 
     // Determine icon URLs based on environment
     const isProduction = process.env.NODE_ENV === 'production';
@@ -51,9 +54,10 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     };
 
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
-    console.log(`🔑 API Key first 20 chars: ${apiKey?.substring(0, 20)}...`);
-    console.log(`🖼️ Logo URL: ${logoUrl}`);
-    console.log(`📡 Using Authorization header: Bearer ${apiKey?.substring(0, 20)}...`);
+    console.log(`   🔑 API Key: ${apiKey?.substring(0, 20)}...`);
+    console.log(`   🆔 App ID: ${process.env.ONESIGNAL_APP_ID?.substring(0, 20)}...`);
+    console.log(`   🖼️ Logo URL: ${logoUrl}`);
+    console.log(`   📡 Calling OneSignal API...`);
 
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
@@ -64,22 +68,28 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       body: JSON.stringify(requestBody),
     });
 
-    console.log(`📊 OneSignal API response status: ${response.status}`);
+    console.log(`   📊 API Response Status: ${response.status}`);
 
     if (!response.ok) {
       const error = await response.text();
-      console.error(`❌ OneSignal API error (status ${response.status}):`, error);
+      console.error(`❌ OneSignal API error (${response.status}):`, error);
       
       // Check if it's a "no subscribers" error
-      if (error.includes("no_subscribed_users") || error.includes("All") && error.includes("not valid")) {
+      if (error.includes("no_subscribed_users") || (error.includes("All") && error.includes("not valid"))) {
         console.error("⚠️  User has not subscribed to push notifications yet!");
-        console.error("   → Tell user to click the notification bell 🔔 and grant permission");
+        console.error("   → User needs to click notification bell 🔔");
       }
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
       return;
     }
 
-    console.log(`✅ Push notification sent successfully!`);
+    const responseData = await response.json();
+    console.log(`✅ Push notification sent to OneSignal!`);
+    console.log(`   🎯 OneSignal Response:`, responseData);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
   } catch (error) {
+    console.error("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.error("❌ Failed to send OneSignal push notification:", error);
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
   }
 }

@@ -1710,12 +1710,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/push/subscribe", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).session.userId;
+      console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("📥 POST /api/push/subscribe called");
+      console.log(`   👤 User ID: ${userId}`);
+      console.log(`   📦 Body:`, req.body);
+      
       const { subscriptionId, oneSignalUserId, pushToken } = req.body;
 
       if (!subscriptionId || subscriptionId === 'pending') {
+        console.log(`   ❌ Invalid subscriptionId: "${subscriptionId}"`);
         return res.status(400).json({ message: "subscriptionId is missing or not ready - please try again" });
       }
 
+      console.log(`   ✅ Saving subscription to database...`);
       const subscription = await storage.saveOneSignalSubscription({
         userId,
         subscriptionId,
@@ -1725,10 +1732,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: 1,
       });
 
-      console.log(`✅ OneSignal subscription saved for user ${userId}`);
+      console.log(`✅ OneSignal subscription saved!`);
       console.log(`   📱 Subscription ID: ${subscriptionId}`);
       console.log(`   🆔 OneSignal User ID: ${oneSignalUserId || 'pending'}`);
       console.log(`   🔑 Push Token: ${pushToken ? '✓ present' : '✗ not provided'}`);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
       res.json({ 
         message: "Subscription saved successfully", 
@@ -1741,8 +1749,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Error saving subscription:", error);
-      res.status(500).json({ message: "Failed to save subscription" });
+      console.error("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.error("❌ Error saving subscription:", error);
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+      res.status(500).json({ message: "Failed to save subscription", error: String(error) });
     }
   });
 
