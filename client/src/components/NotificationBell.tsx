@@ -72,17 +72,29 @@ export default function NotificationBell() {
         
         if (permissionGranted) {
           console.log("✅ Push notifications enabled!");
-          console.log("⏳ Waiting for OneSignal to create subscription...");
+          console.log("⏳ Waiting for OneSignal to create subscription (up to 10s)...");
           
-          // Wait for subscription to be created (OneSignal v16 async process)
-          // The subscription ID is assigned after the permission is granted and service worker is registered
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Wait for subscription to be created - OneSignal v16 needs time to assign IDs
+          let subscriptionId = null;
+          for (let i = 0; i < 20; i++) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const id = OS.User.PushSubscription.id;
+            if (id && id !== 'pending') {
+              subscriptionId = id;
+              console.log(`✅ Got subscription ID after ${(i + 1) * 500}ms`);
+              break;
+            }
+          }
+          
+          if (!subscriptionId) {
+            console.error("❌ OneSignal subscription ID not available after 10s");
+            console.error("⚠️  Push notifications may not work. Try again or check OneSignal dashboard.");
+            return;
+          }
           
           // Capture all necessary IDs for tracking
           try {
-            // Get the push subscription ID (this is the unique subscription identifier)
-            const subscriptionId = OS.User.PushSubscription.id;
-            console.log(`   📱 Push Subscription ID: ${subscriptionId || 'pending assignment'}`);
+            console.log(`   📱 Push Subscription ID: ${subscriptionId}`);
             
             // Get OneSignal's internal user ID
             const oneSignalUserId = OS.User.onesignal_id;
@@ -94,7 +106,7 @@ export default function NotificationBell() {
             
             // Save subscription IDs to backend
             const response = await apiRequest("POST", "/api/push/subscribe", {
-              subscriptionId: subscriptionId || 'pending',
+              subscriptionId,
               oneSignalUserId: oneSignalUserId,
               pushToken: pushToken,
             });
@@ -108,7 +120,7 @@ export default function NotificationBell() {
             console.log(`   OneSignal User ID: ${data.ids.oneSignalUserId}`);
             console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           } catch (idError) {
-            console.log("ℹ️  Could not capture subscription IDs:", (idError as Error).message);
+            console.error("❌ Failed to save subscription:", (idError as Error).message);
           }
         } else {
           console.log("ℹ️  Push notifications denied by user");

@@ -1712,8 +1712,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).session.userId;
       const { subscriptionId, oneSignalUserId, pushToken } = req.body;
 
-      if (!subscriptionId) {
-        return res.status(400).json({ message: "subscriptionId required" });
+      if (!subscriptionId || subscriptionId === 'pending') {
+        return res.status(400).json({ message: "subscriptionId is missing or not ready - please try again" });
       }
 
       const subscription = await storage.saveOneSignalSubscription({
