@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neonConfig, Pool } from "@neondatabase/serverless";
 import ws from "ws";
-import { eq, and, desc, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, isNull, inArray } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -225,89 +225,84 @@ export class DbStorage implements IStorage {
 
   async deleteTrend(id: string): Promise<void> {
     try {
-      // Delete all related data - ORDER MATTERS for foreign keys!
+      console.log(`[deleteTrend] Starting deletion for trend: ${id}`);
       
       // Step 1: Get all posts for this trend
-      const posts = await db.select().from(schema.posts).where(eq(schema.posts.trendId, id));
+      const posts = await db.select({ id: schema.posts.id }).from(schema.posts).where(eq(schema.posts.trendId, id));
       const postIds = posts.map(p => p.id);
+      console.log(`[deleteTrend] Found ${postIds.length} posts`);
       
-      // Step 2: Delete all comments (post-level AND trend-level, with nested replies)
-      // First, find ALL comments for posts in this trend and their nested replies
+      // Step 2: Get all comments on posts in this trend
+      let postCommentIds: string[] = [];
       if (postIds.length > 0) {
-        // Get all post comments (parent and child)
-        const postComments = await db.select({ id: schema.comments.id })
-          .from(schema.comments)
-          .where(sql`${schema.comments.postId} IN (${sql.join(postIds)})`);
+        const postComments = await db.select({ id: schema.comments.id }).from(schema.comments).where(inArray(schema.comments.postId, postIds));
+        postCommentIds = postComments.map(c => c.id);
+        console.log(`[deleteTrend] Found ${postCommentIds.length} post comments`);
         
-        // Delete notifications for these comments FIRST
-        if (postComments.length > 0) {
-          const commentIds = postComments.map(c => c.id);
-          await db.delete(schema.notifications).where(
-            sql`${schema.notifications.commentId} IN (${sql.join(commentIds)})`
-          );
+        // Delete notifications for these comments
+        if (postCommentIds.length > 0) {
+          console.log(`[deleteTrend] Deleting notifications for post comments...`);
+          await db.delete(schema.notifications).where(inArray(schema.notifications.commentId, postCommentIds));
         }
         
-        // Delete all post comments (nested replies handled together)
-        await db.delete(schema.comments).where(
-          sql`${schema.comments.postId} IN (${sql.join(postIds)})`
-        );
+        // Delete all post comments
+        console.log(`[deleteTrend] Deleting post comments...`);
+        await db.delete(schema.comments).where(inArray(schema.comments.postId, postIds));
       }
       
-      // Step 3: Delete trend-level chat comments (trendId set, postId null)
-      const trendComments = await db.select({ id: schema.comments.id })
-        .from(schema.comments)
-        .where(and(eq(schema.comments.trendId, id), isNull(schema.comments.postId)));
+      // Step 3: Get and delete trend-level chat comments
+      const trendComments = await db.select({ id: schema.comments.id }).from(schema.comments).where(and(
+        eq(schema.comments.trendId, id),
+        isNull(schema.comments.postId)
+      ));
+      const trendCommentIds = trendComments.map(c => c.id);
+      console.log(`[deleteTrend] Found ${trendCommentIds.length} trend comments`);
       
-      if (trendComments.length > 0) {
-        const trendCommentIds = trendComments.map(c => c.id);
-        
-        // Delete notifications for trend comments
-        await db.delete(schema.notifications).where(
-          sql`${schema.notifications.commentId} IN (${sql.join(trendCommentIds)})`
-        );
-        
-        // Delete trend-level comments (this will cascade to nested replies)
-        await db.delete(schema.comments).where(
-          sql`${schema.comments.id} IN (${sql.join(trendCommentIds)})`
-        );
+      if (trendCommentIds.length > 0) {
+        console.log(`[deleteTrend] Deleting notifications for trend comments...`);
+        await db.delete(schema.notifications).where(inArray(schema.notifications.commentId, trendCommentIds));
+        console.log(`[deleteTrend] Deleting trend comments...`);
+        await db.delete(schema.comments).where(inArray(schema.comments.id, trendCommentIds));
       }
       
       // Step 4: Delete notifications for this trend
+      console.log(`[deleteTrend] Deleting trend notifications...`);
       await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
       
-      // Step 5: Delete votes for all posts in this trend
+      // Step 5: Delete votes and saved posts for posts in this trend
       if (postIds.length > 0) {
-        for (const postId of postIds) {
-          await db.delete(schema.votes).where(eq(schema.votes.postId, postId));
-          await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, postId));
-        }
+        console.log(`[deleteTrend] Deleting votes...`);
+        await db.delete(schema.votes).where(inArray(schema.votes.postId, postIds));
+        console.log(`[deleteTrend] Deleting saved posts...`);
+        await db.delete(schema.savedPosts).where(inArray(schema.savedPosts.postId, postIds));
+        console.log(`[deleteTrend] Deleting post notifications...`);
+        await db.delete(schema.notifications).where(inArray(schema.notifications.postId, postIds));
       }
       
-      // Step 6: Delete notifications for all posts in this trend
+      // Step 6: Delete all posts for this trend
       if (postIds.length > 0) {
-        for (const postId of postIds) {
-          await db.delete(schema.notifications).where(eq(schema.notifications.postId, postId));
-        }
+        console.log(`[deleteTrend] Deleting posts...`);
+        await db.delete(schema.posts).where(inArray(schema.posts.id, postIds));
       }
       
-      // Step 7: Delete all posts for this trend
-      if (postIds.length > 0) {
-        await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
-      }
-      
-      // Step 8: Delete saved trends
+      // Step 7: Delete saved trends
+      console.log(`[deleteTrend] Deleting saved trends...`);
       await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
       
-      // Step 9: Delete view tracking for this trend
+      // Step 8: Delete view tracking for this trend
+      console.log(`[deleteTrend] Deleting view tracking...`);
       await db.delete(schema.viewTracking).where(and(
         eq(schema.viewTracking.type, 'chat'),
         eq(schema.viewTracking.identifier, id)
       ));
       
-      // Step 10: Finally delete the trend itself
+      // Step 9: Delete the trend itself
+      console.log(`[deleteTrend] Deleting trend...`);
       await db.delete(schema.trends).where(eq(schema.trends.id, id));
+      
+      console.log(`[deleteTrend] ✅ Successfully deleted trend: ${id}`);
     } catch (error) {
-      console.error("Error in deleteTrend:", error);
+      console.error(`[deleteTrend] ❌ Error deleting trend ${id}:`, error);
       throw error;
     }
   }
@@ -648,37 +643,42 @@ export class DbStorage implements IStorage {
 
   async deletePost(id: string): Promise<void> {
     try {
-      // Delete all related data - ORDER MATTERS for foreign keys!
+      console.log(`[deletePost] Starting deletion for post: ${id}`);
       
-      // Step 1: Get all comments for this post (both parent and child)
-      const comments = await db.select({ id: schema.comments.id })
-        .from(schema.comments)
-        .where(eq(schema.comments.postId, id));
+      // Step 1: Get all comments for this post
+      const comments = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.postId, id));
+      const commentIds = comments.map(c => c.id);
+      console.log(`[deletePost] Found ${commentIds.length} comments`);
       
-      // Step 2: Delete notifications for these comments FIRST
-      if (comments.length > 0) {
-        const commentIds = comments.map(c => c.id);
-        await db.delete(schema.notifications).where(
-          sql`${schema.notifications.commentId} IN (${sql.join(commentIds)})`
-        );
+      // Step 2: Delete notifications for these comments
+      if (commentIds.length > 0) {
+        console.log(`[deletePost] Deleting notifications for comments...`);
+        await db.delete(schema.notifications).where(inArray(schema.notifications.commentId, commentIds));
       }
       
-      // Step 3: Delete all comments for this post (nested replies handled together)
+      // Step 3: Delete all comments for this post
+      console.log(`[deletePost] Deleting comments...`);
       await db.delete(schema.comments).where(eq(schema.comments.postId, id));
       
       // Step 4: Delete votes for this post
+      console.log(`[deletePost] Deleting votes...`);
       await db.delete(schema.votes).where(eq(schema.votes.postId, id));
       
       // Step 5: Delete saved post records
+      console.log(`[deletePost] Deleting saved posts...`);
       await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
       
       // Step 6: Delete notifications related to this post
+      console.log(`[deletePost] Deleting post notifications...`);
       await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
       
-      // Step 7: Finally delete the post itself
+      // Step 7: Delete the post itself
+      console.log(`[deletePost] Deleting post...`);
       await db.delete(schema.posts).where(eq(schema.posts.id, id));
+      
+      console.log(`[deletePost] ✅ Successfully deleted post: ${id}`);
     } catch (error) {
-      console.error("Error in deletePost:", error);
+      console.error(`[deletePost] ❌ Error deleting post ${id}:`, error);
       throw error;
     }
   }
