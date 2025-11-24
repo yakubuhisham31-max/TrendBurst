@@ -11,13 +11,13 @@ import { ChevronLeft, Upload } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
 export default function EditProfilePage() {
   const [, setLocation] = useLocation();
-  const { user, checkAuth } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -97,7 +97,9 @@ export default function EditProfilePage() {
       }
       setSelectedProfileFile(null);
       
-      await checkAuth();
+      // Invalidate user cache to refetch updated profile
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -239,10 +241,10 @@ export default function EditProfilePage() {
                 <Avatar className="w-20 h-20" data-testid="avatar-profile">
                   <AvatarImage 
                     src={profilePreviewUrl || user.profilePicture || undefined} 
-                    alt={user.username} 
+                    alt={user.username || "User"} 
                   />
                   <AvatarFallback className="text-xl">
-                    {user.username.slice(0, 2).toUpperCase()}
+                    {(user.username || "U").slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 {profilePreviewUrl && (

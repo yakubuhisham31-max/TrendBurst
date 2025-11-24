@@ -97,7 +97,16 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 
 ## Recent Changes (November 24, 2025)
 
-### 1. Disqualification Notifications (Latest)
+### 1. Fixed EditProfilePage "n is not a function" Error (Latest)
+- **Issue:** EditProfilePage was destructuring `checkAuth` from useAuth hook, but this function doesn't exist
+- **Root Cause:** The `useAuth` hook only exports `user`, `isLoading`, `isAuthenticated`, and `logout` - no `checkAuth` function
+- **Solution:**
+  - Removed `checkAuth` from the destructuring on line 23
+  - Replaced `await checkAuth()` with `queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] })` to refresh user cache after profile update
+  - Added fallback values for potentially undefined `user.username` using `(user.username || "U")`
+- **Result:** Profile save now works without errors, user data is properly refreshed after updates
+
+### 2. Disqualification Notifications
 - Added push notifications when trend creators disqualify user posts
 - Added in-app notifications for disqualifications
 - Notification includes trend name and alerts user about 50 TrendX point loss
