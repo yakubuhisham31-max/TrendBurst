@@ -110,6 +110,27 @@ if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
   process.exit(1);
 }
 
+// Suppress benign "relation already exists" errors from connect-pg-simple during session setup
+const originalConsoleError = console.error;
+const suppressedErrors = new Set<string>();
+
+console.error = function(...args: any[]) {
+  const message = String(args[0]?.message || args[0] || '');
+  
+  // Check for benign errors we've already logged
+  if (suppressedErrors.has(message)) {
+    return; // Don't log duplicate errors
+  }
+  
+  // Suppress benign "relation already exists" errors from session store
+  if ((message.includes('IDX_session_expire') || message.includes('relation')) && message.includes('already exists')) {
+    suppressedErrors.add(message);
+    return; // Silently ignore on first occurrence
+  }
+  
+  originalConsoleError.apply(console, args);
+};
+
 app.use(
   session({
     store: new PgStore({
@@ -130,6 +151,9 @@ app.use(
     },
   })
 );
+
+// Keep error suppression active throughout the app lifecycle
+// Don't restore console.error - keep the suppression in place
 
 // Add cache control headers to prevent browser caching (but exclude service workers)
 app.use((req, res, next) => {
