@@ -264,6 +264,12 @@ app.get("/OneSignalSDKUpdaterWorker.js", (req, res) => {
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    // Don't try to send response if headers already sent
+    if (res.headersSent) {
+      console.error('Error (headers already sent):', err);
+      return;
+    }
+
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
