@@ -32,50 +32,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
 });
 
-// Handle push notifications from OneSignal
-self.addEventListener("push", (event) => {
-  console.log("📬 Push notification received:", event);
-  
-  if (!event.data) {
-    console.log("   ⚠️ No data in push event");
-    return;
-  }
-
-  try {
-    const data = event.data.json();
-    console.log("   📋 Notification data:", data);
-
-    const title = data.title || "Trendx Notification";
-    const options = {
-      body: data.alert || data.body || "",
-      icon: data.icon || "/favicon.png",
-      badge: data.badge || "/favicon.png",
-      tag: data.custom?.i || "trendx-notification",
-      requireInteraction: false,
-      data: data.custom || {}
-    };
-
-    console.log(`   🔔 Displaying: "${title}"`);
-    console.log(`   📝 Body: "${options.body}"`);
-
-    event.waitUntil(
-      self.registration.showNotification(title, options)
-        .then(() => {
-          console.log("✅ Notification displayed successfully");
-        })
-        .catch((err) => {
-          console.error("❌ Failed to display notification:", err);
-        })
-    );
-  } catch (err) {
-    console.error("❌ Error parsing push notification:", err);
-  }
-});
-
-// Handle notification clicks
-self.addEventListener("notificationclick", (event) => {
-  console.log("🔔 Notification clicked:", event.notification);
-  event.notification.close();
-});
+// OneSignal's SDK handles push notifications
+// Our custom SW just provides message handling and lifecycle management
+// Let OneSignalSDKWorker.js handle all push events and notification display
 
 console.log("✅ Service Worker ready to receive messages");

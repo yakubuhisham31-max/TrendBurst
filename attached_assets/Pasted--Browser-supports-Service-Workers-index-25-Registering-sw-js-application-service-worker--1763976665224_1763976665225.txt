@@ -1,0 +1,78 @@
+✅ Browser supports Service Workers
+(index):25 📝 Registering /sw.js (application service worker)...
+(index):50 📢 OneSignal SDK loading...
+(index):55 📊 Service worker registrations: 1
+(index):57   1. https://trendx.social/
+sw.js:3 🔧 Service Worker script loaded
+sw.js:81 ✅ Service Worker ready to receive messages
+sw.js:26 🛠️ Service Worker installing...
+(index):27 ✅ Application Service Worker registered: https://trendx.social/
+(index):66 🔄 OneSignal.init() starting...
+(index):67 📍 Current domain: https://trendx.social
+(index):68 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-g0oAGXJX.js:384 👤 USER IDENTIFICATION LOGGED
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-g0oAGXJX.js:384 🆔 Trendx User ID (External ID): fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-g0oAGXJX.js:384 👤 Username: Icey
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-g0oAGXJX.js:380 🔍 Checking push notification status...
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-g0oAGXJX.js:384 🔔 ONESIGNAL USER IDENTIFICATION
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-g0oAGXJX.js:384 👤 User: Icey (fe48a989-b30c-41f7-a4a0-f4f1fedf38a6)
+index-g0oAGXJX.js:384 ⏳ Waiting for OneSignal SDK initialization...
+(index):73 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):88 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+(index):94 ✅ Site is HTTPS - OneSignal can register service workers
+(index):97 📢 Calling OneSignal.init() with config...
+sw.js:31 ✅ Service Worker activated
+index-g0oAGXJX.js:380 📊 Push status response: {isEnabled: true, subscription: {…}}
+index-g0oAGXJX.js:380 ✅ Push notifications already enabled - button will show 'Enabled'
+index-g0oAGXJX.js:384 ✅ User linked to OneSignal with external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-g0oAGXJX.js:384 📡 Service Workers registered: 1
+index-g0oAGXJX.js:384    1. / (Active: ✓)
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-g0oAGXJX.js:384 ℹ️  Click notification bell to subscribe to push
+index-g0oAGXJX.js:384    Backend sends to external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-g0oAGXJX.js:384 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+(index):100 🎉 OneSignal.init() completed successfully!
+(index):101 Init result: undefined
+(index):103 ✅ OneSignal SDK initialized successfully
+(index):104 📱 Push notifications are enabled for this domain
+(index):109 📝 Registering /OneSignalSDKWorker.js...
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+(index):111 ✅ OneSignalSDKWorker registered: https://trendx.social/
+(index):119 👤 OneSignal.User available
+(index):136 📡 [500ms] Service workers registered: 1
+(index):141   [500ms] 1. Scope: https://trendx.social/
+(index):142   [500ms]    Active: Yes
+(index):136 📡 [2s] Service workers registered: 1
+(index):141   [2s] 1. Scope: https://trendx.social/
+(index):142   [2s]    Active: Yes
+(index):136 📡 [5s] Service workers registered: 1
+(index):141   [5s] 1. Scope: https://trendx.social/
+(index):142   [5s]    Active: Yes
+(index):161 🔔 Current permission: true
+(index):172 ✅ OneSignal SDK initialized - ready to request push permissions
+(index):173    📱 Click the notification bell to enable push notifications
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:46    📋 Notification data: {alert: 'Trendx commented on your post', title: 'New Comment', icon: 'https://trendx.social/favicon.png', custom: {…}, badge: 'https://trendx.social/favicon.png'}
+sw.js:58    🔔 Displaying: "New Comment"
+sw.js:59    📝 Body: "Trendx commented on your post"
+sw.js:64 ✅
