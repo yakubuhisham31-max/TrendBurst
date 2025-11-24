@@ -1796,21 +1796,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (!user) {
+        console.log("❌ Test notification failed: User not found");
         return res.status(404).json({ message: "User not found" });
       }
 
+      console.log("\n🧪 TEST NOTIFICATION ENDPOINT CALLED");
+      console.log(`   👤 User: ${user.username} (ID: ${userId})`);
+      console.log(`   ⏰ Time: ${new Date().toISOString()}`);
+
       // Send test push notification
+      console.log("   📤 Attempting to send test push notification...");
       await sendPushNotification({
         userId,
-        heading: "Test Notification",
-        content: `Hey ${user.username}! Your OneSignal is working perfectly.`,
+        heading: "Test Notification 🧪",
+        content: `Hey ${user.username}! This is a test. If you see this, OneSignal is working! 🔥`,
         data: { type: "test" },
       });
 
-      res.json({ message: "Test notification sent!" });
+      console.log(`✅ Test notification sent successfully!`);
+      res.json({ 
+        message: "Test notification sent!", 
+        userId,
+        username: user.username,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Error sending test notification:", error);
-      res.status(500).json({ message: "Failed to send test notification" });
+      console.error("\n❌ Error sending test notification:");
+      console.error(error);
+      res.status(500).json({ message: "Failed to send test notification", error: String(error) });
     }
   });
 
