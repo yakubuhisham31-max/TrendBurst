@@ -338,7 +338,7 @@ export class DbStorage implements IStorage {
     const posts = await db.select()
       .from(schema.posts)
       .where(and(eq(schema.posts.trendId, trendId), eq(schema.posts.isDisqualified, 0)))
-      .orderBy(desc(schema.posts.votes));
+      .orderBy(desc(schema.posts.votes), schema.posts.createdAt);
     
     const postsWithUsers = await Promise.all(
       posts.map(async (post) => {

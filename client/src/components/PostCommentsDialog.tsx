@@ -49,6 +49,7 @@ export default function PostCommentsDialog({
   const { data: comments = [], isLoading } = useQuery<CommentWithUser[]>({
     queryKey: [`/api/comments/post/${postId}`],
     enabled: open && !!postId,
+    refetchInterval: 5000,
   });
 
   // Create comment mutation

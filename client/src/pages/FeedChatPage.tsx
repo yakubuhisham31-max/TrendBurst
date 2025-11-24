@@ -44,6 +44,7 @@ export default function FeedChatPage() {
   const { data: comments = [], isLoading: commentsLoading } = useQuery<CommentWithUser[]>({
     queryKey: ["/api/comments/trend", trendId],
     enabled: !!trendId,
+    refetchInterval: 5000,
   });
 
   // Update view tracking mutation
