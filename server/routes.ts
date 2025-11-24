@@ -758,6 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Filter posts from last 7 days
         const recentPosts = userPosts.filter(p => {
+          if (!p.createdAt) return false;
           const postDate = p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt);
           return postDate >= sevenDaysAgo;
         });

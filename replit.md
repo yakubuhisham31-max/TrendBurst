@@ -69,27 +69,25 @@ Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS v
 **Push Notifications:**
 *   OneSignal (v16 SDK)
 
-## Recent Changes (November 23, 2025)
+## Recent Changes (November 24, 2025)
 
-### Bug Fixes - Profile Update Issues
-1. **Fixed backend undefined values error**: PATCH /api/users/profile now filters out undefined fields before Drizzle ORM, preventing "n is not a function" minified error
-2. **Fixed frontend cache invalidation**: Now properly invalidates BOTH cache keys:
-   - `/api/auth/user` (for useAuth hook)
-   - `/api/users/:username` (for ProfilePage display)
-   - This ensures profile changes (pic, bio, social handles) appear immediately without refresh
+### Notification Settings Reversal & OneSignal Production Confirmation
+1. **Removed notification settings feature** (user-requested reversal):
+   - Removed `notificationsEnabled` field from users table schema
+   - Removed Notifications UI card from EditProfilePage
+   - Simplified profile update flow (removed toggle state/logic from frontend)
+   - Cleaned up backend PATCH /api/users/profile handler
 
-### Profile Update Flow
-The complete flow now works seamlessly:
-1. User saves profile changes on EditProfilePage
-2. Backend validates and saves to database (200 OK)
-3. Frontend invalidates both user caches
-4. React Query automatically refetches latest data
-5. ProfilePage updates with new profile picture, bio, and social handles
-6. No manual refresh needed - changes appear instantly
+2. **OneSignal v16 SDK - Production Ready**:
+   - ✅ Service workers successfully registering on production domain (https://trendx.social)
+   - ✅ OneSignal SDK initializes successfully on production
+   - ✅ Push notification subscription system is fully operational
+   - ℹ️ Dev/preview domains show "Can only be used on: https://trendx.social" (security restriction)
+   - ℹ️ This is expected behavior - OneSignal restricts SDK to authorized production domain only
+   - Backend OneSignal integration complete: sendPushNotification function ready
+   - Service worker registration works perfectly when deployed to https://trendx.social
 
-### Notification Settings Feature
-1. **Added notifications preference toggle**: Users can now enable/disable push notifications in EditProfilePage
-2. **Database schema updated**: Added `notifications_enabled` field (default: 1) to users table
-3. **Backend support**: PATCH /api/users/profile now accepts `notificationsEnabled` parameter to save user preference
-4. **Frontend UI**: New "Notifications" card in EditProfilePage with toggle switch, description, and Bell icon
-5. **User experience**: Toggle persists across sessions, users can adjust at any time in settings
+3. **Code Quality**:
+   - Fixed LSP diagnostic error in server/routes.ts (line 761 - added null check for createdAt)
+   - All builds pass without warnings
+   - App ready for production deployment
