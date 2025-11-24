@@ -16,6 +16,24 @@
     <!-- OneSignal Web Push SDK v16 -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
+      // Register application service worker FIRST, before OneSignal
+      (async () => {
+        if ('serviceWorker' in navigator) {
+          console.log("✅ Browser supports Service Workers");
+          
+          try {
+            console.log("📝 Registering /sw.js (application service worker)...");
+            const appSwReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log("✅ Application Service Worker registered:", appSwReg.scope);
+            window.appServiceWorkerReady = true;
+          } catch (swError) {
+            console.warn("⚠️  Application Service Worker registration failed:", swError?.message);
+          }
+        } else {
+          console.warn("⚠️  Browser does NOT support Service Workers!");
+        }
+      })();
+
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalInitialized = false;
       
@@ -23,17 +41,14 @@
       
       // Test basic service worker registration first
       if ('serviceWorker' in navigator) {
-        console.log("✅ Browser supports Service Workers");
         navigator.serviceWorker.getRegistrations().then(regs => {
-          console.log("📊 Existing service worker registrations before OneSignal init:", regs.length);
+          console.log("📊 Service worker registrations:", regs.length);
           regs.forEach((reg, i) => {
             console.log(`  ${i + 1}. ${reg.scope}`);
           });
         }).catch(err => {
           console.error("❌ Error checking service worker registrations:", err);
         });
-      } else {
-        console.warn("⚠️  Browser does NOT support Service Workers!");
       }
       
       OneSignalDeferred.push(async function(OneSignal) {
@@ -78,13 +93,12 @@
           console.log("✅ OneSignal SDK initialized successfully");
           console.log("📱 Push notifications are enabled for this domain");
           
-          // Manually register main service worker if OneSignal doesn't do it automatically
-          console.log("🔧 Attempting manual service worker registration...");
+          // Try to register OneSignal service worker if not already registered
           if ('serviceWorker' in navigator) {
             try {
               console.log("📝 Registering /OneSignalSDKWorker.js...");
-              const swReg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
-              console.log("✅ OneSignalSDKWorker registered:", swReg.scope);
+              const osSwReg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
+              console.log("✅ OneSignalSDKWorker registered:", osSwReg.scope);
             } catch (swError) {
               console.warn("⚠️  OneSignalSDKWorker registration failed:", swError?.message);
             }
