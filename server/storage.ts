@@ -225,14 +225,30 @@ export class DbStorage implements IStorage {
 
   async deleteTrend(id: string): Promise<void> {
     // Delete all related data first
-    // Delete comments for this trend (both trend-level chats and post comments)
-    await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
-    
     // Get all posts for this trend so we can delete their related data
     const posts = await db.select().from(schema.posts).where(eq(schema.posts.trendId, id));
     const postIds = posts.map(p => p.id);
     
     if (postIds.length > 0) {
+      // Delete all comments (both trend-level and post-level, including nested replies)
+      // First get all comment IDs for post comments
+      const postComments = await db.select({ id: schema.comments.id })
+        .from(schema.comments)
+        .where(sql`${schema.comments.postId} IN (${sql.join(postIds)})`);
+      const postCommentIds = postComments.map(c => c.id);
+      
+      // Delete notifications for comments on posts (before deleting comments)
+      if (postCommentIds.length > 0) {
+        await db.delete(schema.notifications).where(
+          sql`${schema.notifications.commentId} IN (${sql.join(postCommentIds)})`
+        );
+      }
+      
+      // Delete all post-level comments (this also handles nested replies via cascade)
+      await db.delete(schema.comments).where(
+        sql`${schema.comments.postId} IN (${sql.join(postIds)})`
+      );
+      
       // Delete notifications for all posts in this trend
       for (const postId of postIds) {
         await db.delete(schema.notifications).where(eq(schema.notifications.postId, postId));
@@ -247,6 +263,9 @@ export class DbStorage implements IStorage {
       // Delete all posts for this trend
       await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
     }
+    
+    // Delete trend-level chat comments (and their nested replies)
+    await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
     
     // Delete notifications for this trend
     await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
