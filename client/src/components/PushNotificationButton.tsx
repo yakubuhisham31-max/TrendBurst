@@ -5,23 +5,15 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function PushNotificationButton() {
-  const [isSupported, setIsSupported] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Check if push notifications are supported and enabled
+  // Check if push notifications are already enabled
   useEffect(() => {
-    const checkSupport = async () => {
-      const supported = 'serviceWorker' in navigator && 'PushManager' in window;
-      setIsSupported(supported);
-      
-      if (supported && Notification.permission === "granted") {
-        setIsEnabled(true);
-      }
-    };
-    
-    checkSupport();
+    if (Notification.permission === "granted") {
+      setIsEnabled(true);
+    }
   }, []);
 
   const saveSubscriptionToBackend = async (OS: any) => {
@@ -119,8 +111,8 @@ export default function PushNotificationButton() {
     }
   };
 
-  // Only show button if push notifications are supported and not already enabled
-  if (!isSupported || isEnabled) {
+  // Only show button if push notifications are not already enabled
+  if (isEnabled) {
     return null;
   }
 
