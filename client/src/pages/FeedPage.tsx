@@ -528,6 +528,7 @@ export default function FeedPage() {
                     caption={post.caption || ""}
                     username={post.user?.username || "Unknown"}
                     userAvatar={post.user?.profilePicture || undefined}
+                    userVerified={post.user?.verified}
                     votes={post.votes || 0}
                     createdAt={new Date(post.createdAt!)}
                     userVoted={post.userVoted}

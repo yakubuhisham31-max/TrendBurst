@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import ShareDialog from "./ShareDialog";
 import PostCommentsDialog from "./PostCommentsDialog";
+import VerificationBadge from "./VerificationBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import type { Post, User } from "@shared/schema";
@@ -352,6 +353,7 @@ export default function PostFullscreenModal({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-white truncate">{post.user?.username}</p>
+                    <VerificationBadge verified={post.user?.verified} size="sm" />
                     {calculatedRank && (
                       <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
                         {getRankOrdinal(calculatedRank)}

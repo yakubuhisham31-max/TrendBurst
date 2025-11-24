@@ -15,6 +15,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import FollowButton from "./FollowButton";
 import ShareDialog from "./ShareDialog";
+import VerificationBadge from "./VerificationBadge";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ interface PostCardProps {
   caption?: string;
   username: string;
   userAvatar?: string;
+  userVerified?: number | boolean | null;
   votes: number;
   createdAt: Date;
   userVoted?: boolean;
@@ -101,6 +103,7 @@ export default function PostCard({
   caption,
   username,
   userAvatar,
+  userVerified,
   votes,
   createdAt,
   userVoted,
@@ -361,6 +364,7 @@ export default function PostCard({
                 >
                   {username}
                 </span>
+                <VerificationBadge verified={userVerified} size="sm" />
                 {isTrendHost && (
                   <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                 )}

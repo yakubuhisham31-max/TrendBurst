@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthModal } from "@/components/AuthModal";
+import VerificationBadge from "@/components/VerificationBadge";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -176,6 +177,7 @@ export default function PostCommentsDialog({
                       <span className="text-sm font-medium" data-testid="text-commenter">
                         {comment.user?.username || "Unknown"}
                       </span>
+                      <VerificationBadge verified={comment.user?.verified} size="sm" />
                       {comment.user?.id === trend?.userId && (
                         <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                       )}

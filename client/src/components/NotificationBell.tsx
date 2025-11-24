@@ -10,13 +10,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import VerificationBadge from "@/components/VerificationBadge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
 import type { Notification, User } from "@shared/schema";
 import { notificationSound } from "@/lib/notificationSound";
 
 type NotificationWithActor = Notification & {
-  actor: Pick<User, "id" | "username" | "profilePicture"> | null;
+  actor: Pick<User, "id" | "username" | "profilePicture" | "verified"> | null;
 };
 
 function getNotificationMessage(notification: NotificationWithActor): string {
