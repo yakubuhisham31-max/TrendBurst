@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame, Clock, X } from "lucide-react";
+import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame, Clock, X, Calendar } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -165,7 +165,14 @@ export default function TrendCard({
     return "active";
   };
 
+  const getDaysLeft = () => {
+    if (!endDate) return null;
+    const now = new Date();
+    return differenceInDays(endDate, now);
+  };
+
   const status = getTrendStatus();
+  const daysLeft = getDaysLeft();
 
   const cycleNotifications = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -381,6 +388,15 @@ export default function TrendCard({
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Ended</span>
+              </div>
+            )}
+            {status === "active" && daysLeft !== null && (
+              <div 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/90 to-cyan-500/90 backdrop-blur-sm text-white text-xs font-semibold border border-white/30 drop-shadow-lg"
+                data-testid="badge-days-left"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{daysLeft} day{daysLeft !== 1 ? 's' : ''}</span>
               </div>
             )}
           </div>
