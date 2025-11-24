@@ -126,6 +126,19 @@ export default function PushNotificationButton() {
         return;
       }
 
+      // Check current permission status
+      if (Notification.permission === "denied") {
+        // Permission was previously blocked - need to reset in browser settings
+        console.log("❌ Notifications previously blocked - user must reset in browser settings");
+        toast({
+          title: "Notifications blocked",
+          description: "Go to browser settings > Notifications > Find this site and change to 'Allow'. Then try again.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Request browser notification permission first (this shows the Allow/Block dialog)
       if (Notification.permission !== "granted") {
         console.log("🔔 Requesting browser notification permission...");
