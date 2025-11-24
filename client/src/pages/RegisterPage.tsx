@@ -66,7 +66,7 @@ export default function RegisterPage() {
         title: "Success",
         description: "Your account has been created successfully",
       });
-      setLocation("/");
+      setLocation("/onboarding/categories");
     } catch (error: any) {
       toast({
         title: "Error",

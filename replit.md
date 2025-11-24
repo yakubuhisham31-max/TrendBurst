@@ -68,35 +68,3 @@ Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS v
 
 **Push Notifications:**
 *   OneSignal (v16 SDK)
-
-## Recent Changes (November 24, 2025)
-
-### Complete Push Notification System Removal
-Successfully removed entire OneSignal push notification integration and restored codebase to pre-push-notification state:
-
-1. **Frontend Cleanup**:
-   - Removed OneSignal SDK script tag from client/index.html
-   - Removed OneSignalSDKWorker.js and OneSignalSDKUpdaterWorker.js from public directory
-   - Removed NotificationBell component import and usage from HomePage
-   - Removed OneSignal initialization imports from AuthContext
-   - Removed initializeOneSignal() calls from login/register flows
-
-2. **Backend Cleanup**:
-   - Removed all 12+ notificationService calls from server/routes.ts
-   - Removed notificationService imports
-   - Removed sendPushNotification function calls throughout routes
-   - Removed orphaned push notification parameter blocks
-   - Kept database notification storage intact for in-app notifications
-
-3. **Build & Deployment**:
-   - Fixed all syntax errors from cleanup process
-   - Build passes successfully without warnings
-   - App running stably on port 5000
-   - All API endpoints functional
-   - Database connections working properly
-
-4. **What Remains**:
-   - In-app notifications still functional via storage.createNotification()
-   - Notification database tables intact
-   - Notification UI components available for in-app use
-   - Push notification infrastructure fully removed

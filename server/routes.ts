@@ -14,6 +14,8 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { R2StorageService } from "./r2Storage";
 import { extractMentions } from "@/lib/mentions";
+import { sendPushNotification } from "./onesignal";
+import * as notificationService from "./notificationService";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
@@ -69,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/register", async (req: any, res) => {
     try {
-      const { username, email, password, fullName, profilePicture } = req.body;
+      const { username, email, password } = req.body;
 
       if (!username || !email || !password) {
         return res.status(400).json({ message: "Username, email, and password required" });
@@ -92,8 +94,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username,
         email,
         password: hashedPassword,
-        fullName: fullName || undefined,
-        profilePicture: profilePicture || undefined,
       });
 
       // Set session
@@ -105,6 +105,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(201).json({ message: "Account created successfully", user: sanitizeUser(newUser) });
       });
 
+      // Send welcome push notification asynchronously (don't wait)
+      notificationService.sendWelcomeNotification(newUser.id).catch((error) => {
+        console.error("Failed to send welcome notification:", error);
+      });
     } catch (error) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Registration failed" });
@@ -205,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trend = await storage.createTrend(result.data);
       
       // Send notification to trend creator
-
+      await notificationService.sendTrendCreatedNotification((req as any).session.userId, result.data.name, trend.id);
       
       // Send recommendation notification to random users
       try {
@@ -218,12 +222,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .slice(0, 10);
         
         for (const targetUser of targetUsers) {
-          // Send recommendation notification to target user
-          await storage.createNotification({
-            userId: targetUser.id,
-            actorId: (req as any).session.userId,
-            type: 'trend_recommendation',
-            trendId: trend.id,
+          await notificationService.sendNewTrendNotification(targetUser.id, result.data.name, trend.id).catch(err => {
+            console.error("Failed to send new trend notification:", err);
           });
         }
       } catch (err) {
@@ -240,12 +240,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'new_trend_from_following',
           trendId: trend.id,
         });
+        // Send branded push notification for followers
+        try {
+          await notificationService.sendFollowedUserPostedNotification(
+            follow.followerId,
+            actor?.username || "Someone",
+            result.data.name,
+            "",
+            trend.id
+          );
+        } catch (err) {
+          console.error("Failed to send follower trend notification:", err);
+        }
       }
       
-      res.status(201).json({ message: "Trend created", trend: sanitizeTrend(trend) });
+      res.status(201).json(trend);
     } catch (error) {
-      console.error("Create trend error:", error);
-      res.status(500).json({ message: "Failed to create trend" });
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -443,6 +454,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             trendxPoints: (user.trendxPoints || 0) + bonusPoints[i],
           });
           // Send winner notification
+          await notificationService.sendWinnerNotification(post.userId, trend.name, req.params.id).catch((err) => {
+            console.error("Failed to send winner notification:", err);
+          });
         }
       }
 
@@ -455,12 +469,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!topThreeIds.has(participantId)) {
           const participant = await storage.getUser(participantId);
           if (participant?.username) {
+            await notificationService.sendNonWinnerNotification(participantId, participant.username, trend.name, req.params.id).catch((err) => {
+              console.error("Failed to send non-winner notification:", err);
+            });
           }
         }
       }
 
       // Send notification to trend host that trend is wrapping up
       try {
+        await notificationService.sendHostTrendEndingSoonNotification(trend.userId, trend.name, req.params.id).catch((err) => {
+          console.error("Failed to send host trend ending notification:", err);
+        });
       } catch (err) {
         console.error("Failed to notify trend host:", err);
       }
@@ -521,6 +541,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               postId: post.id,
               trendId: req.params.trendId,
               pointsEarned: bonusPoints[i],
+            });
+            // Send push notification
+            let place = "Top 3";
+            if (bonusPoints[i] === 150) place = "1st place";
+            else if (bonusPoints[i] === 100) place = "2nd place";
+            else if (bonusPoints[i] === 50) place = "3rd place";
+            await sendPushNotification({
+              userId: post.userId,
+              heading: "Congratulations!",
+              content: `You earned ${place} - ${bonusPoints[i]} bonus points!`,
+              data: { postId: post.id, trendId: req.params.trendId },
             });
           }
         }
@@ -621,6 +652,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send notification to post creator
       const trend = await storage.getTrend(result.data.trendId);
       if (trend) {
+        await notificationService.sendPostCreatedNotification((req as any).session.userId, trend.name, trend.id, post.id).catch((err) => {
+          console.error("Failed to send post created notification:", err);
+        });
       }
       
       // Send notification to followers when they post
@@ -637,6 +671,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               postId: post.id,
               trendId: result.data.trendId,
             });
+            // Send branded push notification
+            try {
+              await notificationService.sendFollowedUserPostedNotification(
+                follow.followerId,
+                postAuthor.username,
+                trend.name,
+                post.id,
+                trend.id
+              );
+            } catch (err) {
+              console.error("Failed to send followed user posted notification:", err);
+            }
           }
         }
       } catch (err) {
@@ -655,6 +701,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             postId: post.id,
             trendId: result.data.trendId,
           });
+          // Send branded push notification
+          try {
+            await notificationService.sendHostNewPostNotification(
+              trend.userId,
+              trend.name,
+              post.id,
+              trend.id
+            );
+          } catch (err) {
+            console.error("Failed to send host new post notification:", err);
+          }
         }
       } catch (err) {
         console.error("Failed to process host notifications:", err);
@@ -676,6 +733,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             trendId: result.data.trendId,
             pointsEarned: 50,
           });
+          // Send push notification
+          try {
+            await sendPushNotification({
+              userId: (req as any).session.userId,
+              heading: "Points Earned",
+              content: "You earned 50 TrendX points for posting!",
+              data: { postId: post.id, trendId: result.data.trendId },
+            });
+          } catch (err) {
+            console.error("Failed to send points push notification:", err);
+          }
         }
       } catch (err) {
         console.error("Failed to process points notifications:", err);
@@ -688,7 +756,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Filter posts from last 7 days
         const recentPosts = userPosts.filter(p => {
-          if (!p.createdAt) return false;
           const postDate = p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt);
           return postDate >= sevenDaysAgo;
         });
@@ -697,11 +764,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const uniqueTrends = new Set(recentPosts.map(p => p.trendId));
         
         if (uniqueTrends.size >= 3) {
-          // Create streak notification
-          await storage.createNotification({
-            userId: (req as any).session.userId,
-            type: 'streak_milestone',
-            pointsEarned: 0,
+          await notificationService.sendStreakNotification(
+            (req as any).session.userId,
+            uniqueTrends.size
+          ).catch((err) => {
+            console.error("Failed to send streak notification:", err);
           });
         }
       } catch (err) {
@@ -805,17 +872,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           trendId: trendId,
           voteCount: vote.count,
         });
+        // Send push notification
+        await sendPushNotification({
+          userId: post.userId,
+          heading: "Vote Received",
+          content: `${voter?.username} voted ${vote.count}x on your post`,
+          data: { postId, trendId },
+        });
       }
       
       // Send rank change notifications if rank improved
       if (post && rankAfter < rankBefore && trend) {
-        // Rank improved notification
-        await storage.createNotification({
-          userId: post.userId,
-          type: 'post_rank_improved',
-          postId: postId,
-          trendId: trendId,
-        });
+        await notificationService.sendRankGainedNotification(post.userId, trend.name || "Unknown Trend", trendId);
       }
       
       // Check if other posts' ranks got worse (someone else's post dropped in rank due to this vote)
@@ -828,13 +896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If rank got worse and it's not the post we just voted on
           if (newRank > oldRank && postBefore.id !== postId && trend) {
-            // Post rank dropped notification
-            await storage.createNotification({
-              userId: postBefore.userId,
-              type: 'post_rank_dropped',
-              postId: postBefore.id,
-              trendId: trendId,
-            });
+            await notificationService.sendRankLostNotification(postBefore.userId, trend.name || "Unknown Trend", trendId);
           }
         }
       }
@@ -852,6 +914,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .slice(0, 5);
             
             for (const user of randomUsers) {
+              await notificationService.sendTrendBlowingUpNotification(user.id, trend.name, trendId).catch(err => {
+                console.error("Failed to send trend blowing up notification:", err);
+              });
             }
           }
         }
@@ -900,7 +965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send rank change notifications if rank worsened
       if (post && rankAfter > rankBefore && trend && vote !== null) {
-
+        await notificationService.sendRankLostNotification(post.userId, trend.name || "Unknown Trend", actualTrendId);
       }
 
       // Check if other posts' ranks improved (someone else's post improved due to this vote removal)
@@ -913,7 +978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If rank improved and it's not the post we just removed the vote from
           if (newRank < oldRank && postBefore.id !== postId && trend) {
-
+            await notificationService.sendRankGainedNotification(postBefore.userId, trend.name || "Unknown Trend", actualTrendId);
           }
         }
       }
@@ -1014,6 +1079,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             trendId: comment.trendId,
             commentId: comment.id,
           });
+          // Send push notification
+          if (commenter?.username) {
+            await sendPushNotification({
+              userId: post.userId,
+              heading: "New Comment",
+              content: `${commenter.username} commented on your post`,
+              data: { postId: String(comment.postId), trendId: String(comment.trendId) },
+            });
+          }
         }
       }
       
@@ -1030,12 +1104,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
             postId: comment.postId,
             trendId: comment.trendId,
           });
+          // Send branded push notification
+          if (commenter?.username && comment.trendId) {
+            try {
+              const trendForReply = await storage.getTrend(comment.trendId);
+              if (trendForReply) {
+                await notificationService.sendReplyNotification(
+                  parentComment.userId,
+                  commenter.username,
+                  trendForReply.name,
+                  comment.trendId
+                );
+              }
+            } catch (err) {
+              console.error("Failed to send reply notification:", err);
+            }
+          }
+        }
+      }
+      
+      // Handle @mentions in comment
+      const mentions = extractMentions(comment.text);
+      if (mentions.length > 0) {
+        for (const username of mentions) {
+          const mentionedUser = await storage.getUserByUsername(username);
+          if (mentionedUser && mentionedUser.id !== (req as any).session.userId) {
+            // Create notification in database
+            await storage.createNotification({
+              userId: mentionedUser.id,
+              actorId: (req as any).session.userId,
+              type: 'mention',
+              commentId: comment.id,
+              postId: comment.postId,
+              trendId: comment.trendId,
+            });
+            // Send branded push notification
+            if (commenter?.username && comment.trendId) {
+              try {
+                const trendForMention = await storage.getTrend(comment.trendId);
+                if (trendForMention) {
+                  await notificationService.sendMentionNotification(
+                    mentionedUser.id,
+                    commenter.username,
+                    trendForMention.name,
+                    comment.trendId
+                  );
+                }
+              } catch (err) {
+                console.error("Failed to send mention notification:", err);
+              }
+            }
+          }
         }
       }
       
       res.status(201).json(comment);
     } catch (error) {
-      console.error("Create comment error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -1095,6 +1219,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       // Send push notification using notification service
       if (follower?.username) {
+        await notificationService.sendNewFollowerNotification(result.data.followingId, follower.username, (req as any).session.userId).catch((err) => {
+          console.error("Failed to send new follower notification:", err);
+        });
       }
       
       res.status(201).json(follow);
@@ -1321,20 +1448,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, fullName, bio, profilePicture, instagramUrl, tiktokUrl, twitterUrl, youtubeUrl, categories, role } = req.body;
 
-      // Only include fields that are actually defined (not undefined)
-      const updateData: any = {};
-      if (email !== undefined) updateData.email = email;
-      if (fullName !== undefined) updateData.fullName = fullName;
-      if (bio !== undefined) updateData.bio = bio;
-      if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
-      if (instagramUrl !== undefined) updateData.instagramUrl = instagramUrl;
-      if (tiktokUrl !== undefined) updateData.tiktokUrl = tiktokUrl;
-      if (twitterUrl !== undefined) updateData.twitterUrl = twitterUrl;
-      if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;
-      if (categories !== undefined) updateData.categories = categories;
-      if (role !== undefined) updateData.role = role;
-
-      const updatedUser = await storage.updateUser((req as any).session.userId, updateData);
+      const updatedUser = await storage.updateUser((req as any).session.userId, {
+        email,
+        fullName,
+        bio,
+        profilePicture,
+        instagramUrl,
+        tiktokUrl,
+        twitterUrl,
+        youtubeUrl,
+        categories,
+        role,
+      });
 
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -1664,7 +1789,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      res.json({ message: "Test notification ready!" });
+      // Send test push notification
+      await sendPushNotification({
+        userId,
+        heading: "Test Notification",
+        content: `Hey ${user.username}! Your OneSignal is working perfectly.`,
+        data: { type: "test" },
+      });
+
+      res.json({ message: "Test notification sent!" });
     } catch (error) {
       console.error("Error sending test notification:", error);
       res.status(500).json({ message: "Failed to send test notification" });
@@ -1693,6 +1826,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             for (const participantId of Array.from(participants)) {
               const timeLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60));
               try {
+                await notificationService.sendTrendEndingSoonNotification(
+                  participantId,
+                  trend.name,
+                  `${timeLeft} hour${timeLeft !== 1 ? 's' : ''}`,
+                  trend.id
+                ).catch(err => {
+                  console.error("Failed to send trend ending soon notification:", err);
+                });
                 notificationsSent++;
               } catch (err) {
                 console.error("Error notifying participant:", err);
@@ -1726,6 +1867,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // In production, this would check user.lastLogin field
         if (!user.id) continue;
         try {
+          await notificationService.sendInactiveUserWakeUpNotification(user.id, user.username).catch(err => {
+            console.error("Failed to send inactive user notification:", err);
+          });
           notificationsSent++;
         } catch (err) {
           console.error("Error notifying inactive user:", err);

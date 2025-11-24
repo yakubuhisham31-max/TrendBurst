@@ -11,13 +11,13 @@ import { ChevronLeft, Upload } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 
 export default function EditProfilePage() {
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user, checkAuth } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -72,7 +72,7 @@ export default function EditProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<User> & { profileFile?: File }) => {
-      let profilePictureUrl = data.profilePicture || user?.profilePicture;
+      let profilePictureUrl = data.profilePicture;
       
       // Upload profile picture to R2 if a new file was selected
       if (data.profileFile) {
@@ -81,23 +81,15 @@ export default function EditProfilePage() {
       
       // Remove profileFile from data before sending to API
       const { profileFile, ...apiData } = data;
-      const updateData: any = { ...apiData };
+      const updateData = {
+        ...apiData,
+        profilePicture: profilePictureUrl,
+      };
       
-      // Only include profilePicture if it's defined or being updated
-      if (profilePictureUrl) {
-        updateData.profilePicture = profilePictureUrl;
-      }
-      
-      // Only send request if there's something to update
-      if (Object.keys(updateData).length > 0) {
-        const response = await apiRequest("PATCH", "/api/users/profile", updateData);
-        return response.json();
-      }
-      
-      // If nothing to update, return current user
-      return user;
+      const response = await apiRequest("PATCH", "/api/users/profile", updateData);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Clean up preview URL
       if (profilePreviewUrl) {
         URL.revokeObjectURL(profilePreviewUrl);
@@ -105,25 +97,14 @@ export default function EditProfilePage() {
       }
       setSelectedProfileFile(null);
       
-      // Invalidate user cache to fetch latest profile data
-      // Invalidate both /api/auth/user and /api/users/:username caches
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      if (user?.username) {
-        queryClient.invalidateQueries({ queryKey: ["/api/users", user.username] });
-      }
-      
+      await checkAuth();
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
-      
-      // Redirect after toast appears
-      setTimeout(() => {
-        setLocation("/profile");
-      }, 500);
+      setLocation("/profile");
     },
     onError: (error: Error) => {
-      console.error("Profile update error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update profile.",
@@ -184,14 +165,13 @@ export default function EditProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updateData: any = {};
-    
-    // Only include fields that have been changed or are not empty
-    if (formData.bio !== undefined) updateData.bio = formData.bio;
-    if (formData.instagram) updateData.instagramUrl = formData.instagram;
-    if (formData.tiktok) updateData.tiktokUrl = formData.tiktok;
-    if (formData.twitter) updateData.twitterUrl = formData.twitter;
-    if (formData.youtube) updateData.youtubeUrl = formData.youtube;
+    const updateData: Partial<User> & { profileFile?: File } = {
+      bio: formData.bio,
+      instagramUrl: formData.instagram,
+      tiktokUrl: formData.tiktok,
+      twitterUrl: formData.twitter,
+      youtubeUrl: formData.youtube,
+    };
     
     // Include new profile picture file if selected
     if (selectedProfileFile) {
@@ -258,11 +238,11 @@ export default function EditProfilePage() {
               <div className="relative">
                 <Avatar className="w-20 h-20" data-testid="avatar-profile">
                   <AvatarImage 
-                    src={profilePreviewUrl || user?.profilePicture || undefined} 
-                    alt={user?.username || "User"} 
+                    src={profilePreviewUrl || user.profilePicture || undefined} 
+                    alt={user.username} 
                   />
                   <AvatarFallback className="text-xl">
-                    {user?.username?.slice(0, 2).toUpperCase() || "?"}
+                    {user.username.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 {profilePreviewUrl && (
@@ -311,7 +291,7 @@ export default function EditProfilePage() {
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  value={user?.username || ""}
+                  value={user.username}
                   disabled
                   placeholder="Enter username"
                   data-testid="input-username"

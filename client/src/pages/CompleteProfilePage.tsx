@@ -44,7 +44,7 @@ export default function CompleteProfilePage() {
         title: "Success",
         description: "Profile completed successfully!",
       });
-      setLocation("/");
+      setLocation("/onboarding/categories");
     } catch (error: any) {
       toast({
         title: "Error",

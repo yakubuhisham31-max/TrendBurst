@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import HomePage from "@/pages/HomePage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
@@ -84,12 +85,76 @@ function UserIdLogger() {
   useEffect(() => {
     if (!user) return;
 
+    // Log Trendx User ID (External ID for OneSignal)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("👤 USER IDENTIFICATION LOGGED");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`🆔 Trendx User ID: ${user.id}`);
+    console.log(`🆔 Trendx User ID (External ID): ${user.id}`);
     console.log(`👤 Username: ${user.username}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    // Set up OneSignal user identification after SDK is fully initialized
+    (async () => {
+      try {
+        // Wait for OneSignal SDK to be fully initialized
+        if ((window as any).OneSignalDeferred) {
+          const OneSignalDeferred = (window as any).OneSignalDeferred;
+          await OneSignalDeferred;
+        }
+
+        if ((window as any).OneSignal) {
+          const OS = (window as any).OneSignal;
+          
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log("🔔 ONESIGNAL USER IDENTIFICATION");
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log(`👤 User: ${user.username} (${user.id})`);
+          console.log(`⏳ Waiting for OneSignal SDK initialization...`);
+          
+          // Wait for OneSignal to be fully initialized (with retry)
+          let retries = 0;
+          const maxRetries = 10;
+          
+          while (retries < maxRetries) {
+            try {
+              // Try to identify user with OneSignal
+              await OS.login(user.id);
+              console.log(`✅ User linked to OneSignal with external_id: ${user.id}`);
+              break;
+            } catch (loginError) {
+              retries++;
+              if (retries >= maxRetries) {
+                console.log(`ℹ️  Could not link user after ${maxRetries} attempts`);
+                console.log(`   Error:`, (loginError as Error).message);
+              } else {
+                // Wait 500ms before retrying
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+            }
+          }
+
+          // Log service workers
+          try {
+            const sws = await navigator.serviceWorker.getRegistrations();
+            console.log(`📡 Service Workers registered: ${sws.length}`);
+            sws.forEach((sw, i) => {
+              console.log(`   ${i + 1}. ${sw.scope.replace(window.location.origin, '')} (Active: ${sw.active ? '✓' : '✗'})`);
+            });
+          } catch (e) {
+            console.log(`ℹ️  Service workers:`, (e as Error).message);
+          }
+
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log(`ℹ️  Click notification bell to subscribe to push`);
+          console.log(`   Backend sends to external_id: ${user.id}`);
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        } else {
+          console.log("ℹ️  OneSignal SDK not available on this domain");
+        }
+      } catch (error) {
+        console.log("ℹ️  OneSignal setup:", (error as Error).message);
+      }
+    })();
   }, [user]);
 
   return null;
@@ -101,6 +166,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <UserIdLogger />
+          <NotificationPermissionPrompt />
           <Router />
           <Toaster />
         </TooltipProvider>
