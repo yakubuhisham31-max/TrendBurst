@@ -409,7 +409,7 @@ export default function HomePage() {
                   {selectedSubcategory === "Trending" ? "Trending Trends" : selectedSubcategory || "All Trends"}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {(selectedSubcategory === "Trending" ? filteredTrends.slice(2) : filteredTrends).map((trend) => (
                   <TrendCard
                     key={trend.id}
