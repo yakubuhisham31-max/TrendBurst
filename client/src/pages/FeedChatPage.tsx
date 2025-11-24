@@ -24,6 +24,7 @@ export default function FeedChatPage() {
   const trendId = params.id;
   const [message, setMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -218,6 +219,17 @@ export default function FeedChatPage() {
     const isHost = comment.userId === trend?.userId;
     const isChild = depth > 0;
     const mlClass = isChild ? `ml-${Math.min((depth) * 4, 16)}` : "";
+    const isExpanded = expandedReplies.has(comment.id);
+    
+    const toggleReplies = () => {
+      const newSet = new Set(expandedReplies);
+      if (newSet.has(comment.id)) {
+        newSet.delete(comment.id);
+      } else {
+        newSet.add(comment.id);
+      }
+      setExpandedReplies(newSet);
+    };
 
     return (
       <div key={comment.id} className={mlClass}>
@@ -294,11 +306,6 @@ export default function FeedChatPage() {
                   )
                 )}
               </p>
-              {comment.replies.length > 0 && !isChild && (
-                <span className="text-xs text-primary/70 mt-2 inline-block">
-                  {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
-                </span>
-              )}
               <div className="flex gap-2 mt-2">
                 <Button
                   variant="ghost"
@@ -310,16 +317,27 @@ export default function FeedChatPage() {
                   <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
                   Reply
                 </Button>
+                {comment.replies.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary/70"
+                    onClick={toggleReplies}
+                    data-testid={`button-toggle-replies-${comment.id}`}
+                  >
+                    {isExpanded ? "Hide" : "Show"} {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Render nested replies */}
-        {comment.replies.length > 0 && (
+        {/* Render nested replies only if expanded */}
+        {comment.replies.length > 0 && isExpanded && (
           <div className={`${isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-2 border-l-2 border-muted"}`}>
             {comment.replies.map(reply => (
-              <ChatCommentThread key={reply.id} comment={reply} depth={depth + 1} />
+              <ChatCommentThread key={reply.id} comment={{ ...reply, replies: [] }} depth={depth + 1} />
             ))}
           </div>
         )}
