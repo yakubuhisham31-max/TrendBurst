@@ -812,6 +812,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateUser(post.userId, {
             trendxPoints: Math.max(0, (postOwner.trendxPoints || 0) - 50),
           });
+          
+          // Send disqualification notification (both push and in-app)
+          await notificationService.sendDisqualificationNotification(
+            post.userId,
+            trend.name,
+            post.trendId,
+            post.id
+          ).catch((err) => {
+            console.error("Failed to send disqualification notification:", err);
+          });
         } else {
           // Requalifying - restore 50 points
           await storage.updateUser(post.userId, {

@@ -327,6 +327,38 @@ export async function sendStreakNotification(userId: string, streakCount: number
   await recordNotificationSent(userId, "streak");
 }
 
+export async function sendDisqualificationNotification(userId: string, trendName: string, trendId: string, postId: string) {
+  const canSend = await checkRateLimit(userId, "disqualified", 15);
+  if (!canSend) {
+    console.log(`⏸️  Disqualification notification blocked by rate limit for user ${userId}`);
+    return;
+  }
+
+  try {
+    console.log(`\n🚫 Sending 'Disqualification' notification to user: ${userId}`);
+    
+    // Send push notification
+    await sendPushNotification({
+      userId,
+      heading: "Your Post Was Disqualified 😭🔥",
+      content: `Your submission in ${trendName} was disqualified by the trend creator. You lost 50 TrendX points. Check the rules and try again next time.`,
+      data: { type: "disqualified", postId, trendId },
+    });
+
+    // Create in-app notification
+    await storage.createNotification({
+      userId,
+      type: "disqualified",
+      postId,
+      trendId,
+    });
+    
+    await recordNotificationSent(userId, "disqualified");
+  } catch (error) {
+    console.error(`❌ Failed to send disqualification notification to ${userId}:`, error);
+  }
+}
+
 // Rate limiting and tracking helpers
 async function checkRateLimit(userId: string, type: string, dailyLimit: number): Promise<boolean> {
   const tracking = await getNotificationTracking(userId, type);

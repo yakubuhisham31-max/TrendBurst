@@ -97,14 +97,23 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 
 ## Recent Changes (November 24, 2025)
 
-### 1. Removed Manual "Enable Push" Button (Latest)
+### 1. Disqualification Notifications (Latest)
+- Added push notifications when trend creators disqualify user posts
+- Added in-app notifications for disqualifications
+- Notification includes trend name and alerts user about 50 TrendX point loss
+- Rate limited to 15 per day per user to prevent spam
+- Notifications only sent when disqualifying (not when requalifying)
+- Implemented via `sendDisqualificationNotification()` in notificationService.ts
+- Updated `/api/posts/:id/disqualify` endpoint to trigger notifications
+
+### 2. Removed Manual "Enable Push" Button
 - Removed PushNotificationButton from UI completely
 - Push notifications now only available through automatic NotificationPermissionModal after signup
 - Users see permission prompt immediately after account creation
 - No manual button anywhere in the UI - only automatic prompts
 - Simplified push notification flow: signup → permission modal → browser notification request → OneSignal registration
 
-### 2. Collapsible Reply Threads
+### 3. Collapsible Reply Threads
 - Added expandedReplies state to track which comment threads are expanded
 - All replies now hidden by default to minimize UI clutter
 - "Show X replies" / "Hide X replies" toggle button allows users to control visibility
@@ -112,7 +121,7 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 - Delete functionality works correctly on all reply levels
 - Implemented in both PostCommentsDialog and FeedChatPage
 
-### 3. Nested Reply Support
+### 4. Nested Reply Support
 - Enabled users to reply to replies at unlimited depth
 - Implemented recursive comment threading in both PostCommentsDialog and FeedChatPage
 - Created reusable CommentThread and ChatCommentThread recursive components
@@ -121,7 +130,7 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 - Works with all existing features: badges, host indicators, delete buttons, reply counts
 - Backend already supported via parentId field - frontend now fully enables nested conversations
 
-### 4. Instagram-Style Threaded Comments
+### 5. Instagram-Style Threaded Comments
 - Implemented proper comment threading in PostCommentsDialog and FeedChatPage
 - Parent comments sorted by newest first, replies by oldest first within each thread
 - Visual indentation with left border indicators
@@ -129,9 +138,15 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 - Reply count badges on parent comments
 - Verification badges preserved across all comment levels
 
-### 5. Automatic Notification Permission Modal
+### 6. Automatic Notification Permission Modal
 - New `NotificationPermissionModal` component prompts users after signup
 - Appears automatically after successful account creation
 - Users can "Enable Notifications" or "Skip for now"
 - Graceful handling of "Permission blocked" errors when user clicks "Block" in browser dialog
 - User-friendly messages instead of fatal errors
+
+### 7. Mobile Card Sizing Improvements
+- Increased trend card sizes on mobile view for better visibility
+- Larger avatars (w-14 h-14) on mobile, standard size on desktop
+- Increased trend name text size on mobile (text-3xl) for prominence
+- Responsive sizing ensures cards look great on all devices
