@@ -22,11 +22,10 @@ Push notifications are configured for production on `https://trendx.social` usin
 
 **In-App Notifications:** NotificationBell component displays in-app notifications fetched from the database. Shows unread count and notification list.
 
-**Push Notifications:** Two entry points:
-1. PushNotificationButton (manual) - Allows users to explicitly enable browser push notifications
-2. NotificationPermissionModal (automatic after signup) - Prompts new users to enable notifications immediately after account creation
+**Push Notifications:** Only one entry point:
+- NotificationPermissionModal (automatic after signup) - Prompts new users to enable notifications immediately after account creation
 
-When clicked/opened, both:
+When the modal is shown:
 1. Request browser notification permission
 2. Call OneSignal SDK to create a subscription
 3. Save subscription to backend (`POST /api/push/subscribe`)
@@ -98,7 +97,22 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 
 ## Recent Changes (November 24, 2025)
 
-### 1. Nested Reply Support (Latest)
+### 1. Removed Manual "Enable Push" Button (Latest)
+- Removed PushNotificationButton from UI completely
+- Push notifications now only available through automatic NotificationPermissionModal after signup
+- Users see permission prompt immediately after account creation
+- No manual button anywhere in the UI - only automatic prompts
+- Simplified push notification flow: signup → permission modal → browser notification request → OneSignal registration
+
+### 2. Collapsible Reply Threads
+- Added expandedReplies state to track which comment threads are expanded
+- All replies now hidden by default to minimize UI clutter
+- "Show X replies" / "Hide X replies" toggle button allows users to control visibility
+- Fixed TypeScript type issues when rendering nested replies
+- Delete functionality works correctly on all reply levels
+- Implemented in both PostCommentsDialog and FeedChatPage
+
+### 3. Nested Reply Support
 - Enabled users to reply to replies at unlimited depth
 - Implemented recursive comment threading in both PostCommentsDialog and FeedChatPage
 - Created reusable CommentThread and ChatCommentThread recursive components
@@ -107,7 +121,7 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 - Works with all existing features: badges, host indicators, delete buttons, reply counts
 - Backend already supported via parentId field - frontend now fully enables nested conversations
 
-### 2. Instagram-Style Threaded Comments
+### 4. Instagram-Style Threaded Comments
 - Implemented proper comment threading in PostCommentsDialog and FeedChatPage
 - Parent comments sorted by newest first, replies by oldest first within each thread
 - Visual indentation with left border indicators
@@ -115,21 +129,9 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 - Reply count badges on parent comments
 - Verification badges preserved across all comment levels
 
-### 3. Push Notification Button Improvements
-- Fixed "Enable Push" button to request browser permission FIRST (shows Allow/Block dialog)
-- Button now requests browser's native notification permission before OneSignal registration
-- Handles graceful fallback for development mode (OneSignal only available on production)
-- Clear messages explaining production-only restrictions
-- Works seamlessly on production (https://trendx.social) with full OneSignal integration
-
-### 3. Automatic Notification Permission Modal
+### 5. Automatic Notification Permission Modal
 - New `NotificationPermissionModal` component prompts users after signup
 - Appears automatically after successful account creation
 - Users can "Enable Notifications" or "Skip for now"
-- Can be enabled anytime from profile settings
-
-### 4. Improved Permission Handling
 - Graceful handling of "Permission blocked" errors when user clicks "Block" in browser dialog
 - User-friendly messages instead of fatal errors
-- Users can retry enabling notifications later
-- Both NotificationPermissionModal and PushNotificationButton handle permission denials smoothly
