@@ -1180,7 +1180,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteComment(req.params.id);
       res.json({ message: "Comment deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      console.error("❌ Failed to delete comment:", error);
+      res.status(500).json({ message: "Failed to delete comment: " + (error instanceof Error ? error.message : "Unknown error") });
     }
   });
 

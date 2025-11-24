@@ -92,8 +92,13 @@ export default function FeedChatPage() {
   // Delete comment mutation
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: string) => {
-      const response = await apiRequest("DELETE", `/api/comments/${commentId}`);
-      return response.json();
+      try {
+        const response = await apiRequest("DELETE", `/api/comments/${commentId}`);
+        return response.json();
+      } catch (error) {
+        console.error("Delete comment error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/comments/trend", trendId] });
@@ -104,9 +109,10 @@ export default function FeedChatPage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Failed to delete message",
-        description: error.message,
+        description: error.message || "An error occurred while deleting the message",
         variant: "destructive",
       });
     },
