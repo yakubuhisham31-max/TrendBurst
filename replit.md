@@ -37,16 +37,18 @@ The backend sends push notifications via OneSignal REST API to users with active
 ### Dark Mode System
 Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS variables defined in `:root` and `.dark` classes. A `ThemeProvider` automatically applies the system's dark mode preference (from `prefers-color-scheme: dark`). It prevents flash of unstyled content and ensures full color coverage across all components. Dark mode follows the user's OS setting - no manual toggle required.
 
-### Threaded Comments System (Instagram-style)
-Comments now support threaded replies with visual hierarchy:
-- Parent comments displayed at full size with avatars and badges
-- Replies grouped directly below parent comments with visual indentation
-- Left border indicator (blue line) showing the thread structure
-- Smaller avatars and text for replies to indicate secondary level
-- Reply count badge on parent comments
-- Implemented in both PostCommentsDialog and FeedChatPage
-- Verification badges and host badges preserved across all comment levels
-- Proper sorting: parent comments by newest first, replies by oldest first within each parent
+### Threaded Comments System (Instagram-style with Nested Replies)
+Comments now support unlimited nested threaded replies with visual hierarchy:
+- **Recursive Threading:** Users can reply to replies at any depth - no limit on nesting levels
+- **Visual Hierarchy:** Parent comments at full size, progressively smaller text/avatars for deeper replies
+- **Indentation & Borders:** Left border indicators (blue lines) show thread structure clearly
+- **Smart Sorting:** Parent comments by newest first, all replies by oldest first (chronological within threads)
+- **Reply Counts:** Badge shows reply count on parent comments and nested replies
+- **Full Badge Support:** Verification badges and host badges preserved across all nesting levels
+- **Implemented in Both Sections:**
+  - PostCommentsDialog: Traditional comment view with reply buttons on every comment
+  - FeedChatPage: Chat-style view with message bubbles (current user on right, others on left)
+- **Recursive Components:** Uses CommentThread (PostCommentsDialog) and ChatCommentThread (FeedChatPage) for infinite nesting support
 
 ## External Dependencies
 
@@ -96,7 +98,16 @@ Comments now support threaded replies with visual hierarchy:
 
 ## Recent Changes (November 24, 2025)
 
-### 1. Instagram-Style Threaded Comments
+### 1. Nested Reply Support (Latest)
+- Enabled users to reply to replies at unlimited depth
+- Implemented recursive comment threading in both PostCommentsDialog and FeedChatPage
+- Created reusable CommentThread and ChatCommentThread recursive components
+- Supports full nesting with proper visual indentation at each level
+- Progressive sizing for avatars and text based on nesting depth
+- Works with all existing features: badges, host indicators, delete buttons, reply counts
+- Backend already supported via parentId field - frontend now fully enables nested conversations
+
+### 2. Instagram-Style Threaded Comments
 - Implemented proper comment threading in PostCommentsDialog and FeedChatPage
 - Parent comments sorted by newest first, replies by oldest first within each thread
 - Visual indentation with left border indicators
@@ -104,7 +115,7 @@ Comments now support threaded replies with visual hierarchy:
 - Reply count badges on parent comments
 - Verification badges preserved across all comment levels
 
-### 2. Push Notification Button Improvements
+### 3. Push Notification Button Improvements
 - Fixed "Enable Push" button to handle missing OneSignal gracefully
 - Added validation to check if OneSignal SDK is properly initialized before calling
 - Clear error messages when OneSignal is not available on dev/test domains
