@@ -11,9 +11,7 @@ export default function VerificationBadge({
   size = "md",
   className = "" 
 }: VerificationBadgeProps) {
-  console.log("🔍 VerificationBadge received:", { verified, type: typeof verified, isTruthy: !!verified });
   if (!verified || verified === 0) {
-    console.log("❌ Badge not showing - verified is falsy or 0");
     return null;
   }
 
@@ -25,7 +23,8 @@ export default function VerificationBadge({
 
   return (
     <BadgeCheck 
-      className={`inline-block text-blue-500 fill-blue-500 ${sizeClasses[size]} ${className}`}
+      className={`inline-block text-blue-500 ${sizeClasses[size]} ${className}`}
+      fill="currentColor"
       aria-label="Verified account"
       data-testid="badge-verified"
     />
