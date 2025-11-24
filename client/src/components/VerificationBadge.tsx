@@ -11,7 +11,11 @@ export default function VerificationBadge({
   size = "md",
   className = "" 
 }: VerificationBadgeProps) {
-  if (!verified || verified === 0) return null;
+  console.log("🔍 VerificationBadge received:", { verified, type: typeof verified, isTruthy: !!verified });
+  if (!verified || verified === 0) {
+    console.log("❌ Badge not showing - verified is falsy or 0");
+    return null;
+  }
 
   const sizeClasses = {
     sm: "w-3 h-3",
