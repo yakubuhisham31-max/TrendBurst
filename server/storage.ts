@@ -432,7 +432,22 @@ export class DbStorage implements IStorage {
   async deleteComment(id: string): Promise<void> {
     const comment = await this.getComment(id);
     if (comment) {
+      // Step 1: Find all nested replies (comments that have this comment as parent)
+      const nestedReplies = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.parentId, id));
+      const nestedReplyIds = nestedReplies.map(r => r.id);
+      
+      // Step 2: Recursively delete all nested replies
+      for (const replyId of nestedReplyIds) {
+        await this.deleteComment(replyId); // Recursive call handles nested structure
+      }
+      
+      // Step 3: Delete notifications that reference this comment
+      await db.delete(schema.notifications).where(eq(schema.notifications.commentId, id));
+      
+      // Step 4: Delete the comment itself
       await db.delete(schema.comments).where(eq(schema.comments.id, id));
+      
+      // Step 5: Update counts on parent trend/post
       if (comment.trendId) {
         await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} - 1` }).where(eq(schema.trends.id, comment.trendId));
       }
