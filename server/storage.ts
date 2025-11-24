@@ -224,6 +224,16 @@ export class DbStorage implements IStorage {
   }
 
   async deleteTrend(id: string): Promise<void> {
+    // Helper function to recursively delete comments and their nested replies
+    const deleteCommentAndReplies = async (commentId: string) => {
+      const nestedReplies = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.parentId, commentId));
+      for (const reply of nestedReplies) {
+        await deleteCommentAndReplies(reply.id);
+      }
+      await db.delete(schema.notifications).where(eq(schema.notifications.commentId, commentId));
+      await db.delete(schema.comments).where(eq(schema.comments.id, commentId));
+    };
+    
     // Delete all related data first
     // Get all posts for this trend so we can delete their related data
     const posts = await db.select().from(schema.posts).where(eq(schema.posts.trendId, id));
@@ -265,7 +275,15 @@ export class DbStorage implements IStorage {
     }
     
     // Delete trend-level chat comments (and their nested replies)
-    await db.delete(schema.comments).where(eq(schema.comments.trendId, id));
+    // Get all parent comments in this trend
+    const trendComments = await db.select({ id: schema.comments.id })
+      .from(schema.comments)
+      .where(and(eq(schema.comments.trendId, id), isNull(schema.comments.postId)));
+    
+    // Recursively delete each comment and its replies
+    for (const comment of trendComments) {
+      await deleteCommentAndReplies(comment.id);
+    }
     
     // Delete notifications for this trend
     await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
