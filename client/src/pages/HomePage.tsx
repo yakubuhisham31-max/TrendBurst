@@ -155,11 +155,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-3 relative">
           <Button
             size="icon"
             variant="ghost"
             onClick={() => setMenuOpen(true)}
+            className="absolute left-4"
             data-testid="button-menu"
           >
             <Menu className="w-6 h-6" />
@@ -170,19 +171,21 @@ export default function HomePage() {
             className="h-14 sm:h-16 md:h-18 object-contain"
             data-testid="img-logo"
           />
-          {user ? (
-            <NotificationBell />
-          ) : (
-            <Button
-              variant="default"
-              onClick={() => setAuthModalOpen(true)}
-              className="gap-2"
-              data-testid="button-sign-in"
-            >
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </Button>
-          )}
+          <div className="absolute right-4">
+            {user ? (
+              <NotificationBell />
+            ) : (
+              <Button
+                variant="default"
+                onClick={() => setAuthModalOpen(true)}
+                className="gap-2"
+                data-testid="button-sign-in"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 pb-4 space-y-3">
