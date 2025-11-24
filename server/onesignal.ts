@@ -57,6 +57,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     console.log(`   🔑 API Key: ${apiKey?.substring(0, 20)}...`);
     console.log(`   🆔 App ID: ${process.env.ONESIGNAL_APP_ID?.substring(0, 20)}...`);
     console.log(`   🖼️ Logo URL: ${logoUrl}`);
+    console.log(`   📡 Request Body:`, JSON.stringify(requestBody, null, 2));
     console.log(`   📡 Calling OneSignal API...`);
 
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
@@ -73,6 +74,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
     if (!response.ok) {
       const error = await response.text();
       console.error(`❌ OneSignal API error (${response.status}):`, error);
+      console.log(`   📝 Full error response: ${error}`);
       
       // Check if it's a "no subscribers" error
       if (error.includes("no_subscribed_users") || (error.includes("All") && error.includes("not valid"))) {
