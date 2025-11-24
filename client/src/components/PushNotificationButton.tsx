@@ -13,17 +13,21 @@ export default function PushNotificationButton() {
   useEffect(() => {
     const checkIfEnabled = async () => {
       try {
+        console.log("🔍 Checking push notification status...");
         // Check if we have a saved subscription in backend
         const response = await apiRequest("GET", "/api/push/status", {});
         if (response.ok) {
           const data = await response.json();
+          console.log("📊 Push status response:", data);
           if (data.isEnabled) {
             setIsEnabled(true);
-            console.log("✅ Push notifications already enabled in backend");
+            console.log("✅ Push notifications already enabled - button will show 'Enabled'");
+          } else {
+            console.log("❌ No active push subscription - button will show 'Enable Push'");
           }
         }
       } catch (error) {
-        console.log("Push notification status check:", (error as Error).message);
+        console.log("⚠️  Push notification status check failed:", (error as Error).message);
       }
     };
     
