@@ -123,22 +123,17 @@ export default function PushNotificationButton() {
     }
   };
 
-  // Only show button if push notifications are not already enabled
-  if (isEnabled) {
-    return null;
-  }
-
   return (
     <Button
       size="sm"
-      variant="outline"
+      variant={isEnabled ? "default" : "outline"}
       onClick={handleEnablePushNotifications}
-      disabled={isLoading}
+      disabled={isLoading || isEnabled}
       className="gap-2"
       data-testid="button-enable-push"
     >
       <Bell className="w-4 h-4" />
-      {isLoading ? "Enabling..." : "Enable Push"}
+      {isLoading ? "Enabling..." : isEnabled ? "Enabled" : "Enable Push"}
     </Button>
   );
 }
