@@ -179,10 +179,28 @@ export default function FeedChatPage() {
     textarea.style.height = `${newHeight}px`;
   }, [message]);
 
-  // Sort comments by createdAt (oldest first)
-  const sortedComments = [...comments].sort((a, b) => 
-    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
-  );
+  // Organize comments with threaded replies (Instagram style)
+  const organizeComments = (comments: CommentWithUser[]) => {
+    const result: Array<{ comment: CommentWithUser; replies: CommentWithUser[] }> = [];
+    
+    // Sort all comments by oldest first (chronological for chat)
+    const sorted = [...comments].sort((a, b) => 
+      new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
+    );
+    
+    // Group parent comments with their replies
+    for (const comment of sorted) {
+      if (!comment.parentId) {
+        // This is a parent comment
+        const replies = sorted.filter(c => c.parentId === comment.id);
+        result.push({ comment, replies });
+      }
+    }
+    
+    return result;
+  };
+  
+  const groupedComments = organizeComments(comments);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -256,119 +274,209 @@ export default function FeedChatPage() {
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-16 w-full" />
           </div>
-        ) : sortedComments.length === 0 ? (
+        ) : groupedComments.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             No messages yet. Start the conversation!
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedComments.map((comment) => {
+            {groupedComments.map(({ comment, replies }) => {
               const isCurrentUser = comment.userId === user?.id;
               const isHost = comment.userId === trend?.userId;
-              const parentComment = comment.parentId 
-                ? sortedComments.find(c => c.id === comment.parentId)
-                : null;
-              
-              if (isCurrentUser) {
-                return (
-                  <div key={comment.id} id={`comment-${comment.id}`} className="flex justify-end group transition-all" data-testid={`comment-${comment.id}`}>
-                    <div className="max-w-[70%] bg-primary text-primary-foreground rounded-lg p-3 relative">
-                      {isHost && (
-                        <div className="flex items-center gap-1 mb-1">
-                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" data-testid="icon-host" />
-                          <span className="text-xs opacity-80">Host</span>
-                        </div>
-                      )}
-                      {parentComment && (
-                        <div className="text-xs opacity-80 bg-primary-foreground/20 px-2 py-1 rounded mb-2 italic border-l-2 border-primary-foreground/50">
-                          <Reply className="w-3 h-3 inline mr-1" />
-                          Replying to <strong>{parentComment.user?.username}</strong>: {parentComment.text.slice(0, 40)}{parentComment.text.length > 40 ? '...' : ''}
-                        </div>
-                      )}
-                      <p className="text-sm" data-testid={`text-message-${comment.id}`}>
-                        {parseMentions(comment.text).map((part, idx) => 
-                          typeof part === "string" ? (
-                            <span key={idx}>{part}</span>
-                          ) : (
-                            <span key={idx} className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1">
-                              @{part.username}
-                            </span>
-                          )
-                        )}
-                      </p>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs opacity-80" data-testid={`text-time-${comment.id}`}>
-                          {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary-foreground hover:bg-primary-foreground/20"
-                          onClick={() => deleteCommentMutation.mutate(comment.id)}
-                          disabled={deleteCommentMutation.isPending}
-                          data-testid={`button-delete-${comment.id}`}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
               
               return (
-                <div key={comment.id} id={`comment-${comment.id}`} className="flex gap-3 hover-elevate p-3 rounded-lg transition-all" data-testid={`comment-${comment.id}`}>
-                  <Avatar 
-                    className="w-10 h-10 flex-shrink-0 cursor-pointer"
-                    onClick={() => setLocation(`/profile/${comment.user?.username}`)}
-                  >
-                    <AvatarImage src={comment.user?.profilePicture || undefined} alt={comment.user?.username} />
-                    <AvatarFallback>{comment.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span 
-                        className="font-semibold text-sm cursor-pointer hover:underline" 
-                        data-testid={`text-username-${comment.id}`}
+                <div key={comment.id}>
+                  {/* Parent Comment */}
+                  {isCurrentUser ? (
+                    <div id={`comment-${comment.id}`} className="flex justify-end group transition-all" data-testid={`comment-${comment.id}`}>
+                      <div className="max-w-[70%] bg-primary text-primary-foreground rounded-lg p-3 relative">
+                        {isHost && (
+                          <div className="flex items-center gap-1 mb-1">
+                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" data-testid="icon-host" />
+                            <span className="text-xs opacity-80">Host</span>
+                          </div>
+                        )}
+                        <p className="text-sm" data-testid={`text-message-${comment.id}`}>
+                          {parseMentions(comment.text).map((part, idx) => 
+                            typeof part === "string" ? (
+                              <span key={idx}>{part}</span>
+                            ) : (
+                              <span key={idx} className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1">
+                                @{part.username}
+                              </span>
+                            )
+                          )}
+                        </p>
+                        <div className="flex items-center justify-between mt-1 gap-2">
+                          <span className="text-xs opacity-80" data-testid={`text-time-${comment.id}`}>
+                            {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary-foreground hover:bg-primary-foreground/20"
+                            onClick={() => deleteCommentMutation.mutate(comment.id)}
+                            disabled={deleteCommentMutation.isPending}
+                            data-testid={`button-delete-${comment.id}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div id={`comment-${comment.id}`} className="flex gap-3 hover-elevate p-3 rounded-lg transition-all" data-testid={`comment-${comment.id}`}>
+                      <Avatar 
+                        className="w-10 h-10 flex-shrink-0 cursor-pointer"
                         onClick={() => setLocation(`/profile/${comment.user?.username}`)}
                       >
-                        {comment.user?.username || "Unknown"}
-                      </span>
-                      {isHost && (
-                        <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
-                      )}
-                      <span className="text-xs text-muted-foreground" data-testid={`text-time-${comment.id}`}>
-                        {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
-                      </span>
-                    </div>
-                    {parentComment && (
-                      <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded mb-2 italic border-l-2 border-primary/50">
-                        <Reply className="w-3 h-3 inline mr-1" />
-                        Replying to <strong>{parentComment.user?.username}</strong>: {parentComment.text.slice(0, 40)}{parentComment.text.length > 40 ? '...' : ''}
-                      </div>
-                    )}
-                    <p className="text-sm text-foreground" data-testid={`text-message-${comment.id}`}>
-                      {parseMentions(comment.text).map((part, idx) => 
-                        typeof part === "string" ? (
-                          <span key={idx}>{part}</span>
-                        ) : (
-                          <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
-                            @{part.username}
+                        <AvatarImage src={comment.user?.profilePicture || undefined} alt={comment.user?.username} />
+                        <AvatarFallback>{comment.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <span 
+                            className="font-semibold text-sm cursor-pointer hover:underline" 
+                            data-testid={`text-username-${comment.id}`}
+                            onClick={() => setLocation(`/profile/${comment.user?.username}`)}
+                          >
+                            {comment.user?.username || "Unknown"}
                           </span>
-                        )
-                      )}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-1 h-6 text-xs"
-                      onClick={() => setReplyingTo(comment)}
-                      data-testid={`button-reply-${comment.id}`}
-                    >
-                      <Reply className="w-3 h-3 mr-1" />
-                      Reply
-                    </Button>
-                  </div>
+                          {isHost && (
+                            <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                          )}
+                          <span className="text-xs text-muted-foreground" data-testid={`text-time-${comment.id}`}>
+                            {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground" data-testid={`text-message-${comment.id}`}>
+                          {parseMentions(comment.text).map((part, idx) => 
+                            typeof part === "string" ? (
+                              <span key={idx}>{part}</span>
+                            ) : (
+                              <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
+                                @{part.username}
+                              </span>
+                            )
+                          )}
+                        </p>
+                        {replies.length > 0 && (
+                          <span className="text-xs text-primary/70 mt-2 inline-block">
+                            {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                          </span>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-xs"
+                            onClick={() => setReplyingTo(comment)}
+                            data-testid={`button-reply-${comment.id}`}
+                          >
+                            <Reply className="w-3 h-3 mr-1" />
+                            Reply
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Threaded Replies */}
+                  {replies.length > 0 && (
+                    <div className="ml-12 mt-2 space-y-2 pl-2 border-l-2 border-muted">
+                      {replies.map((reply) => {
+                        const replyIsCurrentUser = reply.userId === user?.id;
+                        const replyIsHost = reply.userId === trend?.userId;
+                        
+                        return replyIsCurrentUser ? (
+                          <div key={reply.id} id={`comment-${reply.id}`} className="flex justify-end group transition-all" data-testid={`comment-${reply.id}`}>
+                            <div className="max-w-[60%] bg-primary text-primary-foreground rounded-lg p-2 relative text-sm">
+                              {replyIsHost && (
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" data-testid="icon-host" />
+                                  <span className="text-xs opacity-80">Host</span>
+                                </div>
+                              )}
+                              <p className="text-xs" data-testid={`text-message-${reply.id}`}>
+                                {parseMentions(reply.text).map((part, idx) => 
+                                  typeof part === "string" ? (
+                                    <span key={idx}>{part}</span>
+                                  ) : (
+                                    <span key={idx} className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1">
+                                      @{part.username}
+                                    </span>
+                                  )
+                                )}
+                              </p>
+                              <div className="flex items-center justify-between mt-1 gap-2">
+                                <span className="text-xs opacity-80" data-testid={`text-time-${reply.id}`}>
+                                  {formatDistanceToNow(new Date(reply.createdAt!), { addSuffix: true })}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary-foreground hover:bg-primary-foreground/20"
+                                  onClick={() => deleteCommentMutation.mutate(reply.id)}
+                                  disabled={deleteCommentMutation.isPending}
+                                  data-testid={`button-delete-${reply.id}`}
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div key={reply.id} id={`comment-${reply.id}`} className="flex gap-2 hover-elevate p-2 rounded transition-all" data-testid={`comment-${reply.id}`}>
+                            <Avatar 
+                              className="w-6 h-6 flex-shrink-0 cursor-pointer"
+                              onClick={() => setLocation(`/profile/${reply.user?.username}`)}
+                            >
+                              <AvatarImage src={reply.user?.profilePicture || undefined} alt={reply.user?.username} />
+                              <AvatarFallback>{reply.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline gap-1 text-xs">
+                                <span 
+                                  className="font-semibold cursor-pointer hover:underline" 
+                                  data-testid={`text-username-${reply.id}`}
+                                  onClick={() => setLocation(`/profile/${reply.user?.username}`)}
+                                >
+                                  {reply.user?.username || "Unknown"}
+                                </span>
+                                {replyIsHost && (
+                                  <Star className="w-2.5 h-2.5 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
+                                )}
+                                <span className="text-muted-foreground" data-testid={`text-time-${reply.id}`}>
+                                  {formatDistanceToNow(new Date(reply.createdAt!), { addSuffix: true })}
+                                </span>
+                              </div>
+                              <p className="text-xs text-foreground mt-0.5" data-testid={`text-message-${reply.id}`}>
+                                {parseMentions(reply.text).map((part, idx) => 
+                                  typeof part === "string" ? (
+                                    <span key={idx}>{part}</span>
+                                  ) : (
+                                    <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
+                                      @{part.username}
+                                    </span>
+                                  )
+                                )}
+                              </p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mt-1 h-5 text-xs p-0"
+                                onClick={() => setReplyingTo(reply)}
+                                data-testid={`button-reply-${reply.id}`}
+                              >
+                                <Reply className="w-2.5 h-2.5 mr-1" />
+                                Reply
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
