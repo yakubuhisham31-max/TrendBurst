@@ -15,7 +15,10 @@ export default function PushNotificationButton() {
       try {
         console.log("🔍 Checking push notification status...");
         // Check if we have a saved subscription in backend
-        const response = await apiRequest("GET", "/api/push/status", {});
+        const response = await fetch("/api/push/status", {
+          method: "GET",
+          credentials: "include"
+        });
         if (response.ok) {
           const data = await response.json();
           console.log("📊 Push status response:", data);
