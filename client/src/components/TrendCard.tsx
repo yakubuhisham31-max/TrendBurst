@@ -214,7 +214,7 @@ export default function TrendCard({
       onClick={handleCardClick}
       data-testid="card-trend"
     >
-      <div className="relative aspect-video bg-muted overflow-hidden">
+      <div className="relative aspect-square sm:aspect-video bg-muted overflow-hidden">
         {coverImage ? (
           <img
             src={coverImage}
@@ -250,7 +250,7 @@ export default function TrendCard({
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1 min-w-0">
                 <span 
-                  className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
+                  className="text-xs sm:text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
                   data-testid="text-username"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -265,7 +265,7 @@ export default function TrendCard({
                 </span>
                 <VerificationBadge verified={userVerified} size="sm" />
               </div>
-              <span className="text-xs text-white/90 drop-shadow" data-testid="text-time">
+              <span className="text-[10px] sm:text-xs text-white/90 drop-shadow" data-testid="text-time">
                 {formatDistanceToNow(createdAt, { addSuffix: true })}
               </span>
             </div>
@@ -337,11 +337,11 @@ export default function TrendCard({
             {categoryIcons[category] && categoryIcons[category]}
             {category}
           </Badge>
-          <h3 className="text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
+          <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
             {trendName}
           </h3>
           {description && (
-            <p className="text-sm text-white/90 drop-shadow-md line-clamp-2" data-testid="text-description">
+            <p className="text-xs sm:text-sm text-white/90 drop-shadow-md line-clamp-2" data-testid="text-description">
               {description}
             </p>
           )}
@@ -349,17 +349,17 @@ export default function TrendCard({
 
         {/* Bottom Section */}
         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-          <div className="flex items-center gap-4 text-white text-sm drop-shadow">
-            <div className="flex items-center gap-1.5" data-testid="stat-views">
-              <Eye className="w-4 h-4" />
+          <div className="flex items-center gap-3 sm:gap-4 text-white text-xs sm:text-sm drop-shadow">
+            <div className="flex items-center gap-1" data-testid="stat-views">
+              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>{views}</span>
             </div>
-            <div className="flex items-center gap-1.5" data-testid="stat-participants">
-              <Users className="w-4 h-4" />
+            <div className="flex items-center gap-1" data-testid="stat-participants">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>{participants}</span>
             </div>
-            <div className="flex items-center gap-1.5" data-testid="stat-chat">
-              <MessageCircle className="w-4 h-4" />
+            <div className="flex items-center gap-1" data-testid="stat-chat">
+              <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>{chatCount}</span>
             </div>
           </div>
