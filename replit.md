@@ -18,7 +18,17 @@ The backend is built with Node.js and Express.js, using Drizzle ORM for PostgreS
 The core data model includes Users, Trends, Posts, Votes, Comments, and Notifications. The PostgreSQL schema uses UUIDs, foreign keys, text arrays, and timestamps.
 
 ### Push Notification System
-Push notifications are configured for production on `https://trendx.social` using OneSignal v16 SDK. It identifies users via `external_id`, requests permissions, and creates subscriptions automatically. The backend sends notifications via the OneSignal REST API. Notifications appear as system notifications with Trendz branding. Key components include client-side SDK initialization, a NotificationBell component, a service worker, and a custom OneSignal REST API client on the server. The system tracks `oneSignalSubscriptions` in the database, storing `userId`, `subscriptionId`, `oneSignalUserId`, `externalId`, `pushToken`, and `isActive` status.
+Push notifications are configured for production on `https://trendx.social` using OneSignal v16 SDK. The system has two distinct notification types:
+
+**In-App Notifications:** NotificationBell component displays in-app notifications fetched from the database. Shows unread count and notification list.
+
+**Push Notifications:** PushNotificationButton component allows users to explicitly enable browser push notifications. When clicked, it:
+1. Requests browser notification permission
+2. Calls OneSignal SDK to create a subscription
+3. Saves subscription to backend (`POST /api/push/subscribe`)
+4. Stores in `one_signal_subscriptions` table with userId, subscriptionId, externalId (Trendx user ID), pushToken, and isActive status
+
+The backend sends push notifications via OneSignal REST API to users with active subscriptions. Notifications trigger on: new posts, new followers, comments, votes, rankings, and points earned. OneSignal identifies users via `external_id` which maps to the Trendx user ID. The system includes OneSignal SDK initialization in index.html, a service worker for receiving notifications, and server-side OneSignal API client for sending.
 
 ### Dark Mode System
 Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS variables defined in `:root` and `.dark` classes. A `ThemeProvider` automatically applies the system's dark mode preference (from `prefers-color-scheme: dark`). It prevents flash of unstyled content and ensures full color coverage across all components. Dark mode follows the user's OS setting - no manual toggle required.
