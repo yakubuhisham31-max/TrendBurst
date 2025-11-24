@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, ArrowLeft, Plus, X, Calendar, Loader2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +15,8 @@ import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { InsertTrend } from "@shared/schema";
 
 const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Other", "Food", "Fashion", "Photography"];
+const fonts = ["inter", "poppins", "playfair", "georgia", "courier", "comic-sans"];
+const colors = ["#FFFFFF", "#000000", "#FF0000", "#00C8FF", "#FFD700", "#00FF00", "#FF69B4", "#9370DB", "#FF8C00", "#FF1493"];
 
 export default function CreateTrendPage() {
   const [, setLocation] = useLocation();
@@ -33,6 +36,8 @@ export default function CreateTrendPage() {
   const [prizeFirst, setPrizeFirst] = useState("");
   const [prizeSecond, setPrizeSecond] = useState("");
   const [prizeThird, setPrizeThird] = useState("");
+  const [trendNameFont, setTrendNameFont] = useState("inter");
+  const [trendNameColor, setTrendNameColor] = useState("#FFFFFF");
   
   // Track preview URLs in refs for cleanup without triggering re-renders
   const coverPreviewRef = useRef<string>("");
@@ -63,6 +68,8 @@ export default function CreateTrendPage() {
         setPrizeFirst(data.prizeFirst || "");
         setPrizeSecond(data.prizeSecond || "");
         setPrizeThird(data.prizeThird || "");
+        setTrendNameFont(data.trendNameFont || "inter");
+        setTrendNameColor(data.trendNameColor || "#FFFFFF");
       } catch (e) {
         // Silently ignore localStorage errors
       }
@@ -82,9 +89,11 @@ export default function CreateTrendPage() {
       prizeFirst,
       prizeSecond,
       prizeThird,
+      trendNameFont,
+      trendNameColor,
     };
     localStorage.setItem('createTrendFormData', JSON.stringify(formData));
-  }, [name, description, instructions, rules, selectedCategory, endDate, includePrizes, prizeFirst, prizeSecond, prizeThird]);
+  }, [name, description, instructions, rules, selectedCategory, endDate, includePrizes, prizeFirst, prizeSecond, prizeThird, trendNameFont, trendNameColor]);
 
   // Clean up preview URLs when component unmounts
   useEffect(() => {
@@ -278,6 +287,8 @@ export default function CreateTrendPage() {
       prizeFirst: prizeFirst.trim() || undefined,
       prizeSecond: prizeSecond.trim() || undefined,
       prizeThird: prizeThird.trim() || undefined,
+      trendNameFont,
+      trendNameColor,
     };
 
     createTrendMutation.mutate(trendData);
@@ -311,6 +322,56 @@ export default function CreateTrendPage() {
                 onChange={(e) => setName(e.target.value)}
                 data-testid="input-trend-name"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="trend-name-font">Trend Name Font</Label>
+                <Select value={trendNameFont} onValueChange={setTrendNameFont}>
+                  <SelectTrigger id="trend-name-font" data-testid="select-trend-name-font">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fonts.map((font) => (
+                      <SelectItem key={font} value={font}>
+                        {font.charAt(0).toUpperCase() + font.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="trend-name-color">Trend Name Color</Label>
+                <div className="flex gap-2">
+                  <input
+                    id="trend-name-color"
+                    type="color"
+                    value={trendNameColor}
+                    onChange={(e) => setTrendNameColor(e.target.value)}
+                    className="w-12 h-9 rounded cursor-pointer"
+                    data-testid="input-trend-name-color"
+                  />
+                  <Select value={trendNameColor} onValueChange={setTrendNameColor}>
+                    <SelectTrigger data-testid="select-trend-name-color">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colors.map((color) => (
+                        <SelectItem key={color} value={color}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded border border-muted-foreground" 
+                              style={{ backgroundColor: color }}
+                            />
+                            {color}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -425,6 +425,8 @@ export default function HomePage() {
                     createdAt={trend.createdAt || new Date()}
                     endDate={trend.endDate || undefined}
                     isTrending={selectedSubcategory === "Trending"}
+                    trendNameFont={(trend as any).trendNameFont || "inter"}
+                    trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
                     onClick={() => {
                       setLocation(`/instructions/${trend.id}`);
                     }}

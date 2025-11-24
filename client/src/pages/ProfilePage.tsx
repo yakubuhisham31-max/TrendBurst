@@ -268,6 +268,8 @@ export default function ProfilePage() {
                             endDate={trend.endDate ? new Date(trend.endDate) : undefined}
                             description={trend.description || undefined}
                             isHost={isOwnProfile}
+                            trendNameFont={(trend as any).trendNameFont || "inter"}
+                            trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
                             onClick={() => setLocation(`/instructions/${trend.id}`)}
                           />
                         ))}
@@ -350,6 +352,8 @@ export default function ProfilePage() {
                                     endDate={trend.endDate ? new Date(trend.endDate) : undefined}
                                     description={trend.description || undefined}
                                     isHost={false}
+                                    trendNameFont={(trend as any).trendNameFont || "inter"}
+                                    trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
                                     onClick={() => setLocation(`/instructions/${trend.id}`)}
                                   />
                                 ))}

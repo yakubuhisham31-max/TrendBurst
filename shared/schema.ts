@@ -54,6 +54,8 @@ export const trends = pgTable("trends", {
   prizeFirst: text("prize_first"),
   prizeSecond: text("prize_second"),
   prizeThird: text("prize_third"),
+  trendNameFont: text("trend_name_font").default("inter"),
+  trendNameColor: text("trend_name_color").default("#FFFFFF"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

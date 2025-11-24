@@ -50,12 +50,23 @@ interface TrendCardProps {
   description?: string;
   isTrending?: boolean;
   isHost?: boolean;
+  trendNameFont?: string;
+  trendNameColor?: string;
   onClick?: () => void;
   onDelete?: () => void;
   onAuthModalOpen?: () => void;
 }
 
 type NotificationStatus = "all" | "posts" | "muted";
+
+const fontMap: Record<string, string> = {
+  "inter": "Inter, sans-serif",
+  "poppins": "'Poppins', sans-serif",
+  "playfair": "'Playfair Display', serif",
+  "georgia": "Georgia, serif",
+  "courier": "'Courier New', monospace",
+  "comic-sans": "'Comic Sans MS', cursive",
+};
 
 export default function TrendCard({
   id,
@@ -73,6 +84,8 @@ export default function TrendCard({
   description,
   isTrending = false,
   isHost = false,
+  trendNameFont = "inter",
+  trendNameColor = "#FFFFFF",
   onClick,
   onDelete,
   onAuthModalOpen,
@@ -344,7 +357,14 @@ export default function TrendCard({
             {categoryIcons[category] && categoryIcons[category]}
             {category}
           </Badge>
-          <h3 className="text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
+          <h3 
+            className="text-2xl font-bold drop-shadow-lg line-clamp-2"
+            style={{ 
+              color: trendNameColor,
+              fontFamily: fontMap[trendNameFont] || "Inter, sans-serif"
+            }}
+            data-testid="text-trend-name"
+          >
             {trendName}
           </h3>
           {description && (
