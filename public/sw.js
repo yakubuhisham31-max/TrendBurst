@@ -32,8 +32,81 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
 });
 
-// OneSignal's SDK handles push notifications
-// Our custom SW just provides message handling and lifecycle management
-// Let OneSignalSDKWorker.js handle all push events and notification display
+// Handle push notifications - display detailed logs and show notifications
+self.addEventListener("push", (event) => {
+  console.log("📬 PUSH EVENT RECEIVED");
+  console.log("   Event:", event);
+  
+  if (!event.data) {
+    console.log("   ⚠️ No data in push event - ignoring");
+    return;
+  }
+
+  try {
+    const rawData = event.data.text();
+    console.log("   📝 Raw push data:", rawData);
+    
+    let data;
+    try {
+      data = JSON.parse(rawData);
+      console.log("   ✅ Parsed JSON:", data);
+    } catch (e) {
+      console.log("   ⚠️ Could not parse as JSON, treating as plain text");
+      data = { message: rawData };
+    }
+
+    const title = data.title || data.heading || "Trendx Notification";
+    const body = data.alert || data.body || data.message || "";
+    const icon = data.icon || data.big_picture || "/favicon.png";
+    const badge = data.badge || "/favicon.png";
+    const tag = data.custom?.i || data.tag || "trendx-notification";
+
+    console.log(`   🔔 Will display: "${title}"`);
+    console.log(`   📝 Body: "${body}"`);
+    console.log(`   🎯 Tag: "${tag}"`);
+
+    const options = {
+      body: body,
+      icon: icon,
+      badge: badge,
+      tag: tag,
+      requireInteraction: false,
+      data: data.custom || data || {}
+    };
+
+    console.log("   📤 Showing notification with options:", options);
+
+    event.waitUntil(
+      self.registration.showNotification(title, options)
+        .then(() => {
+          console.log("✅ NOTIFICATION DISPLAYED SUCCESSFULLY");
+        })
+        .catch((err) => {
+          console.error("❌ FAILED TO DISPLAY NOTIFICATION:", err);
+          console.error("   Error name:", err.name);
+          console.error("   Error message:", err.message);
+        })
+    );
+  } catch (err) {
+    console.error("❌ ERROR PROCESSING PUSH EVENT:", err);
+    console.error("   Stack:", err instanceof Error ? err.stack : "N/A");
+  }
+});
+
+// Handle notification clicks
+self.addEventListener("notificationclick", (event) => {
+  console.log("🔔 NOTIFICATION CLICKED:", event.notification.title);
+  event.notification.close();
+  
+  // Optionally focus the window
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      if (clientList.length > 0) {
+        return clientList[0].focus();
+      }
+      return clients.openWindow('/');
+    })
+  );
+});
 
 console.log("✅ Service Worker ready to receive messages");
