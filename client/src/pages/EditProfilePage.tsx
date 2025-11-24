@@ -168,6 +168,7 @@ export default function EditProfilePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const updateData: Partial<User> & { profileFile?: File } = {
+      fullName: userInfo.fullName,
       bio: formData.bio,
       instagramUrl: formData.instagram,
       tiktokUrl: formData.tiktok,
@@ -317,7 +318,9 @@ export default function EditProfilePage() {
                 <Input
                   id="fullName"
                   value={userInfo.fullName}
-                  disabled
+                  onChange={(e) =>
+                    setUserInfo({ ...userInfo, fullName: e.target.value })
+                  }
                   placeholder="Enter your full name"
                   data-testid="input-fullName"
                 />
