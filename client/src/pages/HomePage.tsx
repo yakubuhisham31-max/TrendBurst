@@ -156,12 +156,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-3 relative">
+        <div className="w-full px-4 py-3 flex items-center justify-center relative">
           <Button
             size="icon"
             variant="ghost"
             onClick={() => setMenuOpen(true)}
-            className="absolute left-4"
+            className="absolute left-0"
             data-testid="button-menu"
           >
             <Menu className="w-6 h-6" />
@@ -169,10 +169,10 @@ export default function HomePage() {
           <img 
             src={logoImage} 
             alt="Trendz" 
-            className="h-14 sm:h-16 md:h-18 object-contain ml-16"
+            className="h-14 sm:h-16 md:h-18 object-contain"
             data-testid="img-logo"
           />
-          <div className="absolute right-4 flex items-center gap-2">
+          <div className="absolute right-0 flex items-center gap-2">
             {user ? (
               <>
                 <PushNotificationButton />
