@@ -14,7 +14,9 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       return;
     }
 
-    console.log(`📢 Sending push notification: "${payload.heading}" to user ${payload.userId}`);
+    console.log(`📢 Sending push notification: "${payload.heading}"`);
+    console.log(`   👤 To user: ${payload.userId}`);
+    console.log(`   📝 Message: ${payload.content}`);
 
     // Determine icon URLs based on environment
     const isProduction = process.env.NODE_ENV === 'production';
@@ -66,11 +68,17 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("❌ OneSignal API error:", error);
+      console.error(`❌ OneSignal API error (status ${response.status}):`, error);
+      
+      // Check if it's a "no subscribers" error
+      if (error.includes("no_subscribed_users") || error.includes("All") && error.includes("not valid")) {
+        console.error("⚠️  User has not subscribed to push notifications yet!");
+        console.error("   → Tell user to click the notification bell 🔔 and grant permission");
+      }
       return;
     }
 
-    console.log(`✅ Push notification sent to user ${payload.userId}`);
+    console.log(`✅ Push notification sent successfully!`);
   } catch (error) {
     console.error("❌ Failed to send OneSignal push notification:", error);
   }
