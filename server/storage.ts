@@ -636,32 +636,38 @@ export class DbStorage implements IStorage {
   }
 
   async deletePost(id: string): Promise<void> {
+    // Helper function to recursively delete comments and their nested replies
+    const deleteCommentAndReplies = async (commentId: string) => {
+      const nestedReplies = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.parentId, commentId));
+      for (const reply of nestedReplies) {
+        await deleteCommentAndReplies(reply.id);
+      }
+      await db.delete(schema.notifications).where(eq(schema.notifications.commentId, commentId));
+      await db.delete(schema.comments).where(eq(schema.comments.id, commentId));
+    };
+    
     // Delete all related data first - ORDER MATTERS for foreign keys!
     
-    // Step 1: Get all comment IDs for this post (we'll need them for notifications)
-    const comments = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.postId, id));
-    const commentIds = comments.map(c => c.id);
+    // Step 1: Get all parent comment IDs for this post (top-level comments only)
+    const parentComments = await db.select({ id: schema.comments.id })
+      .from(schema.comments)
+      .where(and(eq(schema.comments.postId, id), isNull(schema.comments.parentId)));
     
-    // Step 2: Delete notifications that reference these comments (before deleting comments)
-    if (commentIds.length > 0) {
-      await db.delete(schema.notifications).where(
-        sql`${schema.notifications.commentId} IN (${sql.join(commentIds)})`
-      );
+    // Step 2: Recursively delete all parent comments and their nested replies
+    for (const comment of parentComments) {
+      await deleteCommentAndReplies(comment.id);
     }
     
     // Step 3: Delete votes for this post
     await db.delete(schema.votes).where(eq(schema.votes.postId, id));
     
-    // Step 4: Delete comments for this post
-    await db.delete(schema.comments).where(eq(schema.comments.postId, id));
-    
-    // Step 5: Delete saved post records
+    // Step 4: Delete saved post records
     await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
     
-    // Step 6: Delete notifications related to this post
+    // Step 5: Delete notifications related to this post
     await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
     
-    // Step 7: Finally delete the post itself
+    // Step 6: Finally delete the post itself
     await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 
