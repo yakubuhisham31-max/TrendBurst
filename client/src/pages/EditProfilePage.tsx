@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { ChevronLeft, Upload, Bell } from "lucide-react";
+import { ChevronLeft, Upload } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +38,6 @@ export default function EditProfilePage() {
   });
   const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>("");
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -54,7 +52,6 @@ export default function EditProfilePage() {
         twitter: user.twitterUrl || "",
         youtube: user.youtubeUrl || "",
       });
-      setNotificationsEnabled((user as any)?.notificationsEnabled !== 0);
       // Reset the preview when user changes
       setSelectedProfileFile(null);
       if (profilePreviewUrl) {
@@ -195,9 +192,6 @@ export default function EditProfilePage() {
     if (formData.tiktok) updateData.tiktokUrl = formData.tiktok;
     if (formData.twitter) updateData.twitterUrl = formData.twitter;
     if (formData.youtube) updateData.youtubeUrl = formData.youtube;
-    
-    // Always include notifications preference
-    updateData.notificationsEnabled = notificationsEnabled;
     
     // Include new profile picture file if selected
     if (selectedProfileFile) {
@@ -488,33 +482,6 @@ export default function EditProfilePage() {
                   }
                   placeholder="https://youtube.com/@username"
                   data-testid="input-youtube"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="notifications" className="font-medium">
-                    Enable Notifications
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Receive push notifications for likes, comments, and new trends
-                  </p>
-                </div>
-                <Switch
-                  id="notifications"
-                  checked={notificationsEnabled}
-                  onCheckedChange={setNotificationsEnabled}
-                  data-testid="switch-notifications"
                 />
               </div>
             </CardContent>

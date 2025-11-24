@@ -34,7 +34,6 @@ export const users = pgTable("users", {
   youtubeUrl: text("youtube_url"),
   categories: text("categories").array(),
   role: text("role"),
-  notificationsEnabled: integer("notifications_enabled").default(1),
 });
 
 export const trends = pgTable("trends", {
