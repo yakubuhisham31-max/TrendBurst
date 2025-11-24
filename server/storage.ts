@@ -224,81 +224,92 @@ export class DbStorage implements IStorage {
   }
 
   async deleteTrend(id: string): Promise<void> {
-    // Helper function to recursively delete comments and their nested replies
-    const deleteCommentAndReplies = async (commentId: string) => {
-      const nestedReplies = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.parentId, commentId));
-      for (const reply of nestedReplies) {
-        await deleteCommentAndReplies(reply.id);
-      }
-      await db.delete(schema.notifications).where(eq(schema.notifications.commentId, commentId));
-      await db.delete(schema.comments).where(eq(schema.comments.id, commentId));
-    };
-    
-    // Delete all related data first
-    // Get all posts for this trend so we can delete their related data
-    const posts = await db.select().from(schema.posts).where(eq(schema.posts.trendId, id));
-    const postIds = posts.map(p => p.id);
-    
-    if (postIds.length > 0) {
-      // Delete all comments (both trend-level and post-level, including nested replies)
-      // First get all comment IDs for post comments
-      const postComments = await db.select({ id: schema.comments.id })
-        .from(schema.comments)
-        .where(sql`${schema.comments.postId} IN (${sql.join(postIds)})`);
-      const postCommentIds = postComments.map(c => c.id);
+    try {
+      // Delete all related data - ORDER MATTERS for foreign keys!
       
-      // Delete notifications for comments on posts (before deleting comments)
-      if (postCommentIds.length > 0) {
-        await db.delete(schema.notifications).where(
-          sql`${schema.notifications.commentId} IN (${sql.join(postCommentIds)})`
+      // Step 1: Get all posts for this trend
+      const posts = await db.select().from(schema.posts).where(eq(schema.posts.trendId, id));
+      const postIds = posts.map(p => p.id);
+      
+      // Step 2: Delete all comments (post-level AND trend-level, with nested replies)
+      // First, find ALL comments for posts in this trend and their nested replies
+      if (postIds.length > 0) {
+        // Get all post comments (parent and child)
+        const postComments = await db.select({ id: schema.comments.id })
+          .from(schema.comments)
+          .where(sql`${schema.comments.postId} IN (${sql.join(postIds)})`);
+        
+        // Delete notifications for these comments FIRST
+        if (postComments.length > 0) {
+          const commentIds = postComments.map(c => c.id);
+          await db.delete(schema.notifications).where(
+            sql`${schema.notifications.commentId} IN (${sql.join(commentIds)})`
+          );
+        }
+        
+        // Delete all post comments (nested replies handled together)
+        await db.delete(schema.comments).where(
+          sql`${schema.comments.postId} IN (${sql.join(postIds)})`
         );
       }
       
-      // Delete all post-level comments (this also handles nested replies via cascade)
-      await db.delete(schema.comments).where(
-        sql`${schema.comments.postId} IN (${sql.join(postIds)})`
-      );
+      // Step 3: Delete trend-level chat comments (trendId set, postId null)
+      const trendComments = await db.select({ id: schema.comments.id })
+        .from(schema.comments)
+        .where(and(eq(schema.comments.trendId, id), isNull(schema.comments.postId)));
       
-      // Delete notifications for all posts in this trend
-      for (const postId of postIds) {
-        await db.delete(schema.notifications).where(eq(schema.notifications.postId, postId));
+      if (trendComments.length > 0) {
+        const trendCommentIds = trendComments.map(c => c.id);
+        
+        // Delete notifications for trend comments
+        await db.delete(schema.notifications).where(
+          sql`${schema.notifications.commentId} IN (${sql.join(trendCommentIds)})`
+        );
+        
+        // Delete trend-level comments (this will cascade to nested replies)
+        await db.delete(schema.comments).where(
+          sql`${schema.comments.id} IN (${sql.join(trendCommentIds)})`
+        );
       }
       
-      // Delete votes for all posts in this trend
-      for (const postId of postIds) {
-        await db.delete(schema.votes).where(eq(schema.votes.postId, postId));
-        await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, postId));
+      // Step 4: Delete notifications for this trend
+      await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
+      
+      // Step 5: Delete votes for all posts in this trend
+      if (postIds.length > 0) {
+        for (const postId of postIds) {
+          await db.delete(schema.votes).where(eq(schema.votes.postId, postId));
+          await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, postId));
+        }
       }
       
-      // Delete all posts for this trend
-      await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
+      // Step 6: Delete notifications for all posts in this trend
+      if (postIds.length > 0) {
+        for (const postId of postIds) {
+          await db.delete(schema.notifications).where(eq(schema.notifications.postId, postId));
+        }
+      }
+      
+      // Step 7: Delete all posts for this trend
+      if (postIds.length > 0) {
+        await db.delete(schema.posts).where(eq(schema.posts.trendId, id));
+      }
+      
+      // Step 8: Delete saved trends
+      await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
+      
+      // Step 9: Delete view tracking for this trend
+      await db.delete(schema.viewTracking).where(and(
+        eq(schema.viewTracking.type, 'chat'),
+        eq(schema.viewTracking.identifier, id)
+      ));
+      
+      // Step 10: Finally delete the trend itself
+      await db.delete(schema.trends).where(eq(schema.trends.id, id));
+    } catch (error) {
+      console.error("Error in deleteTrend:", error);
+      throw error;
     }
-    
-    // Delete trend-level chat comments (and their nested replies)
-    // Get all parent comments in this trend
-    const trendComments = await db.select({ id: schema.comments.id })
-      .from(schema.comments)
-      .where(and(eq(schema.comments.trendId, id), isNull(schema.comments.postId)));
-    
-    // Recursively delete each comment and its replies
-    for (const comment of trendComments) {
-      await deleteCommentAndReplies(comment.id);
-    }
-    
-    // Delete notifications for this trend
-    await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
-    
-    // Delete saved trends
-    await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
-    
-    // Delete view tracking for this trend
-    await db.delete(schema.viewTracking).where(and(
-      eq(schema.viewTracking.type, 'chat'),
-      eq(schema.viewTracking.identifier, id)
-    ));
-    
-    // Finally delete the trend itself
-    await db.delete(schema.trends).where(eq(schema.trends.id, id));
   }
 
   async incrementTrendParticipants(trendId: string): Promise<void> {
@@ -636,39 +647,40 @@ export class DbStorage implements IStorage {
   }
 
   async deletePost(id: string): Promise<void> {
-    // Helper function to recursively delete comments and their nested replies
-    const deleteCommentAndReplies = async (commentId: string) => {
-      const nestedReplies = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.parentId, commentId));
-      for (const reply of nestedReplies) {
-        await deleteCommentAndReplies(reply.id);
+    try {
+      // Delete all related data - ORDER MATTERS for foreign keys!
+      
+      // Step 1: Get all comments for this post (both parent and child)
+      const comments = await db.select({ id: schema.comments.id })
+        .from(schema.comments)
+        .where(eq(schema.comments.postId, id));
+      
+      // Step 2: Delete notifications for these comments FIRST
+      if (comments.length > 0) {
+        const commentIds = comments.map(c => c.id);
+        await db.delete(schema.notifications).where(
+          sql`${schema.notifications.commentId} IN (${sql.join(commentIds)})`
+        );
       }
-      await db.delete(schema.notifications).where(eq(schema.notifications.commentId, commentId));
-      await db.delete(schema.comments).where(eq(schema.comments.id, commentId));
-    };
-    
-    // Delete all related data first - ORDER MATTERS for foreign keys!
-    
-    // Step 1: Get all parent comment IDs for this post (top-level comments only)
-    const parentComments = await db.select({ id: schema.comments.id })
-      .from(schema.comments)
-      .where(and(eq(schema.comments.postId, id), isNull(schema.comments.parentId)));
-    
-    // Step 2: Recursively delete all parent comments and their nested replies
-    for (const comment of parentComments) {
-      await deleteCommentAndReplies(comment.id);
+      
+      // Step 3: Delete all comments for this post (nested replies handled together)
+      await db.delete(schema.comments).where(eq(schema.comments.postId, id));
+      
+      // Step 4: Delete votes for this post
+      await db.delete(schema.votes).where(eq(schema.votes.postId, id));
+      
+      // Step 5: Delete saved post records
+      await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
+      
+      // Step 6: Delete notifications related to this post
+      await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
+      
+      // Step 7: Finally delete the post itself
+      await db.delete(schema.posts).where(eq(schema.posts.id, id));
+    } catch (error) {
+      console.error("Error in deletePost:", error);
+      throw error;
     }
-    
-    // Step 3: Delete votes for this post
-    await db.delete(schema.votes).where(eq(schema.votes.postId, id));
-    
-    // Step 4: Delete saved post records
-    await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
-    
-    // Step 5: Delete notifications related to this post
-    await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
-    
-    // Step 6: Finally delete the post itself
-    await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 
   // Notifications

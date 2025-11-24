@@ -296,6 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteTrend(req.params.id);
       res.json({ message: "Trend deleted successfully" });
     } catch (error) {
+      console.error("Delete trend error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
