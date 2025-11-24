@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { NotificationPermissionModal } from "@/components/NotificationPermissionModal";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export function AuthModal({
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -82,8 +84,10 @@ export function AuthModal({
 
       toast({ title: "Success!", description: "Account created! You're now signed in" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Close auth modal and show notification permission modal
       onOpenChange(false);
-      window.location.reload();
+      setShowNotificationModal(true);
     } catch (error: any) {
       toast({ 
         title: "Registration failed", 
@@ -93,6 +97,12 @@ export function AuthModal({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleNotificationModalClose = () => {
+    setShowNotificationModal(false);
+    // Reload after notification modal is done
+    window.location.reload();
   };
 
   return (
@@ -203,6 +213,12 @@ export function AuthModal({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Notification Permission Modal */}
+      <NotificationPermissionModal 
+        isOpen={showNotificationModal}
+        onOpenChange={handleNotificationModalClose}
+      />
     </Dialog>
   );
 }
