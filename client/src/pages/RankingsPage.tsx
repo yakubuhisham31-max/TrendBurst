@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap, Info } from "lucide-react";
+import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap, Info, Inbox } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -133,6 +133,19 @@ export default function RankingsPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        {/* Empty State */}
+        {rankingsData.rankings.length === 0 && (
+          <div className="min-h-[400px] flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 p-8">
+            <div className="mb-4 p-4 rounded-full bg-primary/10">
+              <Inbox className="w-12 h-12 text-primary/60" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Posts Yet</h3>
+            <p className="text-center text-muted-foreground max-w-sm">
+              This trend doesn't have any submissions yet. Be the first to join and create a post!
+            </p>
+          </div>
+        )}
+
         {/* Your Entry */}
         {currentUserPost && (
           <div className="rank-item-card rounded-lg p-4 border-2 border-primary/50 bg-card">
