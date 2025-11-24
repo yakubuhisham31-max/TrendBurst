@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
+import VerificationBadge from "./VerificationBadge";
 
 interface Comment {
   id: string;
   username: string;
   userAvatar?: string;
+  userVerified?: number | boolean | null;
   text: string;
   createdAt: Date;
 }
@@ -47,9 +49,12 @@ export default function CommentSection({
             </Avatar>
             <div className="flex-1 space-y-1">
               <div className="flex items-baseline gap-2">
-                <span className="text-sm font-medium" data-testid="text-commenter">
-                  {comment.username}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium" data-testid="text-commenter">
+                    {comment.username}
+                  </span>
+                  <VerificationBadge verified={comment.userVerified} size="sm" />
+                </div>
                 <span className="text-xs text-muted-foreground">
                   {formatDistanceToNow(comment.createdAt, { addSuffix: true })}
                 </span>

@@ -18,6 +18,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import ShareDialog from "./ShareDialog";
 import FollowButton from "./FollowButton";
+import VerificationBadge from "./VerificationBadge";
 import { useAuth } from "@/hooks/useAuth";
 
 const categoryIcons: Record<string, JSX.Element> = {
@@ -39,6 +40,7 @@ interface TrendCardProps {
   trendName: string;
   username: string;
   userAvatar?: string;
+  userVerified?: number | boolean | null;
   category: string;
   views: number;
   participants: number;
@@ -61,6 +63,7 @@ export default function TrendCard({
   trendName,
   username,
   userAvatar,
+  userVerified,
   category,
   views,
   participants,
@@ -245,20 +248,23 @@ export default function TrendCard({
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0">
-              <span 
-                className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
-                data-testid="text-username"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!user) {
-                    onAuthModalOpen?.();
-                    return;
-                  }
-                  setLocation(`/profile/${username}`);
-                }}
-              >
-                {username}
-              </span>
+              <div className="flex items-center gap-1 min-w-0">
+                <span 
+                  className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
+                  data-testid="text-username"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!user) {
+                      onAuthModalOpen?.();
+                      return;
+                    }
+                    setLocation(`/profile/${username}`);
+                  }}
+                >
+                  {username}
+                </span>
+                <VerificationBadge verified={userVerified} size="sm" />
+              </div>
               <span className="text-xs text-white/90 drop-shadow" data-testid="text-time">
                 {formatDistanceToNow(createdAt, { addSuffix: true })}
               </span>

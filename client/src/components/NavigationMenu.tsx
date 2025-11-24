@@ -6,12 +6,14 @@ import { User, LogOut, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import VerificationBadge from "./VerificationBadge";
 
 interface NavigationMenuProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   username?: string;
   userAvatar?: string;
+  userVerified?: number | boolean | null;
   onLogoutClick?: () => void;
   onAuthModalOpen?: () => void;
 }
@@ -21,6 +23,7 @@ export default function NavigationMenu({
   onOpenChange,
   username = "User",
   userAvatar,
+  userVerified,
   onLogoutClick,
   onAuthModalOpen,
 }: NavigationMenuProps) {
@@ -69,9 +72,12 @@ export default function NavigationMenu({
                     <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium" data-testid="text-username">
-                      {username}
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium" data-testid="text-username">
+                        {username}
+                      </p>
+                      <VerificationBadge verified={userVerified} size="sm" />
+                    </div>
                     <p className="text-sm text-muted-foreground">View Profile</p>
                   </div>
                 </div>

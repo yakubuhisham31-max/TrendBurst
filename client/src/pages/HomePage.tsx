@@ -419,6 +419,7 @@ export default function HomePage() {
                     description={trend.description || undefined}
                     username={trend.creator?.username || "Unknown"}
                     userAvatar={trend.creator?.profilePicture || undefined}
+                    userVerified={trend.creator?.verified}
                     category={trend.category}
                     views={trend.views || 0}
                     participants={trend.participants || 0}
@@ -443,6 +444,7 @@ export default function HomePage() {
         onOpenChange={setMenuOpen}
         username={user?.username || "Guest"}
         userAvatar={user?.profilePicture || undefined}
+        userVerified={user?.verified}
         onAuthModalOpen={() => setAuthModalOpen(true)}
       />
 
