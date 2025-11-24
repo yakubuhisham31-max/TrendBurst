@@ -9,11 +9,25 @@ export default function PushNotificationButton() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Check if push notifications are already enabled
+  // Check if push notifications are already enabled in backend
   useEffect(() => {
-    if (Notification.permission === "granted") {
-      setIsEnabled(true);
-    }
+    const checkIfEnabled = async () => {
+      try {
+        // Check if we have a saved subscription in backend
+        const response = await apiRequest("GET", "/api/push/status", {});
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isEnabled) {
+            setIsEnabled(true);
+            console.log("✅ Push notifications already enabled in backend");
+          }
+        }
+      } catch (error) {
+        console.log("Push notification status check:", (error as Error).message);
+      }
+    };
+    
+    checkIfEnabled();
   }, []);
 
   const saveSubscriptionToBackend = async (OS: any) => {

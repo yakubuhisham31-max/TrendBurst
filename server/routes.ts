@@ -1789,6 +1789,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/push/status - Check if user has active push notifications (protected)
+  app.get("/api/push/status", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const subscription = await storage.getOneSignalSubscription(userId);
+      
+      res.json({ 
+        isEnabled: !!subscription && subscription.isActive === 1,
+        subscription: subscription ? {
+          subscriptionId: subscription.subscriptionId,
+          oneSignalUserId: subscription.oneSignalUserId,
+          lastUpdated: subscription.createdAt,
+        } : null
+      });
+    } catch (error) {
+      console.error("Error checking push status:", error);
+      res.status(500).json({ message: "Failed to check push status" });
+    }
+  });
+
   // POST /api/notifications/test - Send test notification (protected, for debugging)
   app.post("/api/notifications/test", isAuthenticated, async (req, res) => {
     try {
