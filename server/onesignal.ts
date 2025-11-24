@@ -78,8 +78,11 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
       
       // Check if it's a "no subscribers" error
       if (error.includes("no_subscribed_users") || (error.includes("All") && error.includes("not valid"))) {
-        console.error("⚠️  User has not subscribed to push notifications yet!");
-        console.error("   → User needs to click notification bell 🔔");
+        console.warn("⚠️  User has no active push subscriptions");
+        console.warn("   → User needs to:");
+        console.warn("     1. Sign in to https://trendx.social");
+        console.warn("     2. Click 'Enable Push' button in the header");
+        console.warn("     3. Grant browser notification permission");
       }
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
       return;

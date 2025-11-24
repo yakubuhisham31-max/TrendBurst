@@ -47,16 +47,23 @@ export async function sendHostNewPostNotification(hostId: string, trendName: str
 
 export async function sendNewPostNotification(userId: string, trendName: string, postId: string, trendId: string) {
   const canSend = await checkRateLimit(userId, "new_post", 8);
-  if (!canSend) return;
+  if (!canSend) {
+    console.log(`⏸️  New post notification blocked by rate limit for user ${userId}`);
+    return;
+  }
 
-  await sendPushNotification({
-    userId,
-    heading: "A Fresh Post Just Landed 🔥",
-    content: `A new post was added in ${trendName}. Jump in before you fall behind.`,
-    data: { type: "new_post", postId, trendId },
-  });
-
-  await recordNotificationSent(userId, "new_post");
+  try {
+    console.log(`\n🔔 Sending 'New Post' notification to user: ${userId}`);
+    await sendPushNotification({
+      userId,
+      heading: "A Fresh Post Just Landed 🔥",
+      content: `A new post was added in ${trendName}. Jump in before you fall behind.`,
+      data: { type: "new_post", postId, trendId },
+    });
+    await recordNotificationSent(userId, "new_post");
+  } catch (error) {
+    console.error(`❌ Failed to send new post notification to ${userId}:`, error);
+  }
 }
 
 export async function sendTrendEndingSoonNotification(userId: string, trendName: string, timeLeft: string, trendId: string) {
@@ -181,44 +188,65 @@ export async function sendTrendBlowingUpNotification(userId: string, trendName: 
 
 export async function sendPostCreatedNotification(userId: string, trendName: string, trendId: string, postId: string) {
   const canSend = await checkRateLimit(userId, "post_created", 10);
-  if (!canSend) return;
+  if (!canSend) {
+    console.log(`⏸️  Post created notification blocked by rate limit for user ${userId}`);
+    return;
+  }
 
-  await sendPushNotification({
-    userId,
-    heading: "Your Post Is Live 🔥",
-    content: `You just entered ${trendName} — now go get those votes. 😤🔥`,
-    data: { type: "post_created", postId, trendId },
-  });
-
-  await recordNotificationSent(userId, "post_created");
+  try {
+    console.log(`\n🎬 Sending 'Post Created' notification to user: ${userId}`);
+    await sendPushNotification({
+      userId,
+      heading: "Your Post Is Live 🔥",
+      content: `You just entered ${trendName} — now go get those votes. 😤🔥`,
+      data: { type: "post_created", postId, trendId },
+    });
+    await recordNotificationSent(userId, "post_created");
+  } catch (error) {
+    console.error(`❌ Failed to send post created notification to ${userId}:`, error);
+  }
 }
 
 export async function sendTrendCreatedNotification(userId: string, trendName: string, trendId: string) {
   const canSend = await checkRateLimit(userId, "trend_created", 10);
-  if (!canSend) return;
+  if (!canSend) {
+    console.log(`⏸️  Trend created notification blocked by rate limit for user ${userId}`);
+    return;
+  }
 
-  await sendPushNotification({
-    userId,
-    heading: "Your Trend Is Live 🔥",
-    content: `Your challenge ${trendName} is up — share it and let the battle begin. 😤🔥`,
-    data: { type: "trend_created", trendId },
-  });
-
-  await recordNotificationSent(userId, "trend_created");
+  try {
+    console.log(`\n✨ Sending 'Trend Created' notification to user: ${userId}`);
+    await sendPushNotification({
+      userId,
+      heading: "Your Trend Is Live 🔥",
+      content: `Your challenge ${trendName} is up — share it and let the battle begin. 😤🔥`,
+      data: { type: "trend_created", trendId },
+    });
+    await recordNotificationSent(userId, "trend_created");
+  } catch (error) {
+    console.error(`❌ Failed to send trend created notification to ${userId}:`, error);
+  }
 }
 
 export async function sendNewFollowerNotification(userId: string, followerUsername: string, followerId: string) {
   const canSend = await checkRateLimit(userId, "new_follower", 10);
-  if (!canSend) return;
+  if (!canSend) {
+    console.log(`⏸️  New follower notification blocked by rate limit for user ${userId}`);
+    return;
+  }
 
-  await sendPushNotification({
-    userId,
-    heading: "New Follower 👀🔥",
-    content: `${followerUsername} just followed you. You're on their radar now — keep the heat coming. 🔥`,
-    data: { type: "new_follower", userId: followerId },
-  });
-
-  await recordNotificationSent(userId, "new_follower");
+  try {
+    console.log(`\n👥 Sending 'New Follower' notification to user: ${userId} (from ${followerUsername})`);
+    await sendPushNotification({
+      userId,
+      heading: "New Follower 👀🔥",
+      content: `${followerUsername} just followed you. You're on their radar now — keep the heat coming. 🔥`,
+      data: { type: "new_follower", userId: followerId },
+    });
+    await recordNotificationSent(userId, "new_follower");
+  } catch (error) {
+    console.error(`❌ Failed to send new follower notification to ${userId}:`, error);
+  }
 }
 
 export async function sendFollowedUserPostedNotification(userId: string, actorUsername: string, trendName: string, postId: string, trendId: string) {
