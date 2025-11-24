@@ -9,7 +9,6 @@ import { Menu, Plus, Search, AlertCircle, LogIn, Flame, Sparkles, TrendingUp } f
 import TrendCard from "@/components/TrendCard";
 import NavigationMenu from "@/components/NavigationMenu";
 import NotificationBell from "@/components/NotificationBell";
-import PushNotificationButton from "@/components/PushNotificationButton";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -174,10 +173,7 @@ export default function HomePage() {
           />
           <div className="absolute right-4 flex items-center gap-2">
             {user ? (
-              <>
-                <PushNotificationButton />
-                <NotificationBell />
-              </>
+              <NotificationBell />
             ) : (
               <Button
                 variant="default"
