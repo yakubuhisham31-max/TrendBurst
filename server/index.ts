@@ -135,7 +135,7 @@ app.use(
   session({
     store: new PgStore({
       pool,
-      createTableIfMissing: true,
+      createTableIfMissing: false, // Table already exists, don't try to recreate
       disableTouch: false,
     }),
     secret: process.env.SESSION_SECRET || "dev-secret-key-not-for-production",
