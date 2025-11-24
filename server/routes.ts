@@ -1827,6 +1827,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/notifications/debug - Debug notification (for testing, no auth required)
+  app.post("/api/notifications/debug", async (req, res) => {
+    try {
+      const testUserId = "4fe4ef1b-7eac-45a1-916f-95009bdbe457"; // Icey
+      const user = await storage.getUser(testUserId);
+      
+      if (!user) {
+        console.log("❌ Debug test failed: User not found");
+        return res.status(404).json({ message: "Test user not found" });
+      }
+
+      console.log("\n🎯🎯🎯 DEBUG NOTIFICATION TEST STARTED 🎯🎯🎯");
+      console.log(`   👤 Test User: ${user.username} (ID: ${testUserId})`);
+      console.log(`   ⏰ Time: ${new Date().toISOString()}`);
+      console.log(`   🔐 Checking OneSignal credentials...`);
+      console.log(`   APP_ID: ${process.env.ONESIGNAL_APP_ID ? '✓ SET' : '✗ MISSING'}`);
+      console.log(`   REST_API_KEY: ${process.env.ONESIGNAL_REST_API_KEY ? '✓ SET' : '✗ MISSING'}`);
+
+      console.log(`\n   📤 Attempting to send test push notification...\n`);
+      await sendPushNotification({
+        userId: testUserId,
+        heading: "🎯 Debug Test Notification",
+        content: `Debug test for ${user.username}. If you see this, the system works! 🔥`,
+        data: { type: "debug_test" },
+      });
+
+      console.log(`\n✅ Debug test completed!`);
+      res.json({ 
+        message: "Debug test completed - check server logs above!", 
+        userId: testUserId,
+        username: user.username
+      });
+    } catch (error) {
+      console.error("\n❌ Debug test failed:");
+      console.error(error);
+      res.status(500).json({ message: "Debug test failed", error: String(error) });
+    }
+  });
+
   // POST /api/notifications/scheduled/trend-ending-soon - Send trend ending soon notifications (can be called by cron)
   app.post("/api/notifications/scheduled/trend-ending-soon", async (req, res) => {
     try {
