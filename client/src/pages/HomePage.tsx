@@ -365,13 +365,13 @@ export default function HomePage() {
                   {filteredTrends.slice(0, 2).map((trend) => (
                     <div
                       key={trend.id}
-                      className="group relative rounded-xl overflow-hidden cursor-pointer h-64 lg:h-80"
+                      className="group relative rounded-xl overflow-hidden cursor-pointer aspect-video"
                       onClick={() => setLocation(`/instructions/${trend.id}`)}
                     >
                       <img
                         src={trend.coverPicture || ""}
                         alt={trend.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-white space-y-2">

@@ -211,12 +211,12 @@ export default function TrendCard({
       onClick={handleCardClick}
       data-testid="card-trend"
     >
-      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+      <div className="relative aspect-video bg-muted overflow-hidden">
         {coverImage ? (
           <img
             src={coverImage}
             alt={trendName}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-chart-2/20" />
