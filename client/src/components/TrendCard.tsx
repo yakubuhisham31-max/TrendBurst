@@ -231,7 +231,7 @@ export default function TrendCard({
         <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-3 z-10">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar 
-              className="w-14 h-14 sm:w-12 sm:h-12 border-2 border-white/30 cursor-pointer hover-elevate flex-shrink-0" 
+              className="w-12 h-12 border-2 border-white/30 cursor-pointer hover-elevate flex-shrink-0" 
               data-testid="avatar-user"
               onClick={(e) => {
                 e.stopPropagation();
@@ -250,7 +250,7 @@ export default function TrendCard({
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1 min-w-0">
                 <span 
-                  className="text-base sm:text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
+                  className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
                   data-testid="text-username"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -337,7 +337,7 @@ export default function TrendCard({
             {categoryIcons[category] && categoryIcons[category]}
             {category}
           </Badge>
-          <h3 className="text-3xl sm:text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
+          <h3 className="text-2xl font-bold text-white drop-shadow-lg line-clamp-2" data-testid="text-trend-name">
             {trendName}
           </h3>
           {description && (
