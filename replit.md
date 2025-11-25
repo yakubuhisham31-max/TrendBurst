@@ -97,27 +97,7 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 
 ## Recent Changes (November 25, 2025)
 
-### 1. Trend Host Disqualify & Delete Post Functionality (Latest - November 25, 2025)
-- **Feature:** Trend hosts can now disqualify and delete participant posts with user confirmation
-- **What It Does:**
-  - Trend hosts see "Disqualify" and "Delete" buttons when viewing participant posts (in PostCommentsDialog)
-  - Clicking either button shows a confirmation dialog asking "Are you sure?"
-  - Upon confirmation, the participant is permanently disqualified from that trend
-  - Disqualified users cannot re-enter the trend
-- **Technical Implementation:**
-  - Added `disqualified_users` table to track which users are disqualified from which trends
-  - Implemented storage methods: `disqualifyUser()` and `isUserDisqualified()`
-  - Updated `DELETE /api/posts/:id` endpoint to allow trend creators to delete posts and disqualify users
-  - Updated `PATCH /api/posts/:id/disqualify` endpoint to disqualify users (prevents re-entry)
-  - Added AlertDialog confirmation UI to PostCommentsDialog and FeedChatPage
-  - Buttons only visible to trend hosts viewing non-owned participant posts
-- **User Experience:**
-  - Confirmation dialogs prevent accidental disqualifications
-  - Clear messaging about consequences (user disqualified from trend)
-  - Separate buttons for "Disqualify" (marks post disqualified) and "Delete" (removes post)
-  - Proper test IDs for automation testing
-
-### 2. Improved Saved Section Organization with Sub-Tabs
+### 1. Improved Saved Section Organization with Sub-Tabs (Latest)
 - **Feature:** Better grouping of saved posts and trends in user profile
 - **Improvements:**
   - Added sub-tabs within the "Saved" tab to separate saved trends and saved posts
