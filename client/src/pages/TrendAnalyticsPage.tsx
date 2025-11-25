@@ -215,21 +215,27 @@ export default function TrendAnalyticsPage() {
 
         {/* Top Posts */}
         <Card className="p-6">
-          <h3 className="font-semibold mb-6 flex items-center gap-2">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             Top Posts
           </h3>
           {analyticsLoading ? (
             <div className="space-y-3">
-              <Skeleton className="w-full h-32" />
-              <Skeleton className="w-full h-32" />
+              <Skeleton className="w-full h-12" />
+              <Skeleton className="w-full h-12" />
+              <Skeleton className="w-full h-12" />
             </div>
           ) : topPostsData.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="space-y-2">
               {topPostsData.map((post, index) => (
-                <div key={post.id} className="bg-muted/50 rounded-lg overflow-hidden hover:bg-muted transition-colors">
-                  {/* Media */}
-                  <div className="relative w-full aspect-square bg-black/80 overflow-hidden">
+                <div 
+                  key={post.id}
+                  onClick={() => setLocation(`/feed/${trendId}?fullscreenPost=${post.id}`)}
+                  className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer hover-elevate"
+                  data-testid={`card-top-post-${post.id}`}
+                >
+                  {/* Small Media Thumbnail */}
+                  <div className="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-black/80">
                     {post.mediaType === "video" ? (
                       <video
                         src={post.mediaUrl || post.imageUrl}
@@ -242,32 +248,26 @@ export default function TrendAnalyticsPage() {
                         className="w-full h-full object-cover"
                       />
                     )}
-                    {/* Rank Badge */}
-                    <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-md">
-                      #{index + 1}
-                    </div>
                   </div>
                   
                   {/* Info */}
-                  <div className="p-3 space-y-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate" title={post.username}>
-                        @{post.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {post.caption || "(No caption)"}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-1 border-t">
-                      <span className="text-xs text-muted-foreground">Votes</span>
-                      <p className="font-bold text-sm">{post.votes}</p>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      #{index + 1} • {post.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {post.caption || "(No caption)"}
+                    </p>
+                  </div>
+                  <div className="ml-4 text-right flex-shrink-0">
+                    <p className="font-bold text-lg">{post.votes}</p>
+                    <p className="text-xs text-muted-foreground">votes</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">No posts yet</p>
+            <p className="text-sm text-muted-foreground">No posts yet</p>
           )}
         </Card>
 

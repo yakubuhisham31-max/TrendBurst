@@ -71,9 +71,9 @@ export default function NavigationMenu({
                     <AvatarImage src={userAvatar} alt={username} />
                     <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium" data-testid="text-username">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 min-w-0">
+                      <p className="font-medium truncate" data-testid="text-username" title={username}>
                         {username}
                       </p>
                       <VerificationBadge verified={userVerified} size="sm" />
