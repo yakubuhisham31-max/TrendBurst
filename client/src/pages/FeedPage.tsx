@@ -248,21 +248,24 @@ export default function FeedPage() {
     },
   });
 
-  // Disqualify & Delete post mutation
+  // Disqualify post mutation
   const disqualifyMutation = useMutation({
     mutationFn: async (postId: string) => {
-      await apiRequest("DELETE", `/api/posts/${postId}`);
+      const response = await apiRequest("PATCH", `/api/posts/${postId}/disqualify`);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       toast({
-        title: "Post removed",
-        description: "User has been disqualified from this trend.",
+        title: "Post status updated",
+        description: data.isDisqualified 
+          ? "The post has been disqualified." 
+          : "The post has been requalified.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to remove post",
+        title: "Failed to update post status",
         description: error.message,
         variant: "destructive",
       });

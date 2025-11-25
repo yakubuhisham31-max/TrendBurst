@@ -413,8 +413,8 @@ export default function PostCard({
                   className="text-destructive focus:text-destructive"
                   data-testid="menu-item-disqualify"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Disqualify & Delete
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  {isDisqualified ? "Undo Disqualify" : "Disqualify"}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
