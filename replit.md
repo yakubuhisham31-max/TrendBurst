@@ -95,9 +95,32 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 **Push Notifications:**
 *   OneSignal (v16 SDK)
 
-## Recent Changes (November 24, 2025)
+## Recent Changes (November 25, 2025)
 
-### 1. Fixed EditProfilePage "n is not a function" Error (Latest)
+### 1. Fixed Trend Creation "Internal Error" (Latest)
+- **Issue:** Internal error when creating trends in production environment
+- **Root Cause:** Notification operations in trend creation endpoint weren't wrapped in try-catch blocks, causing the entire request to fail if any notification operation failed
+- **Solution:**
+  - Wrapped `sendTrendCreatedNotification` call in try-catch (was unwrapped, causing failures)
+  - Wrapped entire follower notification loop in try-catch
+  - Wrapped individual notification creation operations
+  - All notification failures now logged but don't block trend creation
+  - Added explicit error logging to trend creation endpoint to show actual error messages
+- **Schema Updates:**
+  - Added `trendNameFont` and `trendNameColor` to `insertTrendSchema` as optional fields with defaults
+  - Verified both columns exist in database (`trend_name_font` and `trend_name_color`)
+- **Result:** Trends now create successfully regardless of notification failures; notification issues are logged for debugging
+
+### 2. Fixed Database Session Table (November 25, 2025)
+- **Issue:** "relation IDX_session_expire already exists" error blocking startup
+- **Root Cause:** Duplicate index creation attempts when PGStore tried to recreate session table
+- **Solution:**
+  - Dropped and recreated session table cleanly with index
+  - Set `createTableIfMissing: false` in PGStore to prevent auto-recreation
+  - Index now exists cleanly without conflicts
+- **Result:** No more session table startup errors; app initializes cleanly
+
+### 3. Fixed EditProfilePage "n is not a function" Error
 - **Issue:** EditProfilePage was destructuring `checkAuth` from useAuth hook, but this function doesn't exist
 - **Root Cause:** The `useAuth` hook only exports `user`, `isLoading`, `isAuthenticated`, and `logout` - no `checkAuth` function
 - **Solution:**

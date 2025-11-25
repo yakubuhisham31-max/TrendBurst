@@ -203,13 +203,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!result.success) {
+        console.error("Validation error:", result.error.errors);
         return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
       }
 
       const trend = await storage.createTrend(result.data);
       
-      // Send notification to trend creator
-      await notificationService.sendTrendCreatedNotification((req as any).session.userId, result.data.name, trend.id);
+      // Send notification to trend creator (wrapped to prevent failure)
+      try {
+        await notificationService.sendTrendCreatedNotification((req as any).session.userId, result.data.name, trend.id);
+      } catch (err) {
+        console.error("Failed to send trend created notification:", err);
+      }
       
       // Send recommendation notification to random users
       try {
@@ -230,33 +235,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to send trend recommendations:", err);
       }
       
-      // Create notification for followers
-      const followers = await storage.getFollowers((req as any).session.userId);
-      const actor = await storage.getUser((req as any).session.userId);
-      for (const follow of followers) {
-        await storage.createNotification({
-          userId: follow.followerId,
-          actorId: (req as any).session.userId,
-          type: 'new_trend_from_following',
-          trendId: trend.id,
-        });
-        // Send branded push notification for followers
-        try {
-          await notificationService.sendFollowedUserPostedNotification(
-            follow.followerId,
-            actor?.username || "Someone",
-            result.data.name,
-            "",
-            trend.id
-          );
-        } catch (err) {
-          console.error("Failed to send follower trend notification:", err);
+      // Create notification for followers (wrapped to prevent failure)
+      try {
+        const followers = await storage.getFollowers((req as any).session.userId);
+        const actor = await storage.getUser((req as any).session.userId);
+        for (const follow of followers) {
+          try {
+            await storage.createNotification({
+              userId: follow.followerId,
+              actorId: (req as any).session.userId,
+              type: 'new_trend_from_following',
+              trendId: trend.id,
+            });
+          } catch (err) {
+            console.error("Failed to create follower notification:", err);
+          }
+          // Send branded push notification for followers
+          try {
+            await notificationService.sendFollowedUserPostedNotification(
+              follow.followerId,
+              actor?.username || "Someone",
+              result.data.name,
+              "",
+              trend.id
+            );
+          } catch (err) {
+            console.error("Failed to send follower trend notification:", err);
+          }
         }
+      } catch (err) {
+        console.error("Failed to process follower notifications:", err);
       }
       
       res.status(201).json(trend);
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      console.error("Trend creation error:", error);
+      res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

@@ -185,6 +185,8 @@ export const insertTrendSchema = createInsertSchema(trends).omit({
     return val;
   }),
   referenceMedia: z.array(z.string()).nullable().optional(),
+  trendNameFont: z.string().default("inter").optional(),
+  trendNameColor: z.string().default("#FFFFFF").optional(),
 });
 
 export const insertPostSchema = createInsertSchema(posts).omit({
