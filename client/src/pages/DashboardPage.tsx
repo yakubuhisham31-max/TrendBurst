@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, Eye, MessageSquare, ThumbsUp, BarChart3, Edit, Play, Pause } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, BarChart3, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { Trend } from "@shared/schema";
 import { useState } from "react";
@@ -17,34 +17,10 @@ interface DashboardStats {
   trendxPoints: number;
 }
 
-interface TrendAnalytics {
-  trendId: string;
-  trendName: string;
-  category: string;
-  views: number;
-  participants: number;
-  totalPosts: number;
-  totalVotes: number;
-  chatMessages: number;
-  engagementRate: string;
-  topPosts: Array<{
-    rank: number;
-    username: string;
-    votes: number;
-    imageUrl?: string;
-    mediaUrl?: string;
-    mediaType?: string;
-  }>;
-  isActive: boolean;
-  createdAt: string;
-  endDate: string | null;
-}
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const [selectedTrendId, setSelectedTrendId] = useState<string | null>(null);
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -64,11 +40,6 @@ export default function DashboardPage() {
         endDate: trend.endDate ? new Date(trend.endDate) : null,
       }));
     },
-  });
-
-  const { data: trendAnalytics, isLoading: analyticsLoading } = useQuery<TrendAnalytics>({
-    queryKey: ["/api/dashboard/trends", selectedTrendId, "analytics"],
-    enabled: !!selectedTrendId,
   });
 
   const getTrendStatus = (endDate: Date | null | undefined): "active" | "ending-soon" | "ended" => {
@@ -228,12 +199,12 @@ export default function DashboardPage() {
                         })()}
                         <Button
                           size="sm"
-                          variant={selectedTrendId === trend.id ? "default" : "outline"}
-                          onClick={() => setSelectedTrendId(selectedTrendId === trend.id ? null : trend.id)}
+                          variant="outline"
+                          onClick={() => setLocation(`/analytics/${trend.id}`)}
                           data-testid={`button-analytics-${trend.id}`}
                         >
                           <BarChart3 className="w-4 h-4 mr-2" />
-                          {selectedTrendId === trend.id ? "Hide" : "Analytics"}
+                          Analytics
                         </Button>
                         <Button
                           size="sm"
@@ -245,148 +216,6 @@ export default function DashboardPage() {
                         </Button>
                       </div>
                     </div>
-
-                    {selectedTrendId === trend.id && (
-                      analyticsLoading ? (
-                        <div className="flex items-center justify-center py-8 border-t mt-4 pt-4">
-                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                        </div>
-                      ) : trendAnalytics ? (
-                        <div className="border-t mt-4 pt-4 space-y-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Eye className="w-4 h-4" />
-                                <span>Views</span>
-                              </div>
-                              <p className="text-2xl font-bold">{trendAnalytics.views}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Users className="w-4 h-4" />
-                                <span>Participants</span>
-                              </div>
-                              <p className="text-2xl font-bold">{trendAnalytics.participants}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Activity className="w-4 h-4" />
-                                <span>Posts</span>
-                              </div>
-                              <p className="text-2xl font-bold">{trendAnalytics.totalPosts}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <ThumbsUp className="w-4 h-4" />
-                                <span>Total Votes</span>
-                              </div>
-                              <p className="text-2xl font-bold">{trendAnalytics.totalVotes}</p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <MessageSquare className="w-4 h-4" />
-                                <span>Chat Messages</span>
-                              </div>
-                              <p className="text-2xl font-bold">{trendAnalytics.chatMessages}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <TrendingUp className="w-4 h-4" />
-                                <span>Engagement Rate</span>
-                              </div>
-                              <p className="text-2xl font-bold">{trendAnalytics.engagementRate}</p>
-                              <p className="text-xs text-muted-foreground">votes per participant</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Users className="w-4 h-4" />
-                                <span>Participation Rate</span>
-                              </div>
-                              <p className="text-2xl font-bold">
-                                {trendAnalytics.views > 0 
-                                  ? `${((trendAnalytics.participants / trendAnalytics.views) * 100).toFixed(1)}%`
-                                  : '0%'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">participants / views</p>
-                            </div>
-                          </div>
-
-                          {trendAnalytics.topPosts.length > 0 && (
-                            <div>
-                              <h4 className="font-semibold mb-3">Top Performing Posts</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {trendAnalytics.topPosts.map((post) => {
-                                  const mediaUrl = post.mediaUrl || post.imageUrl || "";
-                                  const mediaType = post.mediaType || "image";
-                                  const videoId = `video-${trendAnalytics.trendId}-${post.rank}`;
-                                  const isPlaying = playingVideoId === videoId;
-                                  
-                                  return (
-                                    <div key={post.rank} className="bg-muted rounded-lg p-3 space-y-2">
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-muted-foreground">
-                                          #{post.rank}
-                                        </span>
-                                        <div className="flex items-center gap-1 text-sm font-medium">
-                                          <ThumbsUp className="w-3 h-3" />
-                                          <span>{post.votes}</span>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="relative w-full aspect-square rounded overflow-hidden bg-black">
-                                        {mediaType === "video" ? (
-                                          <>
-                                            <video
-                                              id={videoId}
-                                              src={mediaUrl}
-                                              className="w-full h-full object-cover"
-                                              onPlay={() => setPlayingVideoId(videoId)}
-                                              onPause={() => setPlayingVideoId(null)}
-                                            />
-                                            <button
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                const video = document.getElementById(videoId) as HTMLVideoElement;
-                                                if (video) {
-                                                  if (isPlaying) {
-                                                    video.pause();
-                                                  } else {
-                                                    video.play();
-                                                  }
-                                                }
-                                              }}
-                                              className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors"
-                                              data-testid={`button-play-video-${post.rank}`}
-                                            >
-                                              {isPlaying ? (
-                                                <Pause className="w-8 h-8 text-white" />
-                                              ) : (
-                                                <Play className="w-8 h-8 text-white" />
-                                              )}
-                                            </button>
-                                          </>
-                                        ) : (
-                                          <img
-                                            src={mediaUrl}
-                                            alt={`Top post by ${post.username}`}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        )}
-                                      </div>
-                                      
-                                      <p className="text-sm font-medium">@{post.username}</p>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : null
-                    )}
                   </CardContent>
                 </Card>
               ))}

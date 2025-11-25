@@ -23,8 +23,8 @@ Push notifications are configured for production on `https://trendx.social` usin
 ### Threaded Comments System (Instagram-style with Nested Replies)
 Comments support unlimited nested threaded replies with a visual hierarchy. This includes recursive threading, progressively smaller text/avatars for deeper replies, indentation with border indicators, and smart sorting (parent comments by newest, replies by oldest). Reply counts and full badge support are preserved across all nesting levels. This system is implemented in both `PostCommentsDialog` and `FeedChatPage` using recursive components (`CommentThread` and `ChatCommentThread`). All replies are hidden by default with a "Show X replies" / "Hide X replies" toggle for visibility control.
 
-### Trend Management
-Trend creators have access to an analytics dashboard showing posts, votes, comments, unique participants, and engagement metrics. Trend hosts can disqualify users and delete posts, which permanently prevents users from re-entering that specific trend. Disqualification actions trigger push and in-app notifications to the affected user.
+### Trend Management & Analytics
+Trend creators access comprehensive analytics from their **Dashboard** showing posts, votes, comments, unique participants, and engagement metrics via Recharts visualizations. Each trend card in the Dashboard has an **Analytics** button that navigates to a dedicated analytics page with detailed charts and performance data. Trend hosts can disqualify users and delete posts, which permanently prevents users from re-entering that specific trend. Disqualified users see the "Create Post" button hidden for those trends. Disqualification actions trigger push and in-app notifications to the affected user.
 
 ### User Profile
 The user profile features an improved "Saved" section with sub-tabs to separate saved trends and saved posts, each with a count badge and appropriate grid layouts (2-column for trends, 3-column for posts).
