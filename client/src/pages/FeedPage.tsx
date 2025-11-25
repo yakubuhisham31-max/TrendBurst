@@ -617,37 +617,42 @@ export default function FeedPage() {
         />
       )}
 
-      {fullscreenPostId && (
-        <PostFullscreenModal
-          post={posts.find((p) => p.id === fullscreenPostId)! as Post & { user?: User }}
-          isOpen={!!fullscreenPostId}
-          onClose={() => setFullscreenPostId(null)}
-          onComment={setCommentsPostId}
-          onVoteUp={() => handleVoteUp(fullscreenPostId)}
-          onVoteDown={() => handleVoteDown(fullscreenPostId)}
-          userVoted={posts.find((p) => p.id === fullscreenPostId)?.userVoted}
-          rank={voteRankMap.get(fullscreenPostId)}
-          allPosts={posts as (Post & { user?: User })[]}
-          onNextPost={() => {
-            const currentIndex = posts.findIndex((p) => p.id === fullscreenPostId);
-            if (currentIndex < posts.length - 1) {
-              setFullscreenPostId(posts[currentIndex + 1].id);
-            }
-          }}
-          onPreviousPost={() => {
-            const currentIndex = posts.findIndex((p) => p.id === fullscreenPostId);
-            if (currentIndex > 0) {
-              setFullscreenPostId(posts[currentIndex - 1].id);
-            }
-          }}
-          onTrendChat={(trendChatId) => {
-            if (!user) {
-              setAuthModalOpen(true);
-              return;
-            }
-            setLocation(`/feed-chat/${trendChatId}?fromPost=${fullscreenPostId}`);
-          }}
-        />
+      {fullscreenPostId && posts.length > 0 && (
+        (() => {
+          const selectedPost = posts.find((p) => p.id === fullscreenPostId);
+          return selectedPost ? (
+            <PostFullscreenModal
+              post={selectedPost as Post & { user?: User }}
+              isOpen={!!fullscreenPostId}
+              onClose={() => setFullscreenPostId(null)}
+              onComment={setCommentsPostId}
+              onVoteUp={() => handleVoteUp(fullscreenPostId)}
+              onVoteDown={() => handleVoteDown(fullscreenPostId)}
+              userVoted={selectedPost.userVoted}
+              rank={voteRankMap.get(fullscreenPostId)}
+              allPosts={posts as (Post & { user?: User })[]}
+              onNextPost={() => {
+                const currentIndex = posts.findIndex((p) => p.id === fullscreenPostId);
+                if (currentIndex < posts.length - 1) {
+                  setFullscreenPostId(posts[currentIndex + 1].id);
+                }
+              }}
+              onPreviousPost={() => {
+                const currentIndex = posts.findIndex((p) => p.id === fullscreenPostId);
+                if (currentIndex > 0) {
+                  setFullscreenPostId(posts[currentIndex - 1].id);
+                }
+              }}
+              onTrendChat={(trendChatId) => {
+                if (!user) {
+                  setAuthModalOpen(true);
+                  return;
+                }
+                setLocation(`/feed-chat/${trendChatId}?fromPost=${fullscreenPostId}`);
+              }}
+            />
+          ) : null;
+        })()
       )}
 
       <AuthModal
