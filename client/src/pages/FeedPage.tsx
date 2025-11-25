@@ -630,7 +630,7 @@ export default function FeedPage() {
               onClose={() => {
                 setFullscreenPostId(null);
                 if (fromAnalytics) {
-                  setLocation(`/dashboard/${trendId}`);
+                  setLocation(`/analytics/${trendId}`);
                   setFromAnalytics(false);
                 }
               }}
