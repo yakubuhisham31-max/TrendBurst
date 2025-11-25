@@ -217,8 +217,8 @@ export default function PostCommentsDialog({
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className={isChild ? "text-xs font-medium" : "text-sm font-medium"} data-testid="text-commenter">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />

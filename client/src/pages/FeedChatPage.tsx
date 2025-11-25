@@ -312,11 +312,12 @@ export default function FeedChatPage() {
               <AvatarFallback>{comment.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className={`flex items-baseline gap-2 mb-1 ${isChild ? "text-xs" : ""}`}>
+              <div className={`flex items-baseline gap-2 mb-1 min-w-0 ${isChild ? "text-xs" : ""}`}>
                 <span 
-                  className={`${isChild ? "text-xs" : "text-sm"} font-semibold cursor-pointer hover:underline`}
+                  className={`${isChild ? "text-xs" : "text-sm"} font-semibold truncate cursor-pointer hover:underline`}
                   data-testid={`text-username-${comment.id}`}
                   onClick={() => setLocation(`/profile/${comment.user?.username}`)}
+                  title={comment.user?.username}
                 >
                   {comment.user?.username || "Unknown"}
                 </span>

@@ -125,7 +125,7 @@ export interface IStorage {
     totalComments: number;
     uniqueParticipants: number;
     averageVotesPerPost: number;
-    topPosts: Array<{ id: string; caption: string; votes: number; username: string }>;
+    topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
     engagementRate: number;
   }>;
 }
@@ -854,7 +854,7 @@ export class DbStorage implements IStorage {
     totalComments: number;
     uniqueParticipants: number;
     averageVotesPerPost: number;
-    topPosts: Array<{ id: string; caption: string; votes: number; username: string }>;
+    topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
     engagementRate: number;
   }> {
     // Get posts for this trend
@@ -890,13 +890,16 @@ export class DbStorage implements IStorage {
     // Calculate average votes per post
     const averageVotesPerPost = posts.length > 0 ? totalVotes / posts.length : 0;
 
-    // Get top 5 posts
+    // Get top 5 posts with media info
     const topPosts = await db
       .select({
         id: schema.posts.id,
         caption: schema.posts.caption,
         votes: sql<number>`COALESCE(COUNT(${schema.votes.id}), 0)`,
         username: schema.users.username,
+        mediaType: schema.posts.mediaType,
+        mediaUrl: schema.posts.mediaUrl,
+        imageUrl: schema.posts.imageUrl,
       })
       .from(schema.posts)
       .leftJoin(schema.votes, eq(schema.posts.id, schema.votes.postId))
@@ -923,6 +926,9 @@ export class DbStorage implements IStorage {
         caption: p.caption || "",
         votes: Number(p.votes) || 0,
         username: p.username || "Unknown",
+        mediaType: p.mediaType || undefined,
+        mediaUrl: p.mediaUrl || undefined,
+        imageUrl: p.imageUrl || undefined,
       })),
       engagementRate: parseFloat(engagementRate.toFixed(2)),
     };
