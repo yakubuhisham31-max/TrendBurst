@@ -130,23 +130,6 @@ export default function FeedChatPage() {
       const response = await apiRequest("DELETE", `/api/posts/${selectedPostId}`);
       return response.json();
     },
-    onMutate: async () => {
-      if (!selectedPostId) return;
-      
-      // Cancel outgoing refetches so they don't overwrite optimistic delete
-      await queryClient.cancelQueries({ queryKey: ["/api/comments/trend", trendId] });
-
-      // Snapshot the previous comments
-      const previousComments = queryClient.getQueryData(["/api/comments/trend", trendId]);
-
-      // Optimistically remove all comments for the deleted post
-      queryClient.setQueryData(["/api/comments/trend", trendId], (old: any) => {
-        if (!old) return old;
-        return old.filter((comment: any) => comment.postId !== selectedPostId);
-      });
-
-      return { previousComments };
-    },
     onSuccess: () => {
       if (selectedPostId) {
         queryClient.invalidateQueries({ queryKey: ["/api/posts", selectedPostId] });
@@ -159,11 +142,7 @@ export default function FeedChatPage() {
         description: "User has been disqualified from this trend.",
       });
     },
-    onError: (error: Error, _variables, context: any) => {
-      // Restore the previous comments if mutation fails
-      if (context?.previousComments) {
-        queryClient.setQueryData(["/api/comments/trend", trendId], context.previousComments);
-      }
+    onError: (error: Error) => {
       toast({
         title: "Failed to remove post",
         description: error.message,

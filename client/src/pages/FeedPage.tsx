@@ -70,9 +70,16 @@ export default function FeedPage() {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  // Check if user is disqualified from this trend
+  const { data: disqualificationStatus } = useQuery<{ isDisqualified: boolean }>({
+    queryKey: ["/api/trends", trendId, "disqualification-status"],
+    enabled: !!trendId && !!user,
+  });
+
   const votesRemaining = 10 - (voteCountData?.count || 0);
   const isTrendEnded = trend?.endDate ? new Date(trend.endDate) < new Date() : false;
   const userHasPosted = posts.some(post => post.userId === user?.id);
+  const isUserDisqualified = disqualificationStatus?.isDisqualified || false;
   const unreadChatCount = trendId && notificationCounts?.chat?.[trendId] || 0;
 
   // Pause all background videos when fullscreen opens
@@ -232,32 +239,14 @@ export default function FeedPage() {
     mutationFn: async (postId: string) => {
       await apiRequest("DELETE", `/api/posts/${postId}`);
     },
-    onMutate: async (postId: string) => {
-      // Cancel outgoing refetches so they don't overwrite optimistic delete
-      await queryClient.cancelQueries({ queryKey: ["/api/posts/trend", trendId] });
-
-      // Snapshot the previous value
-      const previousPosts = queryClient.getQueryData(["/api/posts/trend", trendId]);
-
-      // Optimistically remove the post from the cache
-      queryClient.setQueryData(["/api/posts/trend", trendId], (old: any) => {
-        if (!old) return old;
-        return old.filter((post: any) => post.id !== postId);
-      });
-
-      return { previousPosts };
-    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       toast({
         title: "Post deleted",
         description: "Your post has been removed.",
       });
     },
-    onError: (error: Error, _variables, context: any) => {
-      // Restore the previous posts if mutation fails
-      if (context?.previousPosts) {
-        queryClient.setQueryData(["/api/posts/trend", trendId], context.previousPosts);
-      }
+    onError: (error: Error) => {
       toast({
         title: "Failed to delete post",
         description: error.message,
@@ -424,7 +413,7 @@ export default function FeedPage() {
         </div>
 
         {/* Post Button */}
-        {!isTrendEnded && !userHasPosted && (
+        {!isTrendEnded && !userHasPosted && !isUserDisqualified && (
           <Button
             size="lg"
             className="gap-2 bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all rounded-full px-6 py-3 h-auto"

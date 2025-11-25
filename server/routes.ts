@@ -1647,6 +1647,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/trends/:trendId/disqualification-status - Check if user is disqualified (protected)
+  app.get("/api/trends/:trendId/disqualification-status", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const trendId = req.params.trendId;
+      
+      const isDisqualified = await storage.isUserDisqualified(userId, trendId);
+      res.json({ isDisqualified });
+    } catch (error) {
+      console.error("Error checking disqualification status:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // DELETE /api/posts/:id - Delete post (protected, owner or trend creator)
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
