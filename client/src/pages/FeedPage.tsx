@@ -232,14 +232,32 @@ export default function FeedPage() {
     mutationFn: async (postId: string) => {
       await apiRequest("DELETE", `/api/posts/${postId}`);
     },
+    onMutate: async (postId: string) => {
+      // Cancel outgoing refetches so they don't overwrite optimistic delete
+      await queryClient.cancelQueries({ queryKey: ["/api/posts/trend", trendId] });
+
+      // Snapshot the previous value
+      const previousPosts = queryClient.getQueryData(["/api/posts/trend", trendId]);
+
+      // Optimistically remove the post from the cache
+      queryClient.setQueryData(["/api/posts/trend", trendId], (old: any) => {
+        if (!old) return old;
+        return old.filter((post: any) => post.id !== postId);
+      });
+
+      return { previousPosts };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
       toast({
         title: "Post deleted",
         description: "Your post has been removed.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context: any) => {
+      // Restore the previous posts if mutation fails
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["/api/posts/trend", trendId], context.previousPosts);
+      }
       toast({
         title: "Failed to delete post",
         description: error.message,
