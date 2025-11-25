@@ -97,7 +97,22 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 
 ## Recent Changes (November 25, 2025)
 
-### 1. Fixed Trend Creation "Internal Error" (Latest)
+### 1. Improved Saved Section Organization with Sub-Tabs (Latest)
+- **Feature:** Better grouping of saved posts and trends in user profile
+- **Improvements:**
+  - Added sub-tabs within the "Saved" tab to separate saved trends and saved posts
+  - Each section shows a count badge (e.g., "Saved Trends (5)")
+  - Users can easily switch between viewing saved trends and saved posts
+  - Cleaner UI with less visual clutter - only shows one section at a time
+  - Added Bookmark icons for visual clarity
+  - Separate loading states and empty states for each section type
+- **User Experience:**
+  - Saved trends display in a 2-column grid layout
+  - Saved posts display in a 3-column grid layout
+  - Each section has its own empty state message ("No saved trends yet" / "No saved posts yet")
+  - Proper test IDs for automation testing
+
+### 2. Fixed Trend Creation "Internal Error"
 - **Issue:** Internal error when creating trends in production environment
 - **Root Cause:** Notification operations in trend creation endpoint weren't wrapped in try-catch blocks, causing the entire request to fail if any notification operation failed
 - **Solution:**

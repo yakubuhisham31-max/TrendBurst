@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, Edit, Share2 } from "lucide-react";
+import { ChevronLeft, Edit, Share2, Bookmark } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProfileStats from "@/components/ProfileStats";
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [, setLocation] = useLocation();
   const params = useParams();
   const [activeTab, setActiveTab] = useState("trends");
+  const [savedSubTab, setSavedSubTab] = useState("trends");
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
@@ -319,22 +320,34 @@ export default function ProfilePage() {
 
                   {isOwnProfile && (
                     <TabsContent value="saved" className="mt-6">
-                      {savedTrendsLoading || savedPostsLoading ? (
-                        <div className="space-y-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Skeleton className="h-64" />
-                            <Skeleton className="h-64" />
-                          </div>
-                        </div>
-                      ) : savedTrends.length === 0 && savedPosts.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">
-                          No saved items yet
-                        </div>
-                      ) : (
-                        <div className="space-y-6">
-                          {savedTrends.length > 0 && (
-                            <div>
-                              <h3 className="font-semibold mb-4">Saved Trends</h3>
+                      <div className="space-y-6">
+                        {/* Sub-tabs for saved content grouping */}
+                        <Tabs value={savedSubTab} onValueChange={setSavedSubTab} className="w-full">
+                          <TabsList className="w-full grid w-full grid-cols-2">
+                            <TabsTrigger value="trends" className="gap-2" data-testid="tab-saved-trends">
+                              <Bookmark className="w-4 h-4" />
+                              <span>Saved Trends</span>
+                              <span className="ml-1 text-xs text-muted-foreground">({savedTrends.length})</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="posts" className="gap-2" data-testid="tab-saved-posts">
+                              <Bookmark className="w-4 h-4" />
+                              <span>Saved Posts</span>
+                              <span className="ml-1 text-xs text-muted-foreground">({savedPosts.length})</span>
+                            </TabsTrigger>
+                          </TabsList>
+
+                          {/* Saved Trends Section */}
+                          <TabsContent value="trends" className="mt-6">
+                            {savedTrendsLoading ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Skeleton className="h-64" />
+                                <Skeleton className="h-64" />
+                              </div>
+                            ) : savedTrends.length === 0 ? (
+                              <div className="text-center py-12 text-muted-foreground">
+                                No saved trends yet
+                              </div>
+                            ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {savedTrends.map((trend) => (
                                   <TrendCard
@@ -355,15 +368,26 @@ export default function ProfilePage() {
                                     trendNameFont={(trend as any).trendNameFont || "inter"}
                                     trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
                                     onClick={() => setLocation(`/instructions/${trend.id}`)}
+                                    data-testid={`saved-trend-${trend.id}`}
                                   />
                                 ))}
                               </div>
-                            </div>
-                          )}
-                          
-                          {savedPosts.length > 0 && (
-                            <div>
-                              <h3 className="font-semibold mb-4">Saved Posts</h3>
+                            )}
+                          </TabsContent>
+
+                          {/* Saved Posts Section */}
+                          <TabsContent value="posts" className="mt-6">
+                            {savedPostsLoading ? (
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <Skeleton className="aspect-square" />
+                                <Skeleton className="aspect-square" />
+                                <Skeleton className="aspect-square" />
+                              </div>
+                            ) : savedPosts.length === 0 ? (
+                              <div className="text-center py-12 text-muted-foreground">
+                                No saved posts yet
+                              </div>
+                            ) : (
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {savedPosts.map((post) => (
                                   <div
@@ -389,10 +413,10 @@ export default function ProfilePage() {
                                   </div>
                                 ))}
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            )}
+                          </TabsContent>
+                        </Tabs>
+                      </div>
                     </TabsContent>
                   )}
                 </Tabs>
