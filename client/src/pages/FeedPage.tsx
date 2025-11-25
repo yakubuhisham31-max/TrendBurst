@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { ChevronLeft, Info, Trophy, MessageSquare, Plus, Users, Flame, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
@@ -30,6 +31,8 @@ export default function FeedPage() {
   const [highlightCommentId, setHighlightCommentId] = useState<string | null>(null);
   const [fullscreenPostId, setFullscreenPostId] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmPostId, setDeleteConfirmPostId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -360,10 +363,16 @@ export default function FeedPage() {
   };
 
   const handleDisqualifyAndDelete = (postId: string) => {
-    // Show confirmation before deleting
-    if (confirm("Are you sure you want to remove this post and disqualify the user?")) {
-      deletePostMutation.mutate(postId);
+    setDeleteConfirmPostId(postId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmPostId) {
+      deletePostMutation.mutate(deleteConfirmPostId);
     }
+    setShowDeleteConfirm(false);
+    setDeleteConfirmPostId(null);
   };
 
 
@@ -645,6 +654,27 @@ export default function FeedPage() {
         isOpen={authModalOpen}
         onOpenChange={setAuthModalOpen}
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent data-testid="dialog-delete-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this post and disqualify the user?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              data-testid="button-delete-confirm"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
