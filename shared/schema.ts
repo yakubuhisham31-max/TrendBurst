@@ -98,6 +98,13 @@ export const follows = pgTable("follows", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const disqualifiedUsers = pgTable("disqualified_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  trendId: varchar("trend_id").notNull().references(() => trends.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const viewTracking = pgTable("view_tracking", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),

@@ -1647,15 +1647,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DELETE /api/posts/:id - Delete post (protected, only post owner)
+  // DELETE /api/posts/:id - Delete post (protected, owner or trend creator)
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const post = await storage.getPost(req.params.id);
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
       }
-      if (post.userId !== (req as any).session.userId) {
+
+      const userId = (req as any).session.userId;
+      const isPostOwner = post.userId === userId;
+      
+      // Check if user is trend creator (for disqualify + delete permission)
+      const trend = await storage.getTrend(post.trendId);
+      const isTrendCreator = trend && trend.userId === userId;
+
+      // Allow deletion if user is post owner OR trend creator
+      if (!isPostOwner && !isTrendCreator) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own posts" });
+      }
+      
+      // If deleted by trend creator, disqualify the user from this trend
+      if (isTrendCreator && !isPostOwner) {
+        await storage.disqualifyUser(post.userId, post.trendId);
       }
       
       // Decrement trend participants count (total posts)

@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { parseMentions } from "@/lib/mentions";
-import type { Comment, Trend, User } from "@shared/schema";
+import type { Comment, Trend, User, Post } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
 type TrendWithCreator = Trend & { creator: User | null };
@@ -25,6 +26,8 @@ export default function FeedChatPage() {
   const [message, setMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -115,6 +118,34 @@ export default function FeedChatPage() {
       toast({
         title: "Failed to delete message",
         description: error.message || "An error occurred while deleting the message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete post mutation (for trend creator)
+  const deletePostMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPostId) throw new Error("No post selected");
+      const response = await apiRequest("DELETE", `/api/posts/${selectedPostId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      if (selectedPostId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/posts", selectedPostId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      }
+      setShowDeleteConfirm(false);
+      setSelectedPostId(null);
+      toast({
+        title: "Post removed",
+        description: "User has been disqualified from this trend.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove post",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -318,6 +349,23 @@ export default function FeedChatPage() {
                   <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
                   Reply
                 </Button>
+                {/* Delete button for trend host on participant posts */}
+                {trend && user && trend.userId === user.id && comment.userId !== user.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`${isChild ? "h-5 text-xs p-0 text-destructive" : "h-6 text-xs text-destructive"}`}
+                    onClick={() => {
+                      setSelectedPostId(comment.postId || "");
+                      setShowDeleteConfirm(true);
+                    }}
+                    disabled={deletePostMutation.isPending}
+                    data-testid={`button-delete-post-${comment.postId}`}
+                  >
+                    <Trash2 className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
+                    Disqualify & Delete
+                  </Button>
+                )}
                 {comment.replies.length > 0 && (
                   <Button
                     variant="ghost"
@@ -430,6 +478,28 @@ export default function FeedChatPage() {
             <div ref={messagesEndRef} />
           </div>
         )}
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent data-testid="dialog-delete-confirm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove This Post?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove this post? The user will not be allowed to reenter this trend.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-delete-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deletePostMutation.mutate()}
+                disabled={deletePostMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                data-testid="button-delete-confirm"
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
 
       <footer className="sticky bottom-0 bg-background border-t">

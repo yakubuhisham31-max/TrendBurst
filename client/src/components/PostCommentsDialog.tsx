@@ -7,13 +7,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthModal } from "@/components/AuthModal";
 import VerificationBadge from "@/components/VerificationBadge";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Star, Reply, Trash2 } from "lucide-react";
 import { parseMentions } from "@/lib/mentions";
-import type { Comment, User, Trend } from "@shared/schema";
+import type { Comment, User, Trend, Post } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
 
@@ -36,6 +37,7 @@ export default function PostCommentsDialog({
   const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -43,6 +45,12 @@ export default function PostCommentsDialog({
   const { data: trend } = useQuery<Trend>({
     queryKey: [`/api/trends/${trendId}`],
     enabled: open && !!trendId,
+  });
+
+  // Fetch post info to check owner
+  const { data: post } = useQuery<Post>({
+    queryKey: ["/api/posts", postId],
+    enabled: open && !!postId,
   });
 
   // Fetch comments for this post
@@ -102,6 +110,31 @@ export default function PostCommentsDialog({
       toast({
         title: "Failed to delete comment",
         description: error.message || "An error occurred while deleting the comment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete post mutation (for trend creator)
+  const deletePostMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("DELETE", `/api/posts/${postId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts", postId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      setShowDeleteConfirm(false);
+      onOpenChange(false);
+      toast({
+        title: "Post removed",
+        description: "User has been disqualified from this trend.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove post",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -282,6 +315,23 @@ export default function PostCommentsDialog({
           <DialogTitle>Comments</DialogTitle>
         </DialogHeader>
 
+        {/* Post actions for trend creator */}
+        {trend && user && trend.userId === user.id && post && post.userId !== user.id && (
+          <div className="flex gap-2 border-b pb-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={deletePostMutation.isPending}
+              data-testid="button-delete-post"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Disqualify & Delete
+            </Button>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto space-y-4 py-4">
           {isLoading ? (
             <>
@@ -345,6 +395,29 @@ export default function PostCommentsDialog({
         isOpen={authModalOpen}
         onOpenChange={setAuthModalOpen}
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent data-testid="dialog-delete-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove This Post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this post? The user will not be allowed to reenter this trend.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-delete-cancel">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletePostMutation.mutate()}
+              disabled={deletePostMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-delete-confirm"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
