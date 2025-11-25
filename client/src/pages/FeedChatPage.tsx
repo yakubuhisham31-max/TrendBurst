@@ -404,10 +404,11 @@ export default function FeedChatPage() {
               variant="ghost"
               onClick={() => {
                 if (fromPostId) {
-                  // Navigate back to feed with fullscreen modal open
                   setLocation(`/feed/${trendId}?fullscreenPost=${fromPostId}`);
+                } else if (trendId) {
+                  setLocation(`/feed/${trendId}`);
                 } else {
-                  window.history.back();
+                  setLocation("/");
                 }
               }}
               data-testid="button-back"
