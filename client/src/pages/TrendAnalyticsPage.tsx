@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, TrendingUp, Users, MessageSquare, Flame, Target } from "lucide-react";
+import { ChevronLeft, TrendingUp, Users, MessageSquare, Flame, Target, Play } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
@@ -230,17 +230,22 @@ export default function TrendAnalyticsPage() {
               {topPostsData.map((post, index) => (
                 <div 
                   key={post.id}
-                  onClick={() => setLocation(`/feed/${trendId}?fullscreenPost=${post.id}`)}
+                  onClick={() => setLocation(`/feed/${trendId}?fullscreenPost=${post.id}&from=analytics`)}
                   className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer hover-elevate"
                   data-testid={`card-top-post-${post.id}`}
                 >
                   {/* Small Media Thumbnail */}
-                  <div className="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-black/80">
+                  <div className="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-black/80 relative">
                     {post.mediaType === "video" ? (
-                      <video
-                        src={post.mediaUrl || post.imageUrl}
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        <video
+                          src={post.mediaUrl || post.imageUrl}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <Play className="w-3 h-3 text-white fill-white" />
+                        </div>
+                      </>
                     ) : (
                       <img
                         src={post.mediaUrl || post.imageUrl}

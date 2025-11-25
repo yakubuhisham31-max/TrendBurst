@@ -33,15 +33,18 @@ export default function FeedPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmPostId, setDeleteConfirmPostId] = useState<string | null>(null);
+  const [fromAnalytics, setFromAnalytics] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Get query params for fullscreen post from returning from chat
+  // Get query params for fullscreen post from returning from chat or analytics
   useEffect(() => {
     const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
     const fullscreenPostParam = searchParams.get('fullscreenPost');
+    const fromParam = searchParams.get('from');
     if (fullscreenPostParam) {
       setFullscreenPostId(fullscreenPostParam);
+      setFromAnalytics(fromParam === 'analytics');
       // Clean up URL
       window.history.replaceState({}, '', `/feed/${trendId}`);
     }
@@ -624,7 +627,13 @@ export default function FeedPage() {
             <PostFullscreenModal
               post={selectedPost as Post & { user?: User }}
               isOpen={!!fullscreenPostId}
-              onClose={() => setFullscreenPostId(null)}
+              onClose={() => {
+                setFullscreenPostId(null);
+                if (fromAnalytics) {
+                  setLocation(`/dashboard/${trendId}`);
+                  setFromAnalytics(false);
+                }
+              }}
               onComment={setCommentsPostId}
               onVoteUp={() => handleVoteUp(fullscreenPostId)}
               onVoteDown={() => handleVoteDown(fullscreenPostId)}

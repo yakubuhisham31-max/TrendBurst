@@ -6,6 +6,17 @@ Mini Feed, or "Trendx", is a social media platform centered on trend-based conte
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates (November 25, 2025)
+- **UI Improvements:** Long username handling with truncate + tooltip across comments, chat, sidebar, and analytics
+- **Analytics Enhancements:** 
+  - Added play button overlay on video thumbnails in top posts
+  - Implemented smart navigation tracking: closing fullscreen from analytics returns to analytics page
+  - Media holders display images/videos with proper aspect ratio
+- **Navigation Fixes:**
+  - Back button in Ranking page now uses explicit navigation instead of history
+  - Back button in trend discussion/chat now reliably returns to feed
+  - Fullscreen modal respects origin page (analytics vs feed) for navigation
+
 ## System Architecture
 
 ### Frontend
@@ -27,8 +38,9 @@ Comments support unlimited nested threaded replies with a visual hierarchy. This
 Trend creators access comprehensive analytics from their **Dashboard** showing posts, votes, comments, unique participants, and engagement metrics via professional Recharts visualizations. Each trend card in the Dashboard has an **Analytics** button that navigates to a dedicated analytics page with:
 - **Engagement Breakdown:** Donut chart with percentages showing votes vs comments breakdown with custom legend
 - **Votes Distribution:** Bar chart with rounded corners, custom tooltips, and username labels showing top post performance
-- **Top Posts List:** Ranked list with vote counts and contributor usernames
+- **Top Posts List:** Compact row-based list with small media thumbnails (images/videos), vote counts, and contributor usernames. Video thumbnails display a play button overlay icon. Clicking any top post opens it in fullscreen on the feed and returns to analytics when closing
 - **Performance Metrics:** Cards displaying total posts, votes, comments, participants, and engagement rate
+- **Smart Navigation:** Clicking on analytics top posts saves the origin and allows the back button in fullscreen view to return directly to analytics instead of the feed
 
 Trend hosts can disqualify users and delete posts, which permanently prevents users from re-entering that specific trend. Disqualified users see the "Create Post" button hidden for those trends. Disqualification actions trigger push and in-app notifications to the affected user.
 
