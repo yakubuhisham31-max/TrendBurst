@@ -117,6 +117,17 @@ export interface IStorage {
   // Disqualified Users
   disqualifyUser(userId: string, trendId: string): Promise<void>;
   isUserDisqualified(userId: string, trendId: string): Promise<boolean>;
+
+  // Analytics
+  getTrendAnalytics(trendId: string): Promise<{
+    totalPosts: number;
+    totalVotes: number;
+    totalComments: number;
+    uniqueParticipants: number;
+    averageVotesPerPost: number;
+    topPosts: Array<{ id: string; caption: string; votes: number; username: string }>;
+    engagementRate: number;
+  }>;
 }
 
 export class DbStorage implements IStorage {
@@ -834,6 +845,87 @@ export class DbStorage implements IStorage {
       .from(schema.disqualifiedUsers)
       .where(and(eq(schema.disqualifiedUsers.userId, userId), eq(schema.disqualifiedUsers.trendId, trendId)));
     return result.length > 0;
+  }
+
+  // Analytics
+  async getTrendAnalytics(trendId: string): Promise<{
+    totalPosts: number;
+    totalVotes: number;
+    totalComments: number;
+    uniqueParticipants: number;
+    averageVotesPerPost: number;
+    topPosts: Array<{ id: string; caption: string; votes: number; username: string }>;
+    engagementRate: number;
+  }> {
+    // Get posts for this trend
+    const posts = await db
+      .select()
+      .from(schema.posts)
+      .where(eq(schema.posts.trendId, trendId));
+
+    const postIds = posts.map(p => p.id);
+
+    // Get all votes for posts in this trend
+    const votes = postIds.length > 0 
+      ? await db
+          .select()
+          .from(schema.votes)
+          .where(inArray(schema.votes.postId, postIds))
+      : [];
+
+    // Get all comments for posts in this trend
+    const comments = postIds.length > 0
+      ? await db
+          .select()
+          .from(schema.comments)
+          .where(inArray(schema.comments.postId, postIds))
+      : [];
+
+    // Calculate unique participants
+    const uniqueParticipants = new Set(posts.map(p => p.userId)).size;
+
+    // Get total votes sum
+    const totalVotes = votes.length;
+
+    // Calculate average votes per post
+    const averageVotesPerPost = posts.length > 0 ? totalVotes / posts.length : 0;
+
+    // Get top 5 posts
+    const topPosts = await db
+      .select({
+        id: schema.posts.id,
+        caption: schema.posts.caption,
+        votes: sql<number>`COALESCE(COUNT(${schema.votes.id}), 0)`,
+        username: schema.users.username,
+      })
+      .from(schema.posts)
+      .leftJoin(schema.votes, eq(schema.posts.id, schema.votes.postId))
+      .leftJoin(schema.users, eq(schema.posts.userId, schema.users.id))
+      .where(eq(schema.posts.trendId, trendId))
+      .groupBy(schema.posts.id, schema.users.id, schema.users.username)
+      .orderBy(desc(sql<number>`COUNT(${schema.votes.id})`))
+      .limit(5);
+
+    // Calculate engagement rate (total interactions / potential interactions)
+    const trend = await this.getTrend(trendId);
+    const engagementRate = trend && uniqueParticipants > 0 
+      ? ((totalVotes + comments.length) / (uniqueParticipants * 10)) * 100 
+      : 0;
+
+    return {
+      totalPosts: posts.length,
+      totalVotes,
+      totalComments: comments.length,
+      uniqueParticipants,
+      averageVotesPerPost: parseFloat(averageVotesPerPost.toFixed(2)),
+      topPosts: topPosts.map(p => ({
+        id: p.id,
+        caption: p.caption || "",
+        votes: Number(p.votes) || 0,
+        username: p.username || "Unknown",
+      })),
+      engagementRate: parseFloat(engagementRate.toFixed(2)),
+    };
   }
 }
 

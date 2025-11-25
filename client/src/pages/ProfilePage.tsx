@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, Edit, Share2, Bookmark } from "lucide-react";
+import { ChevronLeft, Edit, Share2, Bookmark, BarChart3 } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProfileStats from "@/components/ProfileStats";
@@ -254,25 +254,38 @@ export default function ProfilePage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {trends.map((trend) => (
-                          <TrendCard
-                            key={trend.id}
-                            id={trend.id}
-                            coverImage={trend.coverPicture || undefined}
-                            trendName={trend.name}
-                            username={profileUser.username}
-                            userAvatar={profileUser.profilePicture || undefined}
-                            category={trend.category}
-                            views={trend.views || 0}
-                            participants={(trend as any).postCount || trend.participants || 0}
-                            chatCount={trend.chatCount || 0}
-                            createdAt={new Date(trend.createdAt!)}
-                            endDate={trend.endDate ? new Date(trend.endDate) : undefined}
-                            description={trend.description || undefined}
-                            isHost={isOwnProfile}
-                            trendNameFont={(trend as any).trendNameFont || "inter"}
-                            trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
-                            onClick={() => setLocation(`/instructions/${trend.id}`)}
-                          />
+                          <div key={trend.id} className="relative">
+                            <TrendCard
+                              id={trend.id}
+                              coverImage={trend.coverPicture || undefined}
+                              trendName={trend.name}
+                              username={profileUser.username}
+                              userAvatar={profileUser.profilePicture || undefined}
+                              category={trend.category}
+                              views={trend.views || 0}
+                              participants={(trend as any).postCount || trend.participants || 0}
+                              chatCount={trend.chatCount || 0}
+                              createdAt={new Date(trend.createdAt!)}
+                              endDate={trend.endDate ? new Date(trend.endDate) : undefined}
+                              description={trend.description || undefined}
+                              isHost={isOwnProfile}
+                              trendNameFont={(trend as any).trendNameFont || "inter"}
+                              trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
+                              onClick={() => setLocation(`/instructions/${trend.id}`)}
+                            />
+                            {isOwnProfile && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="absolute top-2 right-2 gap-2"
+                                onClick={() => setLocation(`/analytics/${trend.id}`)}
+                                data-testid={`button-analytics-${trend.id}`}
+                              >
+                                <BarChart3 className="w-4 h-4" />
+                                <span className="hidden sm:inline">Analytics</span>
+                              </Button>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}

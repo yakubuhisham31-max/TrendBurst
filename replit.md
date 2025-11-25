@@ -1,7 +1,7 @@
 # Mini Feed - Trending Social Feed App
 
 ## Overview
-Mini Feed, or "Trendx", is a social media platform focused on trend-based content. It allows users to create and join challenges, submit posts, vote, and compete in rankings. The platform aims to be a central hub for trending content, targeting creative individuals and brands with a tailored onboarding process.
+Mini Feed, or "Trendx", is a social media platform centered on trend-based content. It enables users to create and join challenges, submit posts, vote, and compete in rankings. The platform's primary goal is to serve as a central hub for trending content, attracting creative individuals and brands through a specialized onboarding process.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,7 +9,7 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend
-The frontend uses React 18, TypeScript, Wouter for routing, TanStack Query for state management, Shadcn/ui (Radix UI) for components, and Tailwind CSS for styling. It features a custom color palette with full light/dark mode support, Inter font, and a mobile-first responsive design. Key patterns include component-based architecture, custom hooks, React Hook Form with Zod validation, and path aliases. It includes a notification system, an Instagram-like two-step upload flow, optimized video playback, and theme persistence via localStorage.
+The frontend utilizes React 18, TypeScript, Wouter for routing, TanStack Query for state management, Shadcn/ui (Radix UI) for components, and Tailwind CSS for styling. It features a custom color palette with full light/dark mode support, Inter font, and a mobile-first responsive design. Key patterns include component-based architecture, custom hooks, React Hook Form with Zod validation, and path aliases. It includes a notification system, an Instagram-like two-step upload flow, optimized video playback, and theme persistence via localStorage. Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, applying system preferences and preventing flash of unstyled content.
 
 ### Backend
 The backend is built with Node.js and Express.js, using Drizzle ORM for PostgreSQL (via Neon serverless). Vite handles frontend builds, esbuild for backend bundling, and tsx for TypeScript development. It provides a RESTful API with request/response logging, JSON parsing, and error handling. Cloudflare R2 is used for object storage. Authentication is self-contained with bcrypt hashing and PostgreSQL session storage.
@@ -18,36 +18,16 @@ The backend is built with Node.js and Express.js, using Drizzle ORM for PostgreS
 The core data model includes Users, Trends, Posts, Votes, Comments, and Notifications. The PostgreSQL schema uses UUIDs, foreign keys, text arrays, and timestamps.
 
 ### Push Notification System
-Push notifications are configured for production on `https://trendx.social` using OneSignal v16 SDK. The system has two distinct notification types:
-
-**In-App Notifications:** NotificationBell component displays in-app notifications fetched from the database. Shows unread count and notification list.
-
-**Push Notifications:** Only one entry point:
-- NotificationPermissionModal (automatic after signup) - Prompts new users to enable notifications immediately after account creation
-
-When the modal is shown:
-1. Request browser notification permission
-2. Call OneSignal SDK to create a subscription
-3. Save subscription to backend (`POST /api/push/subscribe`)
-4. Store in `one_signal_subscriptions` table with userId, subscriptionId, externalId (Trendx user ID), pushToken, and isActive status
-
-The backend sends push notifications via OneSignal REST API to users with active subscriptions. Notifications trigger on: new posts, new followers, comments, votes, rankings, and points earned. OneSignal identifies users via `external_id` which maps to the Trendx user ID. The system includes OneSignal SDK initialization in index.html, a service worker for receiving notifications, and server-side OneSignal API client for sending.
-
-### Dark Mode System
-Dark mode is implemented using `darkMode: ["class"]` in Tailwind CSS, with CSS variables defined in `:root` and `.dark` classes. A `ThemeProvider` automatically applies the system's dark mode preference (from `prefers-color-scheme: dark`). It prevents flash of unstyled content and ensures full color coverage across all components. Dark mode follows the user's OS setting - no manual toggle required.
+Push notifications are configured for production on `https://trendx.social` using OneSignal v16 SDK. In-app notifications are displayed via a NotificationBell component. Push notifications are enabled via an automatic `NotificationPermissionModal` after signup, which requests browser permission, calls the OneSignal SDK, and saves the subscription to the backend. The backend sends notifications via the OneSignal REST API for events like new posts, followers, comments, votes, rankings, and points earned, identifying users via `external_id` mapped to the Trendx user ID.
 
 ### Threaded Comments System (Instagram-style with Nested Replies)
-Comments now support unlimited nested threaded replies with visual hierarchy:
-- **Recursive Threading:** Users can reply to replies at any depth - no limit on nesting levels
-- **Visual Hierarchy:** Parent comments at full size, progressively smaller text/avatars for deeper replies
-- **Indentation & Borders:** Left border indicators (blue lines) show thread structure clearly
-- **Smart Sorting:** Parent comments by newest first, all replies by oldest first (chronological within threads)
-- **Reply Counts:** Badge shows reply count on parent comments and nested replies
-- **Full Badge Support:** Verification badges and host badges preserved across all nesting levels
-- **Implemented in Both Sections:**
-  - PostCommentsDialog: Traditional comment view with reply buttons on every comment
-  - FeedChatPage: Chat-style view with message bubbles (current user on right, others on left)
-- **Recursive Components:** Uses CommentThread (PostCommentsDialog) and ChatCommentThread (FeedChatPage) for infinite nesting support
+Comments support unlimited nested threaded replies with a visual hierarchy. This includes recursive threading, progressively smaller text/avatars for deeper replies, indentation with border indicators, and smart sorting (parent comments by newest, replies by oldest). Reply counts and full badge support are preserved across all nesting levels. This system is implemented in both `PostCommentsDialog` and `FeedChatPage` using recursive components (`CommentThread` and `ChatCommentThread`). All replies are hidden by default with a "Show X replies" / "Hide X replies" toggle for visibility control.
+
+### Trend Management
+Trend creators have access to an analytics dashboard showing posts, votes, comments, unique participants, and engagement metrics. Trend hosts can disqualify users and delete posts, which permanently prevents users from re-entering that specific trend. Disqualification actions trigger push and in-app notifications to the affected user.
+
+### User Profile
+The user profile features an improved "Saved" section with sub-tabs to separate saved trends and saved posts, each with a count badge and appropriate grid layouts (2-column for trends, 3-column for posts).
 
 ## External Dependencies
 
@@ -94,125 +74,3 @@ Comments now support unlimited nested threaded replies with visual hierarchy:
 
 **Push Notifications:**
 *   OneSignal (v16 SDK)
-
-## Recent Changes (November 25, 2025)
-
-### 1. Trend Host Disqualify & Delete Post Functionality (Latest)
-- **Feature:** Trend hosts can remove participant posts and permanently disqualify users from re-entering the trend
-- **What It Does:**
-  - Trend hosts see "Disqualify & Delete" button when viewing participant posts
-  - Clicking the button shows confirmation dialog asking "Are you sure you want to remove this post?"
-  - Upon confirmation, the post is deleted and the user is permanently disqualified from that trend
-  - Disqualified users cannot re-enter the trend
-- **Technical Implementation:**
-  - Added `disqualified_users` table to track which users are disqualified from which trends
-  - Implemented storage methods: `disqualifyUser()` and `isUserDisqualified()`
-  - Updated `DELETE /api/posts/:id` endpoint to allow trend creators to delete posts and disqualify users
-  - Added AlertDialog confirmation UI to PostCommentsDialog and FeedChatPage
-  - Single "Disqualify & Delete" button visible only to trend hosts viewing non-owned participant posts
-- **User Experience:**
-  - Clear confirmation prevents accidental disqualifications
-  - Button shows only for trend host viewing other users' posts
-  - Toast notification confirms action completion
-  - Proper test IDs for automation testing
-
-### 2. Improved Saved Section Organization with Sub-Tabs
-- **Feature:** Better grouping of saved posts and trends in user profile
-- **Improvements:**
-  - Added sub-tabs within the "Saved" tab to separate saved trends and saved posts
-  - Each section shows a count badge (e.g., "Saved Trends (5)")
-  - Users can easily switch between viewing saved trends and saved posts
-  - Cleaner UI with less visual clutter - only shows one section at a time
-  - Added Bookmark icons for visual clarity
-  - Separate loading states and empty states for each section type
-- **User Experience:**
-  - Saved trends display in a 2-column grid layout
-  - Saved posts display in a 3-column grid layout
-  - Each section has its own empty state message ("No saved trends yet" / "No saved posts yet")
-  - Proper test IDs for automation testing
-
-### 2. Fixed Trend Creation "Internal Error"
-- **Issue:** Internal error when creating trends in production environment
-- **Root Cause:** Notification operations in trend creation endpoint weren't wrapped in try-catch blocks, causing the entire request to fail if any notification operation failed
-- **Solution:**
-  - Wrapped `sendTrendCreatedNotification` call in try-catch (was unwrapped, causing failures)
-  - Wrapped entire follower notification loop in try-catch
-  - Wrapped individual notification creation operations
-  - All notification failures now logged but don't block trend creation
-  - Added explicit error logging to trend creation endpoint to show actual error messages
-- **Schema Updates:**
-  - Added `trendNameFont` and `trendNameColor` to `insertTrendSchema` as optional fields with defaults
-  - Verified both columns exist in database (`trend_name_font` and `trend_name_color`)
-- **Result:** Trends now create successfully regardless of notification failures; notification issues are logged for debugging
-
-### 2. Fixed Database Session Table (November 25, 2025)
-- **Issue:** "relation IDX_session_expire already exists" error blocking startup
-- **Root Cause:** Duplicate index creation attempts when PGStore tried to recreate session table
-- **Solution:**
-  - Dropped and recreated session table cleanly with index
-  - Set `createTableIfMissing: false` in PGStore to prevent auto-recreation
-  - Index now exists cleanly without conflicts
-- **Result:** No more session table startup errors; app initializes cleanly
-
-### 3. Fixed EditProfilePage "n is not a function" Error
-- **Issue:** EditProfilePage was destructuring `checkAuth` from useAuth hook, but this function doesn't exist
-- **Root Cause:** The `useAuth` hook only exports `user`, `isLoading`, `isAuthenticated`, and `logout` - no `checkAuth` function
-- **Solution:**
-  - Removed `checkAuth` from the destructuring on line 23
-  - Replaced `await checkAuth()` with `queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] })` to refresh user cache after profile update
-  - Added fallback values for potentially undefined `user.username` using `(user.username || "U")`
-- **Result:** Profile save now works without errors, user data is properly refreshed after updates
-
-### 2. Disqualification Notifications
-- Added push notifications when trend creators disqualify user posts
-- Added in-app notifications for disqualifications
-- Notification includes trend name and alerts user about 50 TrendX point loss
-- Rate limited to 15 per day per user to prevent spam
-- Notifications only sent when disqualifying (not when requalifying)
-- Implemented via `sendDisqualificationNotification()` in notificationService.ts
-- Updated `/api/posts/:id/disqualify` endpoint to trigger notifications
-
-### 2. Removed Manual "Enable Push" Button
-- Removed PushNotificationButton from UI completely
-- Push notifications now only available through automatic NotificationPermissionModal after signup
-- Users see permission prompt immediately after account creation
-- No manual button anywhere in the UI - only automatic prompts
-- Simplified push notification flow: signup → permission modal → browser notification request → OneSignal registration
-
-### 3. Collapsible Reply Threads
-- Added expandedReplies state to track which comment threads are expanded
-- All replies now hidden by default to minimize UI clutter
-- "Show X replies" / "Hide X replies" toggle button allows users to control visibility
-- Fixed TypeScript type issues when rendering nested replies
-- Delete functionality works correctly on all reply levels
-- Implemented in both PostCommentsDialog and FeedChatPage
-
-### 4. Nested Reply Support
-- Enabled users to reply to replies at unlimited depth
-- Implemented recursive comment threading in both PostCommentsDialog and FeedChatPage
-- Created reusable CommentThread and ChatCommentThread recursive components
-- Supports full nesting with proper visual indentation at each level
-- Progressive sizing for avatars and text based on nesting depth
-- Works with all existing features: badges, host indicators, delete buttons, reply counts
-- Backend already supported via parentId field - frontend now fully enables nested conversations
-
-### 5. Instagram-Style Threaded Comments
-- Implemented proper comment threading in PostCommentsDialog and FeedChatPage
-- Parent comments sorted by newest first, replies by oldest first within each thread
-- Visual indentation with left border indicators
-- Smaller avatars and text for replies
-- Reply count badges on parent comments
-- Verification badges preserved across all comment levels
-
-### 6. Automatic Notification Permission Modal
-- New `NotificationPermissionModal` component prompts users after signup
-- Appears automatically after successful account creation
-- Users can "Enable Notifications" or "Skip for now"
-- Graceful handling of "Permission blocked" errors when user clicks "Block" in browser dialog
-- User-friendly messages instead of fatal errors
-
-### 7. Mobile Card Sizing Improvements
-- Increased trend card sizes on mobile view for better visibility
-- Larger avatars (w-14 h-14) on mobile, standard size on desktop
-- Increased trend name text size on mobile (text-3xl) for prominence
-- Responsive sizing ensures cards look great on all devices

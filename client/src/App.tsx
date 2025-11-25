@@ -17,6 +17,7 @@ import EditProfilePage from "@/pages/EditProfilePage";
 import InstructionsPage from "@/pages/InstructionsPage";
 import RankingsPage from "@/pages/RankingsPage";
 import FeedChatPage from "@/pages/FeedChatPage";
+import TrendAnalyticsPage from "@/pages/TrendAnalyticsPage";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
@@ -73,6 +74,7 @@ function Router() {
       <Route path="/instructions/:id" component={InstructionsPage} />
       <Route path="/rankings/:id" component={RankingsPage} />
       <Route path="/feed-chat/:id" component={FeedChatPage} />
+      <Route path="/analytics/:id" component={(props) => <ProtectedRoute component={TrendAnalyticsPage} {...props} />} />
       
       <Route component={NotFound} />
     </Switch>

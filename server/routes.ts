@@ -1661,6 +1661,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/trends/:trendId/analytics - Get trend analytics (protected, trend creator only)
+  app.get("/api/trends/:trendId/analytics", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const trendId = req.params.trendId;
+      
+      const trend = await storage.getTrend(trendId);
+      if (!trend) {
+        return res.status(404).json({ message: "Trend not found" });
+      }
+
+      // Only trend creator can view analytics
+      if (trend.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden: Only trend creator can view analytics" });
+      }
+
+      const analytics = await storage.getTrendAnalytics(trendId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error getting trend analytics:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // DELETE /api/posts/:id - Delete post (protected, owner or trend creator)
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
