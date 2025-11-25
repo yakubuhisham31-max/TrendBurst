@@ -113,6 +113,10 @@ export interface IStorage {
   saveOneSignalSubscription(subscription: InsertOneSignalSubscription): Promise<OneSignalSubscription>;
   getOneSignalSubscription(userId: string): Promise<OneSignalSubscription | undefined>;
   getActiveOneSignalSubscriptions(limit?: number): Promise<OneSignalSubscription[]>;
+
+  // Disqualified Users
+  disqualifyUser(userId: string, trendId: string, reason?: string): Promise<void>;
+  isUserDisqualified(userId: string, trendId: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -814,6 +818,22 @@ export class DbStorage implements IStorage {
       .where(eq(schema.oneSignalSubscriptions.isActive, 1))
       .limit(limit);
     return result;
+  }
+
+  // Disqualified Users
+  async disqualifyUser(userId: string, trendId: string, reason: string = "disqualified"): Promise<void> {
+    await db
+      .insert(schema.disqualifiedUsers)
+      .values({ userId, trendId, reason })
+      .onConflictDoNothing();
+  }
+
+  async isUserDisqualified(userId: string, trendId: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(schema.disqualifiedUsers)
+      .where(and(eq(schema.disqualifiedUsers.userId, userId), eq(schema.disqualifiedUsers.trendId, trendId)));
+    return result.length > 0;
   }
 }
 

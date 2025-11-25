@@ -6,14 +6,15 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2 } from "lucide-react";
+import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2, AlertTriangle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { parseMentions } from "@/lib/mentions";
-import type { Comment, Trend, User } from "@shared/schema";
+import type { Comment, Trend, User, Post } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
 type TrendWithCreator = Trend & { creator: User | null };
@@ -25,6 +26,9 @@ export default function FeedChatPage() {
   const [message, setMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentWithUser | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [showDisqualifyConfirm, setShowDisqualifyConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -115,6 +119,62 @@ export default function FeedChatPage() {
       toast({
         title: "Failed to delete message",
         description: error.message || "An error occurred while deleting the message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Disqualify post mutation
+  const disqualifyPostMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPostId) throw new Error("No post selected");
+      const response = await apiRequest("PATCH", `/api/posts/${selectedPostId}/disqualify`);
+      return response.json();
+    },
+    onSuccess: () => {
+      if (selectedPostId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/posts", selectedPostId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      }
+      setShowDisqualifyConfirm(false);
+      setSelectedPostId(null);
+      toast({
+        title: "Post disqualified",
+        description: "User has been disqualified from this trend.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to disqualify post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPostId) throw new Error("No post selected");
+      const response = await apiRequest("DELETE", `/api/posts/${selectedPostId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      if (selectedPostId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/posts", selectedPostId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      }
+      setShowDeleteConfirm(false);
+      setSelectedPostId(null);
+      toast({
+        title: "Post removed",
+        description: "User has been disqualified from this trend.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove post",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -430,6 +490,50 @@ export default function FeedChatPage() {
             <div ref={messagesEndRef} />
           </div>
         )}
+        {/* Disqualify and Delete confirmation dialogs */}
+        <AlertDialog open={showDisqualifyConfirm} onOpenChange={setShowDisqualifyConfirm}>
+          <AlertDialogContent data-testid="dialog-disqualify-confirm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Disqualify User?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to disqualify this user from this trend? They will not be allowed to re-enter.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-disqualify-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => disqualifyPostMutation.mutate()}
+                disabled={disqualifyPostMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                data-testid="button-disqualify-confirm"
+              >
+                Disqualify
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent data-testid="dialog-delete-confirm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Post?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove this post? The user will be disqualified from this trend and cannot re-enter.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-delete-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deletePostMutation.mutate()}
+                disabled={deletePostMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                data-testid="button-delete-confirm"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
 
       <footer className="sticky bottom-0 bg-background border-t">
