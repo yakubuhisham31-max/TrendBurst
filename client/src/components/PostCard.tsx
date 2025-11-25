@@ -45,6 +45,7 @@ interface PostCardProps {
   onComment?: () => void;
   onDelete?: () => void;
   onDisqualify?: () => void;
+  onDisqualifyAndDelete?: () => void;
   onFullscreen?: () => void;
   onAuthModalOpen?: () => void;
 }
@@ -119,6 +120,7 @@ export default function PostCard({
   onComment,
   onDelete,
   onDisqualify,
+  onDisqualifyAndDelete,
   onFullscreen,
   onAuthModalOpen,
 }: PostCardProps) {
@@ -408,14 +410,24 @@ export default function PostCard({
                 </DropdownMenuItem>
               )}
               {isUserTrendHost && !isCreator && (
-                <DropdownMenuItem
-                  onClick={onDisqualify}
-                  className="text-destructive focus:text-destructive"
-                  data-testid="menu-item-disqualify"
-                >
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  {isDisqualified ? "Undo Disqualify" : "Disqualify"}
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem
+                    onClick={onDisqualify}
+                    className="text-destructive focus:text-destructive"
+                    data-testid="menu-item-disqualify"
+                  >
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    {isDisqualified ? "Undo Disqualify" : "Disqualify"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onDisqualifyAndDelete}
+                    className="text-destructive focus:text-destructive"
+                    data-testid="menu-item-disqualify-delete"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Disqualify & Delete
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

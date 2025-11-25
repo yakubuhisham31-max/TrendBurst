@@ -352,6 +352,13 @@ export default function FeedPage() {
     disqualifyMutation.mutate(postId);
   };
 
+  const handleDisqualifyAndDelete = (postId: string) => {
+    // Show confirmation before deleting
+    if (confirm("Are you sure you want to remove this post and disqualify the user?")) {
+      deletePostMutation.mutate(postId);
+    }
+  };
+
 
   const isTrendCreator = user?.id === trend?.userId;
 
@@ -551,6 +558,7 @@ export default function FeedPage() {
                     }}
                     onDelete={() => handleDeletePost(post.id)}
                     onDisqualify={() => handleDisqualify(post.id)}
+                    onDisqualifyAndDelete={() => handleDisqualifyAndDelete(post.id)}
                     onFullscreen={() => setFullscreenPostId(post.id)}
                     onAuthModalOpen={() => setAuthModalOpen(true)}
                   />
