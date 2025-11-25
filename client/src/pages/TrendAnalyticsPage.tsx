@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, TrendingUp, Users, MessageSquare, Flame, Target } from "lucide-react";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -168,30 +168,47 @@ export default function TrendAnalyticsPage() {
 
           {/* Engagement Breakdown */}
           <Card className="p-6">
-            <h3 className="font-semibold mb-4">Engagement Breakdown</h3>
+            <h3 className="font-semibold mb-6">Engagement Breakdown</h3>
             {analyticsLoading ? (
-              <Skeleton className="w-full h-40" />
+              <Skeleton className="w-full h-64" />
             ) : engagementData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={150}>
-                <PieChart>
-                  <Pie
-                    data={engagementData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={50}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {engagementData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="flex flex-col items-center">
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={engagementData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={70}
+                      innerRadius={40}
+                      fill="#8884d8"
+                      dataKey="value"
+                      animationBegin={0}
+                      animationDuration={400}
+                    >
+                      {engagementData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => value.toLocaleString()} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex gap-6 mt-4">
+                  {engagementData.map((item, index) => (
+                    <div key={item.name} className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-sm" 
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="text-sm text-muted-foreground">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No engagement data available</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No engagement data available</p>
             )}
           </Card>
         </div>
@@ -235,21 +252,46 @@ export default function TrendAnalyticsPage() {
         {/* Chart: Votes Distribution */}
         {topPostsData.length > 0 && (
           <Card className="p-6">
-            <h3 className="font-semibold mb-4">Votes Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topPostsData}>
-                <CartesianGrid strokeDasharray="3 3" />
+            <h3 className="font-semibold mb-6 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Votes Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart 
+                data={topPostsData}
+                margin={{ top: 20, right: 30, left: 0, bottom: 80 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
                   dataKey="username"
                   angle={-45}
                   textAnchor="end"
                   height={100}
                   interval={0}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
                 />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="votes" fill="#06B6D4" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                    padding: '8px 12px'
+                  }}
+                  formatter={(value) => [value.toLocaleString(), 'Votes']}
+                  labelFormatter={(label) => `Posted by: ${label}`}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  formatter={() => 'Vote Count'}
+                />
+                <Bar 
+                  dataKey="votes" 
+                  fill="#06B6D4" 
+                  radius={[8, 8, 0, 0]}
+                  animationDuration={300}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card>
