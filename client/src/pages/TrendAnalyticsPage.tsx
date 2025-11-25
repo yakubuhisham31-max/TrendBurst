@@ -71,7 +71,7 @@ export default function TrendAnalyticsPage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => setLocation(`/profile`)}
+            onClick={() => setLocation(`/dashboard`)}
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
