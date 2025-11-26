@@ -43,9 +43,8 @@ export function ObjectUploader({
       autoProceed: false,
     })
       .use(AwsS3, {
-        shouldUseMultipart: true,
+        shouldUseMultipart: false,
         getUploadParameters: onGetUploadParameters,
-        companionUrl: "/",
       })
       .on("complete", (result) => {
         console.log("Upload complete:", result);

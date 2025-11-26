@@ -24,20 +24,28 @@ export async function uploadToR2(file: File, folder: string): Promise<string> {
 
   const { uploadURL, publicURL } = await response.json();
 
-  // Upload file to R2 using presigned URL
-  const uploadResponse = await fetch(uploadURL, {
-    method: "PUT",
-    body: file,
-    headers: {
-      "Content-Type": file.type,
-    },
-  });
+  // Upload file to R2 using presigned URL with AbortController for timeout
+  const controller = new AbortController();
+  const uploadTimeout = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout for large videos
 
-  if (!uploadResponse.ok) {
-    throw new Error("Failed to upload file to R2");
+  try {
+    const uploadResponse = await fetch(uploadURL, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type,
+      },
+      signal: controller.signal,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error("Failed to upload file to R2");
+    }
+
+    return publicURL;
+  } finally {
+    clearTimeout(uploadTimeout);
   }
-
-  return publicURL;
 }
 
 /**
