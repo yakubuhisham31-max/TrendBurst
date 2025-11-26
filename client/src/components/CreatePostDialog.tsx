@@ -110,9 +110,11 @@ export default function CreatePostDialog({
       setUploadProgress(0);
       onOpenChange(false);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("Upload error details:", error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload media. Please try again.",
+        description: errorMessage || "Failed to upload media. Check browser console for details.",
         variant: "destructive",
       });
     } finally {

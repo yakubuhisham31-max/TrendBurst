@@ -106,6 +106,9 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
     const concurrency = 8;
     let uploadedCount = 0;
 
+    console.log(`🔍 DEBUG: partUrls keys:`, Object.keys(partUrls));
+    console.log(`🔍 DEBUG: partUrls sample:`, Object.entries(partUrls).slice(0, 2));
+
     for (let i = 0; i < totalChunks; i += concurrency) {
       const batch = partNumbers.slice(i, i + concurrency);
       
@@ -114,29 +117,44 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const chunk = file.slice(start, end);
 
-        const uploadResponse = await fetch(partUrls[partNumber], {
-          method: "PUT",
-          body: chunk,
-          headers: { "Content-Type": file.type },
-        });
+        const partUrl = partUrls[partNumber];
+        console.log(`📝 Part ${partNumber}: URL exists?`, !!partUrl, `Chunk size: ${(chunk.size / 1024 / 1024).toFixed(2)}MB`);
 
-        if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload part ${partNumber}: ${uploadResponse.statusText}`);
+        if (!partUrl) {
+          throw new Error(`No presigned URL for part ${partNumber}`);
         }
 
-        // Extract ETag - R2 returns it with quotes, remove them
-        let etag = uploadResponse.headers.get("etag") || "";
-        if (etag.startsWith('"') && etag.endsWith('"')) {
-          etag = etag.slice(1, -1);
+        try {
+          const uploadResponse = await fetch(partUrl, {
+            method: "PUT",
+            body: chunk,
+            headers: { "Content-Type": file.type },
+          });
+
+          console.log(`📤 Part ${partNumber} response status: ${uploadResponse.status} ${uploadResponse.statusText}`);
+
+          if (!uploadResponse.ok) {
+            const responseText = await uploadResponse.text();
+            throw new Error(`Part ${partNumber} failed: ${uploadResponse.status} ${uploadResponse.statusText} - ${responseText}`);
+          }
+
+          // Extract ETag - R2 returns it with quotes, remove them
+          let etag = uploadResponse.headers.get("etag") || "";
+          if (etag.startsWith('"') && etag.endsWith('"')) {
+            etag = etag.slice(1, -1);
+          }
+          
+          uploadedCount++;
+          // Calculate progress: 10-90% for actual upload, 90-100% for completion
+          const uploadProgress = 10 + (uploadedCount / totalChunks) * 80;
+          onProgress?.(Math.round(uploadProgress));
+          console.log(`✅ Part ${partNumber}/${totalChunks} uploaded (${uploadedCount}/${totalChunks}), ETag: ${etag}`);
+          
+          return { ETag: etag, PartNumber: partNumber };
+        } catch (err) {
+          console.error(`❌ Error uploading part ${partNumber}:`, err);
+          throw err;
         }
-        
-        uploadedCount++;
-        // Calculate progress: 10-90% for actual upload, 90-100% for completion
-        const uploadProgress = 10 + (uploadedCount / totalChunks) * 80;
-        onProgress?.(Math.round(uploadProgress));
-        console.log(`📤 Part ${partNumber}/${totalChunks} uploaded (${uploadedCount}/${totalChunks})`);
-        
-        return { ETag: etag, PartNumber: partNumber };
       });
 
       const results = await Promise.all(uploadPromises);
