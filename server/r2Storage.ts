@@ -45,7 +45,7 @@ export class R2StorageService {
       Key: key,
     });
 
-    const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15 minutes
+    const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 3600 }); // 60 minutes for large video uploads
     
     // Construct public URL using the R2_PUBLIC_DOMAIN
     const publicURL = `${this.getPublicDomain()}/${key}`;
@@ -66,7 +66,7 @@ export class R2StorageService {
       Key: sanitizedPath,
     });
 
-    const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15 minutes
+    const uploadURL = await getSignedUrl(r2Client, command, { expiresIn: 3600 }); // 60 minutes for large video uploads
     
     // Construct public URL using the R2_PUBLIC_DOMAIN
     const publicURL = `${this.getPublicDomain()}/${sanitizedPath}`;
