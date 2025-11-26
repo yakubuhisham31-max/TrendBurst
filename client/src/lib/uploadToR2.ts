@@ -11,7 +11,7 @@ export async function uploadToR2(file: File, folder: string, onProgress?: (progr
   
   // For small files (< 5MB), use simple upload
   if (file.size < 5242880) {
-    return uploadSmpleFile(file, folder, fileExtension, onProgress);
+    return uploadSimpleFile(file, folder, fileExtension, onProgress);
   }
 
   // For large files, use multipart upload with parallel chunks
@@ -19,7 +19,7 @@ export async function uploadToR2(file: File, folder: string, onProgress?: (progr
   return uploadMultipart(file, folder, fileExtension, onProgress);
 }
 
-async function uploadSmpleFile(file: File, folder: string, fileExtension: string, onProgress?: (progress: number) => void): Promise<string> {
+async function uploadSimpleFile(file: File, folder: string, fileExtension: string, onProgress?: (progress: number) => void): Promise<string> {
   // Request presigned upload URL from backend
   const response = await fetch("/api/objects/upload", {
     method: "POST",
