@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Upload, Loader2, ArrowRight } from "lucide-react";
 import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ export default function CreatePostDialog({
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
 
   // Clean up and reset when dialog closes
@@ -88,9 +90,12 @@ export default function CreatePostDialog({
     if (!selectedFile) return;
 
     setIsUploading(true);
+    setUploadProgress(0);
     try {
-      // Upload to R2 in the 'posts' folder
-      const publicUrl = await uploadToR2(selectedFile, 'posts');
+      // Upload to R2 in the 'posts' folder with progress tracking
+      const publicUrl = await uploadToR2(selectedFile, 'posts', (progress) => {
+        setUploadProgress(progress);
+      });
       
       if (onSubmit) {
         onSubmit({ mediaUrl: publicUrl, mediaType, caption });
@@ -102,6 +107,7 @@ export default function CreatePostDialog({
       setPreviewUrl("");
       setSelectedFile(null);
       setMediaType('image');
+      setUploadProgress(0);
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -111,6 +117,7 @@ export default function CreatePostDialog({
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -215,8 +222,19 @@ export default function CreatePostDialog({
                   className="min-h-[100px]"
                   data-testid="input-caption"
                   autoFocus
+                  disabled={isUploading}
                 />
               </div>
+
+              {isUploading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Uploading...</Label>
+                    <span className="text-sm font-medium text-muted-foreground">{uploadProgress}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" data-testid="progress-upload" />
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <Button

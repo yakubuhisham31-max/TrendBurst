@@ -2,23 +2,24 @@
  * Upload a file to Cloudflare R2 storage with parallel chunk uploads for large files
  * @param file - The file to upload
  * @param folder - The folder to upload to (e.g., 'posts', 'profile-pictures', 'trend-covers', 'reference-media')
+ * @param onProgress - Optional callback to track upload progress (0-100)
  * @returns The public URL of the uploaded file
  */
-export async function uploadToR2(file: File, folder: string): Promise<string> {
+export async function uploadToR2(file: File, folder: string, onProgress?: (progress: number) => void): Promise<string> {
   // Get file extension
   const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
   
   // For small files (< 5MB), use simple upload
   if (file.size < 5242880) {
-    return uploadSmpleFile(file, folder, fileExtension);
+    return uploadSmpleFile(file, folder, fileExtension, onProgress);
   }
 
   // For large files, use multipart upload with parallel chunks
   console.log(`📁 Starting multipart upload for ${(file.size / 1024 / 1024).toFixed(2)}MB file`);
-  return uploadMultipart(file, folder, fileExtension);
+  return uploadMultipart(file, folder, fileExtension, onProgress);
 }
 
-async function uploadSmpleFile(file: File, folder: string, fileExtension: string): Promise<string> {
+async function uploadSmpleFile(file: File, folder: string, fileExtension: string, onProgress?: (progress: number) => void): Promise<string> {
   // Request presigned upload URL from backend
   const response = await fetch("/api/objects/upload", {
     method: "POST",
@@ -34,6 +35,7 @@ async function uploadSmpleFile(file: File, folder: string, fileExtension: string
   }
 
   const { uploadURL, publicURL } = await response.json();
+  onProgress?.(10); // Initial progress after getting URL
 
   // Upload file to R2 using presigned URL
   const controller = new AbortController();
@@ -53,13 +55,14 @@ async function uploadSmpleFile(file: File, folder: string, fileExtension: string
       throw new Error("Failed to upload file to R2");
     }
 
+    onProgress?.(100); // Complete
     return publicURL;
   } finally {
     clearTimeout(uploadTimeout);
   }
 }
 
-async function uploadMultipart(file: File, folder: string, fileExtension: string): Promise<string> {
+async function uploadMultipart(file: File, folder: string, fileExtension: string, onProgress?: (progress: number) => void): Promise<string> {
   const CHUNK_SIZE = 2097152; // 2MB chunks for more parallelism
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   console.log(`📦 Splitting into ${totalChunks} chunks of ${(CHUNK_SIZE / 1024 / 1024).toFixed(1)}MB`);
@@ -78,6 +81,7 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
 
   const { uploadId, key, publicURL } = await initResponse.json();
   console.log(`⏳ Multipart upload initiated. Upload ID: ${uploadId}`);
+  onProgress?.(5); // 5% after initiating
 
   try {
     // Get all part URLs in one request
@@ -95,6 +99,7 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
 
     const { partUrls } = await partUrlsResponse.json();
     console.log(`✅ Received presigned URLs for all ${totalChunks} parts`);
+    onProgress?.(10); // 10% after getting URLs
 
     // Upload chunks in parallel (8 concurrent uploads for better speed)
     const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
@@ -126,6 +131,9 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
         }
         
         uploadedCount++;
+        // Calculate progress: 10-90% for actual upload, 90-100% for completion
+        const uploadProgress = 10 + (uploadedCount / totalChunks) * 80;
+        onProgress?.(Math.round(uploadProgress));
         console.log(`📤 Part ${partNumber}/${totalChunks} uploaded (${uploadedCount}/${totalChunks})`);
         
         return { ETag: etag, PartNumber: partNumber };
@@ -136,6 +144,7 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
     }
 
     console.log(`✅ All ${totalChunks} parts uploaded, completing multipart upload...`);
+    onProgress?.(90); // 90% before completing
 
     // Complete multipart upload
     const completeResponse = await fetch("/api/objects/upload/complete", {
@@ -149,6 +158,7 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
       throw new Error("Failed to complete multipart upload");
     }
 
+    onProgress?.(100); // 100% done
     console.log(`🎉 Upload complete! ${(file.size / 1024 / 1024).toFixed(2)}MB file successfully uploaded`);
     return publicURL;
   } catch (error) {
