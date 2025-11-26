@@ -63,7 +63,7 @@ async function uploadSimpleFile(file: File, folder: string, fileExtension: strin
 }
 
 async function uploadMultipart(file: File, folder: string, fileExtension: string, onProgress?: (progress: number) => void): Promise<string> {
-  const CHUNK_SIZE = 2097152; // 2MB chunks for more parallelism
+  const CHUNK_SIZE = 5242880; // 5MB chunks - R2 requires minimum 5MB per part for multipart uploads
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   console.log(`📦 Splitting into ${totalChunks} chunks of ${(CHUNK_SIZE / 1024 / 1024).toFixed(1)}MB`);
 
