@@ -162,19 +162,26 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
     }
 
     console.log(`✅ All ${totalChunks} parts uploaded, completing multipart upload...`);
+    console.log(`📋 Parts to send:`, JSON.stringify(uploadedParts.sort((a, b) => a.PartNumber - b.PartNumber), null, 2));
     onProgress?.(90); // 90% before completing
 
     // Complete multipart upload
+    const sortedParts = uploadedParts.sort((a, b) => a.PartNumber - b.PartNumber);
     const completeResponse = await fetch("/api/objects/upload/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ key, uploadId, parts: uploadedParts.sort((a, b) => a.PartNumber - b.PartNumber) }),
+      body: JSON.stringify({ key, uploadId, parts: sortedParts }),
     });
 
     if (!completeResponse.ok) {
-      throw new Error("Failed to complete multipart upload");
+      const errorBody = await completeResponse.text();
+      console.error(`❌ Complete response not ok: ${completeResponse.status}`, errorBody);
+      throw new Error(`Failed to complete multipart upload: ${completeResponse.status} - ${errorBody}`);
     }
+    
+    const completeResult = await completeResponse.json();
+    console.log(`✅ Complete response:`, completeResult);
 
     onProgress?.(100); // 100% done
     console.log(`🎉 Upload complete! ${(file.size / 1024 / 1024).toFixed(2)}MB file successfully uploaded`);
