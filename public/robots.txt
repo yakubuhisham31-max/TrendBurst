@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /feed
+Allow: /rankings
+Allow: /profile
+Allow: /dashboard
+
+# Disallow pages that don't need indexing
+Disallow: /login
+Disallow: /register
+Disallow: /edit
+Disallow: /create
+
+# Sitemap
+Sitemap: https://trendx.social/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1
