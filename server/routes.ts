@@ -1388,7 +1388,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { key, uploadId, parts } = req.body;
       
+      console.log(`📋 [ROUTE] Complete multipart request received`);
+      console.log(`📋 [ROUTE] Key: ${key}, UploadId: ${uploadId}, Parts count: ${parts?.length}`);
+      
       if (!key || !uploadId || !parts) {
+        console.error(`❌ [ROUTE] Missing required fields - key: ${!!key}, uploadId: ${!!uploadId}, parts: ${!!parts}`);
         return res.status(400).json({ error: "key, uploadId, and parts are required" });
       }
 
@@ -1396,8 +1400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await r2Service.completeMultipartUpload(key, uploadId, parts);
       res.json({ success: true, publicURL: r2Service.getPublicURL(key) });
     } catch (error) {
-      console.error("Error completing multipart upload:", error);
-      res.status(500).json({ error: "Failed to complete upload" });
+      console.error("❌ [ROUTE] Error completing multipart upload:", error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ error: `Failed to complete upload: ${errorMsg}` });
     }
   });
 
