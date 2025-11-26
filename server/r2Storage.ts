@@ -120,6 +120,10 @@ export class R2StorageService {
    * Complete a multipart upload
    */
   async completeMultipartUpload(key: string, uploadId: string, parts: Array<{ ETag: string; PartNumber: number }>): Promise<void> {
+    console.log(`🔍 [COMPLETE] Key: ${key}, UploadId: ${uploadId}`);
+    console.log(`🔍 [COMPLETE] Parts count: ${parts.length}`);
+    console.log(`🔍 [COMPLETE] Parts data:`, JSON.stringify(parts, null, 2));
+    
     const command = new CompleteMultipartUploadCommand({
       Bucket: BUCKET_NAME,
       Key: key,
@@ -127,6 +131,16 @@ export class R2StorageService {
       MultipartUpload: { Parts: parts },
     });
 
-    await r2Client.send(command);
+    try {
+      const response = await r2Client.send(command);
+      console.log(`✅ [COMPLETE] Success! Response:`, JSON.stringify(response, null, 2));
+    } catch (error) {
+      console.error(`❌ [COMPLETE] Failed with error:`, error);
+      if (error instanceof Error) {
+        console.error(`   Error message: ${error.message}`);
+        console.error(`   Error name: ${error.name}`);
+      }
+      throw error;
+    }
   }
 }
