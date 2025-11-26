@@ -8,12 +8,13 @@ export async function uploadToR2(file: File, folder: string): Promise<string> {
   // Get file extension
   const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
   
-  // For small files (< 10MB), use simple upload
-  if (file.size < 10485760) {
+  // For small files (< 5MB), use simple upload
+  if (file.size < 5242880) {
     return uploadSmpleFile(file, folder, fileExtension);
   }
 
   // For large files, use multipart upload with parallel chunks
+  console.log(`📁 Starting multipart upload for ${(file.size / 1024 / 1024).toFixed(2)}MB file`);
   return uploadMultipart(file, folder, fileExtension);
 }
 
@@ -59,8 +60,9 @@ async function uploadSmpleFile(file: File, folder: string, fileExtension: string
 }
 
 async function uploadMultipart(file: File, folder: string, fileExtension: string): Promise<string> {
-  const CHUNK_SIZE = 5242880; // 5MB chunks
+  const CHUNK_SIZE = 2097152; // 2MB chunks for more parallelism
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  console.log(`📦 Splitting into ${totalChunks} chunks of ${(CHUNK_SIZE / 1024 / 1024).toFixed(1)}MB`);
 
   // Initiate multipart upload
   const initResponse = await fetch("/api/objects/upload/init", {
@@ -75,9 +77,10 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
   }
 
   const { uploadId, key, publicURL } = await initResponse.json();
+  console.log(`⏳ Multipart upload initiated. Upload ID: ${uploadId}`);
 
   try {
-    // Get all part URLs
+    // Get all part URLs in one request
     const partNumbers = Array.from({ length: totalChunks }, (_, i) => i + 1);
     const partUrlsResponse = await fetch("/api/objects/upload/part-urls", {
       method: "POST",
@@ -91,10 +94,12 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
     }
 
     const { partUrls } = await partUrlsResponse.json();
+    console.log(`✅ Received presigned URLs for all ${totalChunks} parts`);
 
-    // Upload chunks in parallel (4 concurrent uploads)
+    // Upload chunks in parallel (8 concurrent uploads for better speed)
     const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
-    const concurrency = 4;
+    const concurrency = 8;
+    let uploadedCount = 0;
 
     for (let i = 0; i < totalChunks; i += concurrency) {
       const batch = partNumbers.slice(i, i + concurrency);
@@ -111,16 +116,26 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
         });
 
         if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload part ${partNumber}`);
+          throw new Error(`Failed to upload part ${partNumber}: ${uploadResponse.statusText}`);
         }
 
-        const etag = uploadResponse.headers.get("etag")?.replace(/"/g, "") || "";
+        // Extract ETag - R2 returns it with quotes, remove them
+        let etag = uploadResponse.headers.get("etag") || "";
+        if (etag.startsWith('"') && etag.endsWith('"')) {
+          etag = etag.slice(1, -1);
+        }
+        
+        uploadedCount++;
+        console.log(`📤 Part ${partNumber}/${totalChunks} uploaded (${uploadedCount}/${totalChunks})`);
+        
         return { ETag: etag, PartNumber: partNumber };
       });
 
       const results = await Promise.all(uploadPromises);
       uploadedParts.push(...results);
     }
+
+    console.log(`✅ All ${totalChunks} parts uploaded, completing multipart upload...`);
 
     // Complete multipart upload
     const completeResponse = await fetch("/api/objects/upload/complete", {
@@ -134,9 +149,10 @@ async function uploadMultipart(file: File, folder: string, fileExtension: string
       throw new Error("Failed to complete multipart upload");
     }
 
+    console.log(`🎉 Upload complete! ${(file.size / 1024 / 1024).toFixed(2)}MB file successfully uploaded`);
     return publicURL;
   } catch (error) {
-    console.error("Multipart upload error:", error);
+    console.error("❌ Multipart upload error:", error);
     throw error;
   }
 }
