@@ -41,7 +41,7 @@ export default function TrendAnalyticsPage() {
   });
 
   // Prepare data for visualizations
-  const topPostsData = analytics?.topPosts || [];
+  const topPostsData = (analytics?.topPosts || []).slice(0, 3);
 
   // Create pie chart data for engagement breakdown
   const engagementData = analytics ? [
