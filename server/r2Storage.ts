@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
@@ -79,5 +79,54 @@ export class R2StorageService {
    */
   getPublicURL(key: string): string {
     return `${this.getPublicDomain()}/${key}`;
+  }
+
+  /**
+   * Initiate a multipart upload for large files
+   */
+  async initiateMultipartUpload(folder: string = 'uploads', fileExtension: string = ''): Promise<{ uploadId: string; key: string; publicURL: string }> {
+    const objectId = randomUUID();
+    const key = `${folder}/${objectId}${fileExtension}`;
+
+    const command = new CreateMultipartUploadCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+
+    const response = await r2Client.send(command);
+    
+    return {
+      uploadId: response.UploadId!,
+      key,
+      publicURL: `${this.getPublicDomain()}/${key}`,
+    };
+  }
+
+  /**
+   * Get presigned URL for uploading a part in multipart upload
+   */
+  async getPartUploadURL(key: string, uploadId: string, partNumber: number): Promise<string> {
+    const command = new UploadPartCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      UploadId: uploadId,
+      PartNumber: partNumber,
+    });
+
+    return await getSignedUrl(r2Client, command, { expiresIn: 3600 });
+  }
+
+  /**
+   * Complete a multipart upload
+   */
+  async completeMultipartUpload(key: string, uploadId: string, parts: Array<{ ETag: string; PartNumber: number }>): Promise<void> {
+    const command = new CompleteMultipartUploadCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      UploadId: uploadId,
+      MultipartUpload: { Parts: parts },
+    });
+
+    await r2Client.send(command);
   }
 }

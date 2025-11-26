@@ -1344,6 +1344,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/objects/upload/init - Initiate multipart upload for large files
+  app.post("/api/objects/upload/init", isAuthenticated, async (req, res) => {
+    try {
+      const { folder, fileExtension, totalChunks } = req.body;
+      const r2Service = new R2StorageService();
+      const { uploadId, key, publicURL } = await r2Service.initiateMultipartUpload(
+        folder || 'uploads',
+        fileExtension || ''
+      );
+      res.json({ uploadId, key, publicURL, totalChunks });
+    } catch (error) {
+      console.error("Error initiating multipart upload:", error);
+      res.status(500).json({ error: "Failed to initiate upload" });
+    }
+  });
+
+  // POST /api/objects/upload/part-urls - Get presigned URLs for uploading parts
+  app.post("/api/objects/upload/part-urls", isAuthenticated, async (req, res) => {
+    try {
+      const { key, uploadId, partNumbers } = req.body;
+      
+      if (!key || !uploadId || !partNumbers) {
+        return res.status(400).json({ error: "key, uploadId, and partNumbers are required" });
+      }
+
+      const r2Service = new R2StorageService();
+      const partUrls: Record<number, string> = {};
+      
+      for (const partNumber of partNumbers) {
+        partUrls[partNumber] = await r2Service.getPartUploadURL(key, uploadId, partNumber);
+      }
+      
+      res.json({ partUrls });
+    } catch (error) {
+      console.error("Error getting part URLs:", error);
+      res.status(500).json({ error: "Failed to get part URLs" });
+    }
+  });
+
+  // POST /api/objects/upload/complete - Complete multipart upload
+  app.post("/api/objects/upload/complete", isAuthenticated, async (req, res) => {
+    try {
+      const { key, uploadId, parts } = req.body;
+      
+      if (!key || !uploadId || !parts) {
+        return res.status(400).json({ error: "key, uploadId, and parts are required" });
+      }
+
+      const r2Service = new R2StorageService();
+      await r2Service.completeMultipartUpload(key, uploadId, parts);
+      res.json({ success: true, publicURL: r2Service.getPublicURL(key) });
+    } catch (error) {
+      console.error("Error completing multipart upload:", error);
+      res.status(500).json({ error: "Failed to complete upload" });
+    }
+  });
+
   // PUT /api/posts/:id/image - Update post image and set ACL
   app.put("/api/posts/:id/image", isAuthenticated, async (req, res) => {
     if (!req.body.imageUrl) {
