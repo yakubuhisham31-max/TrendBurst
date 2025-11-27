@@ -546,7 +546,7 @@ export default function FeedPage() {
                 className={`relative w-full ${isBlurred ? 'border border-border rounded-lg' : ''}`}
                 id={`post-${post.id}`}
               >
-                <div className={`${isBlurred ? 'blur-sm relative' : ''}`}>
+                <div className={isBlurred ? 'blur-sm' : ''}>
                   <PostCard
                     id={post.id}
                     rank={voteRankMap.get(post.id) || 0}
@@ -581,18 +581,18 @@ export default function FeedPage() {
                     onFullscreen={() => setFullscreenPostId(post.id)}
                     onAuthModalOpen={() => setAuthModalOpen(true)}
                   />
-                  
-                  {isBlurred && (
-                    <div 
-                      className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                      onClick={() => setAuthModalOpen(true)}
-                    >
-                      <div className="text-center space-y-3 bg-black/50 px-8 py-4 rounded-lg">
-                        <p className="text-white font-bold text-xl">Tap to view</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
+                
+                {isBlurred && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center rounded-lg cursor-pointer z-20"
+                    onClick={() => setAuthModalOpen(true)}
+                  >
+                    <div className="text-center space-y-3 bg-black/70 px-8 py-4 rounded-lg backdrop-blur-sm">
+                      <p className="text-white font-bold text-xl">Tap to view</p>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })
