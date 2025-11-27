@@ -129,6 +129,7 @@ export default function PostCard({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const [, setLocation] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -318,6 +319,7 @@ export default function PostCard({
             video.play().catch(() => {
               // Video play failed (e.g., user interaction required)
             });
+            setHasAutoPlayed(true);
           } else {
             // Stop preloading when out of view to save bandwidth
             video.preload = 'none';
@@ -493,10 +495,13 @@ export default function PostCard({
                 data-testid="video-post"
               />
               
-              {/* Play/Pause overlay - centered */}
-              {!isPlaying && !isDisqualified && (
+              {/* Play/Pause overlay - centered - show when paused or before auto-play */}
+              {(!isPlaying || !hasAutoPlayed) && !isDisqualified && (
                 <button
-                  onClick={handlePlayPause}
+                  onClick={(e) => {
+                    handlePlayPause(e);
+                    setHasAutoPlayed(true);
+                  }}
                   className="absolute inset-0 flex items-center justify-center hover-elevate"
                   data-testid="button-video-play"
                   aria-label="Play video"
