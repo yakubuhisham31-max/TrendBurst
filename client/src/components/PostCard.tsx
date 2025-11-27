@@ -258,26 +258,33 @@ export default function PostCard({
 
   // Track video play/pause state and progress
   useEffect(() => {
-    if (mediaType !== 'video' || !videoRef.current) return;
     const video = videoRef.current;
+    if (mediaType !== 'video' || !video) return;
 
-    const updatePlayState = () => setIsPlaying(!video.paused);
+    const updatePlayState = () => {
+      setIsPlaying(!video.paused);
+    };
+    
     const updateProgress = () => {
       if (video.duration) {
         setProgress((video.currentTime / video.duration) * 100);
       }
     };
 
+    // Add listeners
     video.addEventListener('play', updatePlayState);
     video.addEventListener('pause', updatePlayState);
     video.addEventListener('timeupdate', updateProgress);
+
+    // Update initial state
+    updatePlayState();
 
     return () => {
       video.removeEventListener('play', updatePlayState);
       video.removeEventListener('pause', updatePlayState);
       video.removeEventListener('timeupdate', updateProgress);
     };
-  }, [mediaType]);
+  }, [mediaType, id]);
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
