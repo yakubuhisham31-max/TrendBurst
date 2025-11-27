@@ -543,10 +543,10 @@ export default function FeedPage() {
             return (
               <div
                 key={post.id}
-                className="relative w-full"
+                className={`relative w-full ${isBlurred ? 'border border-border rounded-lg' : ''}`}
                 id={`post-${post.id}`}
               >
-                <div className={isBlurred ? 'blur-xl' : ''}>
+                <div className={isBlurred ? 'blur-xs' : ''}>
                   <PostCard
                     id={post.id}
                     rank={voteRankMap.get(post.id) || 0}

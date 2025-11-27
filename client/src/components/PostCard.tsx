@@ -463,14 +463,14 @@ export default function PostCard({
         })()}
 
         {isDisqualified && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-xs">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <Badge variant="destructive" className="text-lg px-4 py-2" data-testid="badge-disqualified">
               Disqualified
             </Badge>
           </div>
         )}
 
-        <div className={`relative aspect-[4/5] overflow-hidden bg-muted border border-border ${isDisqualified ? 'blur-xs' : ''}`}>
+        <div className={`relative aspect-[4/5] overflow-hidden bg-muted ${isDisqualified ? 'blur-sm' : ''}`}>
           {mediaType === 'video' ? (
             <>
               <video
