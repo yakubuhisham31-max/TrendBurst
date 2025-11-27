@@ -129,7 +129,7 @@ export function AuthModal({
                   type="text"
                   placeholder="username@example.com"
                   value={loginInput}
-                  onChange={(e) => setLoginInput(e.target.value)}
+                  onChange={(e) => setLoginInput(e.target.value.replace(/\s/g, ''))}
                   data-testid="input-login-username-email"
                   required
                 />
@@ -169,7 +169,7 @@ export function AuthModal({
                   type="text"
                   placeholder="@username"
                   value={registerUsername}
-                  onChange={(e) => setRegisterUsername(e.target.value)}
+                  onChange={(e) => setRegisterUsername(e.target.value.replace(/\s/g, ''))}
                   data-testid="input-register-username"
                   required
                 />
