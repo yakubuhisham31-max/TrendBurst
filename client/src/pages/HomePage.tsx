@@ -66,7 +66,7 @@ export default function HomePage() {
   const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
   
   const { data: allTrends = [], isLoading } = useQuery<TrendWithCreator[]>({
-    queryKey: categoryParam ? ["/api/trends", categoryParam] : ["/api/trends"],
+    queryKey: categoryParam ? [`/api/trends?category=${categoryParam}`] : ["/api/trends"],
   });
 
   // Fetch notification counts
