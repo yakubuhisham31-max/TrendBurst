@@ -662,9 +662,8 @@ export default function PostCard({
               className={`text-sm ${!showFullCaption ? "line-clamp-3" : ""}`}
               data-testid="text-caption"
             >
-              <span className="font-medium flex items-center gap-1">
+              <span className="font-medium">
                 {username}
-                <VerificationBadge verified={userVerified} size="sm" />
               </span> {caption}
             </p>
             {caption.length > 150 && (
