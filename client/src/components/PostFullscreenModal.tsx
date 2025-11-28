@@ -434,20 +434,20 @@ export default function PostFullscreenModal({
           </div>
 
           {/* Bottom Left - User Info & Caption */}
-          <div className="absolute bottom-0 left-0 right-16 z-40 pb-6 md:pb-4">
-            <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pt-16 pb-4">
+          <div className="absolute bottom-0 left-0 right-16 z-40 pb-4 md:pb-3 max-h-32 overflow-hidden">
+            <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent px-4 pt-12 pb-3 h-full flex flex-col justify-end">
               {/* User Info */}
-              <div className="flex items-center gap-2 mb-2">
-                <Avatar className="w-10 h-10 border-2 border-white/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Avatar className="w-8 h-8 border border-white/30 flex-shrink-0">
                   <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
-                  <AvatarFallback className="text-sm bg-primary/20 text-white">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-xs bg-primary/20 text-white">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-white">{post.user?.username}</span>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-white truncate">{post.user?.username}</span>
                     <VerificationBadge verified={post.user?.verified} size="sm" />
                     {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
-                      <span className="text-xs font-bold px-2 py-0.5 bg-primary/30 text-primary rounded-full">
+                      <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/30 text-primary rounded-full flex-shrink-0">
                         {getRankOrdinal(calculatedRank)}
                       </span>
                     )}
@@ -457,7 +457,7 @@ export default function PostFullscreenModal({
 
               {/* Caption */}
               {post.caption && (
-                <p className="text-sm text-white/90 line-clamp-2 leading-relaxed">{post.caption}</p>
+                <p className="text-xs text-white/90 line-clamp-1 leading-tight">{post.caption}</p>
               )}
             </div>
           </div>
