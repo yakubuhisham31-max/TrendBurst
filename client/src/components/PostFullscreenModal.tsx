@@ -1,4 +1,4 @@
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -25,6 +25,9 @@ interface PostFullscreenModalProps {
   onNextPost?: () => void;
   onPreviousPost?: () => void;
   onTrendChat?: (trendId: string) => void;
+  isTrendCreator?: boolean;
+  onDisqualify?: (postId: string) => void;
+  isDisqualifyPending?: boolean;
 }
 
 export default function PostFullscreenModal({
@@ -40,6 +43,9 @@ export default function PostFullscreenModal({
   onNextPost,
   onPreviousPost,
   onTrendChat,
+  isTrendCreator = false,
+  onDisqualify,
+  isDisqualifyPending = false,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -424,6 +430,19 @@ export default function PostFullscreenModal({
               >
                 <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
               </Button>
+
+              {isTrendCreator && post.userId !== user?.id && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-white hover:text-destructive"
+                  onClick={() => onDisqualify?.(post.id)}
+                  disabled={isDisqualifyPending}
+                  data-testid="button-disqualify-fullscreen"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              )}
             </div>
           </div>
         </div>

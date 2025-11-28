@@ -659,6 +659,9 @@ export default function FeedPage() {
                 }
                 setLocation(`/feed-chat/${trendChatId}?fromPost=${fullscreenPostId}`);
               }}
+              isTrendCreator={isTrendCreator}
+              onDisqualify={handleDisqualifyAndDelete}
+              isDisqualifyPending={disqualifyMutation.isPending}
             />
           ) : null;
         })()
