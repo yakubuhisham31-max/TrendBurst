@@ -270,11 +270,11 @@ export default function PostFullscreenModal({
           {/* Back Button */}
           <button
             onClick={onClose}
-            className="absolute top-6 left-6 z-50 w-14 h-14 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
+            className="absolute top-6 left-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
             data-testid="button-close-fullscreen"
             aria-label="Go back"
           >
-            <ArrowLeft className="w-8 h-8" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
 
           {/* Disqualified Badge - Centered */}
