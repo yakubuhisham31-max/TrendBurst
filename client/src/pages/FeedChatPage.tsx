@@ -365,8 +365,8 @@ export default function FeedChatPage() {
           </div>
         </div>
 
-        {/* Render nested replies - for top-level show initial batch, for nested always show all */}
-        {comment.replies.length > 0 && (isExpanded || isChild || !isChild) && (
+        {/* Render nested replies - only show if expanded or if this is a nested reply */}
+        {comment.replies.length > 0 && (isExpanded || isChild) && (
           <div className={isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-3 border-l-2 border-muted"}>
             {comment.replies.slice(0, isChild ? comment.replies.length : currentShown).map(reply => (
               <ChatCommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
