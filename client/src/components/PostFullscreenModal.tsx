@@ -170,6 +170,17 @@ export default function PostFullscreenModal({
     }
   }, [post.isDisqualified]);
 
+  // Autoplay video when post changes (swiping to new post)
+  useEffect(() => {
+    if (!videoRef.current || post.isDisqualified) return;
+    const type = post.mediaType || "image";
+    if (type === "video") {
+      videoRef.current.play().catch(() => {
+        // Video play failed (e.g., user interaction required)
+      });
+    }
+  }, [post.id, post.isDisqualified]);
+
   // Handle swipe gestures for post navigation (touch)
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -483,16 +494,18 @@ export default function PostFullscreenModal({
                         data-testid="menu-disqualify"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        <span>Disqualify User</span>
+                        <span>{post.isDisqualified ? "Requalify User" : "Disqualify User"}</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="text-destructive cursor-pointer flex items-center"
-                        data-testid="menu-disqualify-delete"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        <span>Disqualify & Delete Post</span>
-                      </DropdownMenuItem>
+                      {!post.isDisqualified && (
+                        <DropdownMenuItem
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="text-destructive cursor-pointer flex items-center"
+                          data-testid="menu-disqualify-delete"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          <span>Disqualify & Delete Post</span>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
