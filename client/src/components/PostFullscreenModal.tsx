@@ -387,52 +387,47 @@ export default function PostFullscreenModal({
           <div className="absolute bottom-0 left-0 right-0 z-40">
             {/* Caption - Above border */}
             {post.caption && (
-              <div className="bg-gradient-to-t from-black via-black/90 to-transparent px-4 pt-6 pb-2">
-                <p className="text-sm text-white line-clamp-3">{post.caption}</p>
+              <div className="bg-gradient-to-t from-black via-black/90 to-transparent px-4 pt-4 pb-1">
+                <p className="text-sm text-white line-clamp-2">{post.caption}</p>
               </div>
             )}
 
             {/* Post Info Bar */}
-            <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 md:pb-4">
-            {/* User Info */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Avatar className="w-10 h-10 flex-shrink-0">
+            <div className="bg-black border-t border-border/20 px-4 py-3 pb-20 md:pb-3">
+            {/* User Info and Action Buttons in one row */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
-                  <AvatarFallback>{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-xs">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-white truncate">{post.user?.username}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-white truncate">{post.user?.username}</p>
                     <VerificationBadge verified={post.user?.verified} size="sm" />
                     {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
-                      <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
+                      <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/20 text-primary rounded-full whitespace-nowrap">
                         {getRankOrdinal(calculatedRank)}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {post.createdAt && formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
+              {/* Action Buttons - Same row */}
+              <div className="flex items-center gap-1">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="text-white hover:text-primary"
+                  className="text-white hover:text-primary h-8 w-8"
                   onClick={() => onVoteUp?.(post.id)}
                   data-testid="button-vote-up-fullscreen"
                 >
-                  <ThumbsUp className="w-5 h-5" />
+                  <ThumbsUp className="w-4 h-4" />
                 </Button>
 
                 {(post.votes ?? 0) > 0 && (
-                  <span className="text-sm font-bold text-white" data-testid="text-votes-fullscreen">
+                  <span className="text-xs font-bold text-white" data-testid="text-votes-fullscreen">
                     {post.votes}
                   </span>
                 )}
@@ -440,59 +435,44 @@ export default function PostFullscreenModal({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="text-white hover:text-destructive"
+                  className="text-white hover:text-destructive h-8 w-8"
                   onClick={() => onVoteDown?.(post.id)}
                   data-testid="button-vote-down-fullscreen"
                 >
-                  <ThumbsDown className="w-5 h-5" />
+                  <ThumbsDown className="w-4 h-4" />
                 </Button>
-              </div>
 
-              {(post.commentCount ?? 0) > 0 && (
-                <Button
-                  variant="ghost"
-                  className="gap-2 text-white hover:text-primary"
-                  onClick={() => setCommentsOpen(true)}
-                  data-testid="button-comment-fullscreen"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>{post.commentCount}</span>
-                </Button>
-              )}
-              {(post.commentCount ?? 0) === 0 && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="text-white hover:text-primary"
+                  className="text-white hover:text-primary h-8 w-8"
                   onClick={() => setCommentsOpen(true)}
                   data-testid="button-comment-fullscreen"
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <MessageCircle className="w-4 h-4" />
                 </Button>
-              )}
 
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:text-primary"
-                onClick={handleShare}
-                data-testid="button-share-fullscreen"
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-white hover:text-primary h-8 w-8"
+                  onClick={handleShare}
+                  data-testid="button-share-fullscreen"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
 
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:text-primary"
-                onClick={handleSave}
-                data-testid="button-save-fullscreen"
-              >
-                <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
-              </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-white hover:text-primary h-8 w-8"
+                  onClick={handleSave}
+                  data-testid="button-save-fullscreen"
+                >
+                  <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
+                </Button>
 
-              {isTrendCreator && post.userId !== user?.id && onDisqualify && (
-                <div className="ml-auto">
+                {isTrendCreator && post.userId !== user?.id && onDisqualify && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -526,8 +506,8 @@ export default function PostFullscreenModal({
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
           </div>
