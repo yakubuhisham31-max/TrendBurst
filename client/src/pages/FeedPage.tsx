@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import type { Post, Trend, User } from "@shared/schema";
 
-type PostWithUser = Post & { user: User | null; userVoted: boolean };
+type PostWithUser = Post & { user: User | null; userVoted: boolean; userVoteCount?: number };
 type TrendWithCreator = Trend & { creator: User | null };
 
 export default function FeedPage() {
@@ -128,7 +128,7 @@ export default function FeedPage() {
           ["/api/posts/trend", trendId],
           previousPosts.map(post =>
             post.id === postId
-              ? { ...post, votes: (post.votes || 0) + 1, userVoted: true }
+              ? { ...post, votes: (post.votes || 0) + 1, userVoted: true, userVoteCount: (post.userVoteCount || 0) + 1 }
               : post
           )
         );
@@ -183,11 +183,18 @@ export default function FeedPage() {
       if (previousPosts) {
         queryClient.setQueryData<PostWithUser[]>(
           ["/api/posts/trend", trendId],
-          previousPosts.map(post =>
-            post.id === postId
-              ? { ...post, votes: Math.max((post.votes || 0) - 1, 0), userVoted: false }
-              : post
-          )
+          previousPosts.map(post => {
+            if (post.id === postId) {
+              const newVoteCount = Math.max((post.userVoteCount || 0) - 1, 0);
+              return { 
+                ...post, 
+                votes: Math.max((post.votes || 0) - 1, 0), 
+                userVoted: newVoteCount > 0,
+                userVoteCount: newVoteCount
+              };
+            }
+            return post;
+          })
         );
       }
 
@@ -357,12 +364,14 @@ export default function FeedPage() {
       return;
     }
     
-    // Check if there are votes to remove
+    // Check if user has votes on this specific post
     const post = posts.find(p => p.id === postId);
-    if (!post || (post.votes ?? 0) <= 0) {
+    const userVotes = post?.userVoteCount || 0;
+    
+    if (userVotes <= 0) {
       toast({
         title: "No votes to remove",
-        description: "You can only unlike posts that have likes.",
+        description: "You can only unlike posts you have voted on.",
         variant: "destructive",
       });
       return;
