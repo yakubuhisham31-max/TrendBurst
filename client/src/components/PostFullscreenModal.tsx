@@ -428,9 +428,11 @@ export default function PostFullscreenModal({
                   <ThumbsUp className="w-5 h-5" />
                 </Button>
 
-                <span className="text-sm font-bold text-white" data-testid="text-votes-fullscreen">
-                  {post.votes}
-                </span>
+                {(post.votes ?? 0) > 0 && (
+                  <span className="text-sm font-bold text-white" data-testid="text-votes-fullscreen">
+                    {post.votes}
+                  </span>
+                )}
 
                 <Button
                   size="icon"
