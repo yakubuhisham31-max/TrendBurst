@@ -391,7 +391,7 @@ export default function PostFullscreenModal({
           )}
 
           {/* Post Info Bar */}
-          <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 overflow-y-auto max-h-[20vh] md:pb-4 md:max-h-none flex-shrink-0">
+          <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 md:pb-4 flex-shrink-0">
             {/* User Info */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -403,7 +403,7 @@ export default function PostFullscreenModal({
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-white truncate">{post.user?.username}</p>
                     <VerificationBadge verified={post.user?.verified} size="sm" />
-                    {calculatedRank > 0 && !post.isDisqualified && (
+                    {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
                       <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
                         {getRankOrdinal(calculatedRank)}
                       </span>
