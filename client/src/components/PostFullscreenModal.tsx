@@ -389,22 +389,28 @@ export default function PostFullscreenModal({
             <div className="flex flex-col items-center">
               <button
                 onClick={() => onVoteUp?.(post.id)}
-                className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                className={`w-11 h-11 flex items-center justify-center rounded-full backdrop-blur-sm transition-all ${
+                  userVoted 
+                    ? "bg-primary text-white shadow-lg shadow-primary/30" 
+                    : "bg-white/10 hover:bg-white/20"
+                }`}
                 data-testid="button-vote-up-fullscreen"
               >
-                <ThumbsUp className="w-5 h-5 text-white" />
+                <ThumbsUp className={`w-5 h-5 ${userVoted ? "fill-current" : "text-white"}`} />
               </button>
-              {(post.votes ?? 0) > 0 && (
-                <span className="text-xs font-semibold text-white mt-1" data-testid="text-votes-fullscreen">
-                  {post.votes}
-                </span>
-              )}
+              <span className={`text-xs font-semibold mt-1 ${userVoted ? "text-primary" : "text-white"}`} data-testid="text-votes-fullscreen">
+                {post.votes ?? 0}
+              </span>
             </div>
 
             {/* Vote Down */}
             <button
               onClick={() => onVoteDown?.(post.id)}
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+              className={`w-11 h-11 flex items-center justify-center rounded-full backdrop-blur-sm transition-all ${
+                userVoted === false && (post.votes ?? 0) < 0
+                  ? "bg-destructive text-white shadow-lg shadow-destructive/30"
+                  : "bg-white/10 hover:bg-white/20"
+              }`}
               data-testid="button-vote-down-fullscreen"
             >
               <ThumbsDown className="w-5 h-5 text-white" />
