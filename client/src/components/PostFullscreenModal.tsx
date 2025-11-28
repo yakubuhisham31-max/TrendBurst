@@ -290,7 +290,7 @@ export default function PostFullscreenModal({
           )}
 
           {/* Media */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
+          <div className="absolute inset-0 z-0 flex items-center justify-center bg-black overflow-hidden">
             {mediaType === "video" ? (
               <video
                 ref={videoRef}
