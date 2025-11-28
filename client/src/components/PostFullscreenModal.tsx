@@ -434,7 +434,7 @@ export default function PostFullscreenModal({
           </div>
 
           {/* Bottom Left - User Info & Caption */}
-          <div className="absolute bottom-0 left-0 right-16 z-40 pb-4 md:pb-3 max-h-32 overflow-hidden">
+          <div className="absolute bottom-0 left-0 right-16 z-10 pb-4 md:pb-3 max-h-32 overflow-hidden">
             <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent px-4 pt-12 pb-3 h-full flex flex-col justify-end">
               {/* User Info */}
               <div className="flex items-center gap-2 mb-1">
