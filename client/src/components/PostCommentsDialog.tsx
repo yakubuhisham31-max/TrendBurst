@@ -295,7 +295,7 @@ export default function PostCommentsDialog({
         {comment.replies.length > 0 && isExpanded && (
           <div className={isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-3 border-l-2 border-muted"}>
             {comment.replies.map(reply => (
-              <CommentThread key={reply.id} comment={{ ...reply, replies: [] }} depth={depth + 1} />
+              <CommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
             ))}
           </div>
         )}

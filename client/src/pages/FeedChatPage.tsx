@@ -404,7 +404,7 @@ export default function FeedChatPage() {
         {comment.replies.length > 0 && isExpanded && (
           <div className={`${isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-2 border-l-2 border-muted"}`}>
             {comment.replies.map(reply => (
-              <ChatCommentThread key={reply.id} comment={{ ...reply, replies: [] }} depth={depth + 1} />
+              <ChatCommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
             ))}
           </div>
         )}
