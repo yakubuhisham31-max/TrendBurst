@@ -248,12 +248,11 @@ export default function FeedChatPage() {
   // Create a map for quick comment lookups by ID
   const commentMap = new Map(comments.map(c => [c.id, c]));
 
-  // Recursive chat comment component (supports replies to replies at any depth)
+  // Recursive chat comment component (supports replies to replies at any depth) - same as comments
   const ChatCommentThread = ({ comment, depth = 0 }: { comment: CommentWithUser & { replies: CommentWithUser[] }; depth?: number }) => {
-    const isCurrentUser = comment.userId === user?.id;
-    const isHost = comment.userId === trend?.userId;
+    const isOwnComment = comment.userId === user?.id;
     const isChild = depth > 0;
-    const mlClass = isChild ? `ml-${Math.min((depth) * 4, 16)}` : "";
+    const indentClass = isChild ? `ml-${Math.min(depth * 3, 12)}` : "";
     const isExpanded = expandedReplies.has(comment.id);
     
     // Get parent username if this is a reply to a reply
@@ -271,138 +270,91 @@ export default function FeedChatPage() {
     };
 
     return (
-      <div key={comment.id} className={mlClass}>
-        {isCurrentUser ? (
-          <div id={`comment-${comment.id}`} className="flex justify-end group transition-all" data-testid={`comment-${comment.id}`}>
-            <div className={`${isChild ? "max-w-[60%]" : "max-w-[70%]"} bg-primary text-primary-foreground rounded-lg ${isChild ? "p-2" : "p-3"} relative`}>
-              {isHost && (
-                <div className="flex items-center gap-1 mb-1">
-                  <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-400 text-yellow-400`} data-testid="icon-host" />
-                  <span className="text-xs opacity-80">Host</span>
-                </div>
+      <div key={comment.id}>
+        <div
+          id={`comment-${comment.id}`}
+          className={`flex gap-3 group transition-all ${indentClass}`}
+          data-testid={`comment-${comment.id}`}
+        >
+          <Avatar className={isChild ? "w-6 h-6" : "w-8 h-8"}>
+            <AvatarImage
+              src={comment.user?.profilePicture || undefined}
+              alt={comment.user?.username || "User"}
+            />
+            <AvatarFallback>
+              {(comment.user?.username || "U").slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 space-y-1">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
+                {comment.user?.username || "Unknown"}
+              </span>
+              {comment.user?.id === trend?.userId && (
+                <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
               )}
-              <p className={isChild ? "text-xs" : "text-sm"} data-testid={`text-message-${comment.id}`}>
-                {parentUsername && (
-                  <span className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1 mr-1">
-                    @{parentUsername}
-                  </span>
-                )}
-                {parseMentions(comment.text).map((part, idx) => 
-                  typeof part === "string" ? (
-                    <span key={idx}>{part}</span>
-                  ) : (
-                    <span key={idx} className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1">
-                      @{part.username}
-                    </span>
-                  )
-                )}
-              </p>
-              <div className="flex items-center justify-between mt-1 gap-2">
-                <span className="text-xs opacity-80" data-testid={`text-time-${comment.id}`}>
-                  {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+              <span className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
+              </span>
+            </div>
+            <p className={isChild ? "text-xs" : "text-sm"} data-testid="text-comment">
+              {parentUsername && (
+                <span className="bg-primary/20 text-primary font-medium rounded px-1 mr-1">
+                  @{parentUsername}
                 </span>
+              )}
+              {parseMentions(comment.text).map((part, idx) => 
+                typeof part === "string" ? (
+                  <span key={idx}>{part}</span>
+                ) : (
+                  <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
+                    @{part.username}
+                  </span>
+                )
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`mt-1 text-xs ${isChild ? "h-5 p-0" : "h-6"}`}
+                onClick={() => setReplyingTo(comment)}
+                data-testid={`button-reply-${comment.id}`}
+              >
+                <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
+                Reply
+              </Button>
+              {comment.replies.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`${isChild ? "h-4 w-4" : "h-6 w-6"} p-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary-foreground hover:bg-primary-foreground/20`}
+                  className="mt-1 text-xs text-primary/70"
+                  onClick={toggleReplies}
+                  data-testid={`button-toggle-replies-${comment.id}`}
+                >
+                  {isExpanded ? "Hide" : "Show"} {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                </Button>
+              )}
+              {isOwnComment && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`mt-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive ${isChild ? "h-5 p-0" : "h-6"}`}
                   onClick={() => deleteCommentMutation.mutate(comment.id)}
                   disabled={deleteCommentMutation.isPending}
                   data-testid={`button-delete-${comment.id}`}
                 >
-                  <Trash2 className={isChild ? "w-2.5 h-2.5" : "w-3 h-3"} />
+                  <Trash2 className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
+                  Delete
                 </Button>
-              </div>
+              )}
             </div>
           </div>
-        ) : (
-          <div id={`comment-${comment.id}`} className={`flex ${isChild ? "gap-2" : "gap-3"} hover-elevate ${isChild ? "p-2" : "p-3"} rounded-lg transition-all`} data-testid={`comment-${comment.id}`}>
-            <Avatar 
-              className={`${isChild ? "w-6 h-6" : "w-10 h-10"} flex-shrink-0 cursor-pointer`}
-              onClick={() => setLocation(`/profile/${comment.user?.username}`)}
-            >
-              <AvatarImage src={comment.user?.profilePicture || undefined} alt={comment.user?.username} />
-              <AvatarFallback>{comment.user?.username?.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className={`flex items-baseline gap-2 mb-1 min-w-0 ${isChild ? "text-xs" : ""}`}>
-                <span 
-                  className={`${isChild ? "text-xs" : "text-sm"} font-semibold truncate cursor-pointer hover:underline`}
-                  data-testid={`text-username-${comment.id}`}
-                  onClick={() => setLocation(`/profile/${comment.user?.username}`)}
-                  title={comment.user?.username}
-                >
-                  {comment.user?.username || "Unknown"}
-                </span>
-                {isHost && (
-                  <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
-                )}
-                <span className={`${isChild ? "text-muted-foreground" : "text-muted-foreground"} ${isChild ? "text-xs" : "text-xs"}`} data-testid={`text-time-${comment.id}`}>
-                  {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
-                </span>
-              </div>
-              <p className={`${isChild ? "text-xs" : "text-sm"} text-foreground`} data-testid={`text-message-${comment.id}`}>
-                {parentUsername && (
-                  <span className="bg-primary/20 text-primary font-medium rounded px-1 mr-1">
-                    @{parentUsername}
-                  </span>
-                )}
-                {parseMentions(comment.text).map((part, idx) => 
-                  typeof part === "string" ? (
-                    <span key={idx}>{part}</span>
-                  ) : (
-                    <span key={idx} className="bg-primary/20 text-primary font-medium rounded px-1">
-                      @{part.username}
-                    </span>
-                  )
-                )}
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`${isChild ? "h-5 text-xs p-0" : "h-6 text-xs"}`}
-                  onClick={() => setReplyingTo(comment)}
-                  data-testid={`button-reply-${comment.id}`}
-                >
-                  <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
-                  Reply
-                </Button>
-                {/* Delete button for trend host on participant posts */}
-                {trend && user && trend.userId === user.id && comment.userId !== user.id && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`${isChild ? "h-5 text-xs p-0 text-destructive" : "h-6 text-xs text-destructive"}`}
-                    onClick={() => {
-                      setSelectedPostId(comment.postId || "");
-                      setShowDeleteConfirm(true);
-                    }}
-                    disabled={deletePostMutation.isPending}
-                    data-testid={`button-delete-post-${comment.postId}`}
-                  >
-                    <Trash2 className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
-                    Disqualify & Delete
-                  </Button>
-                )}
-                {comment.replies.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-primary/70"
-                    onClick={toggleReplies}
-                    data-testid={`button-toggle-replies-${comment.id}`}
-                  >
-                    {isExpanded ? "Hide" : "Show"} {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Render nested replies only if expanded */}
         {comment.replies.length > 0 && isExpanded && (
-          <div className={`${isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-2 border-l-2 border-muted"}`}>
+          <div className={isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-3 border-l-2 border-muted"}>
             {comment.replies.map(reply => (
               <ChatCommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
             ))}
