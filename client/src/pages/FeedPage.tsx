@@ -357,12 +357,12 @@ export default function FeedPage() {
       return;
     }
     
-    // Check if user has voted on this post
+    // Check if there are votes to remove
     const post = posts.find(p => p.id === postId);
-    if (!post?.userVoted) {
+    if (!post || (post.votes ?? 0) <= 0) {
       toast({
-        title: "Can't unlike",
-        description: "You can only unlike posts you've already liked.",
+        title: "No votes to remove",
+        description: "You can only unlike posts that have likes.",
         variant: "destructive",
       });
       return;
