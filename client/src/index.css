@@ -489,3 +489,15 @@ body {
     inset: -1px;
   }
 }
+/* Hide video controls on fullscreen for mobile */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+video::-moz-media-controls {
+  display: none !important;
+}
