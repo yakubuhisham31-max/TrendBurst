@@ -490,11 +490,11 @@ export default function PostCard({
               <video
                 ref={videoRef}
                 src={mediaUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover bg-muted"
                 loop
                 muted={isMuted}
                 playsInline
-                preload="none"
+                preload="metadata"
                 crossOrigin="anonymous"
                 onClick={handleVideoTap}
                 data-testid="video-post"
