@@ -50,6 +50,17 @@ export default function FeedPage() {
     }
   }, [trendId]);
 
+  // Set first post as default when posts load
+  useEffect(() => {
+    if (posts.length > 0 && !fullscreenPostId) {
+      // Get the newest post (last in sorted array since sorted oldest first)
+      const newestPost = posts.reduce((latest, current) =>
+        new Date(current.createdAt!).getTime() > new Date(latest.createdAt!).getTime() ? current : latest
+      );
+      setFullscreenPostId(newestPost.id);
+    }
+  }, [posts, fullscreenPostId]);
+
   // Fetch trend info
   const { data: trend, isLoading: trendLoading } = useQuery<TrendWithCreator>({
     queryKey: ["/api/trends", trendId],
