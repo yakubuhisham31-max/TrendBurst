@@ -60,7 +60,6 @@ export default function PostFullscreenModal({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [hasAttemptedAutoplay, setHasAttemptedAutoplay] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
@@ -135,37 +134,17 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Autoplay video on post change (swipe)
-  useEffect(() => {
-    setHasAttemptedAutoplay(false);
+  // Trigger autoplay when video metadata is loaded
+  const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      // Reset video to start and play
       videoRef.current.currentTime = 0;
       videoRef.current.muted = true;
-      setHasAttemptedAutoplay(true);
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
           videoRef.current!.muted = false;
         }).catch(() => {
           // Autoplay was prevented, user will need to click play
-        });
-      }
-    }
-  }, [post.id, mediaType, post.isDisqualified]);
-
-  // Fallback autoplay trigger when video is ready to play
-  const handleVideoCanPlay = () => {
-    if (!hasAttemptedAutoplay && videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
-      setHasAttemptedAutoplay(true);
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          videoRef.current!.muted = false;
-        }).catch(() => {
-          // Autoplay was prevented
         });
       }
     }
@@ -290,10 +269,10 @@ export default function PostFullscreenModal({
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
                 controls={!post.isDisqualified}
                 autoPlay
-                muted={!!post.isDisqualified}
+                muted
                 preload="metadata"
                 crossOrigin="anonymous"
-                onCanPlay={handleVideoCanPlay}
+                onLoadedMetadata={handleVideoLoadedMetadata}
                 data-testid="video-fullscreen"
               />
             ) : (
