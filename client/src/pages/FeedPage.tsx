@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export default function FeedPage() {
   const [fromAnalytics, setFromAnalytics] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const postListRef = useRef<HTMLDivElement>(null);
   
   // Get query params for fullscreen post from returning from chat or analytics
   useEffect(() => {
@@ -96,6 +97,13 @@ export default function FeedPage() {
         video.pause();
       }
     });
+  }, [fullscreenPostId]);
+
+  // Scroll to top when closing fullscreen to show first (oldest) post
+  useEffect(() => {
+    if (!fullscreenPostId && postListRef.current) {
+      postListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [fullscreenPostId]);
 
   // Vote increment mutation with optimistic updates
@@ -528,7 +536,7 @@ export default function FeedPage() {
         )}
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-4 space-y-6">
+      <main ref={postListRef} className="max-w-3xl mx-auto px-4 py-4 space-y-6">
         {(trendLoading || postsLoading) ? (
           <>
             <Skeleton className="h-96 w-full" />
