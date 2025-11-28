@@ -33,6 +33,7 @@ interface PostCardProps {
   votes: number;
   createdAt: Date;
   userVoted?: boolean;
+  userVoteCount?: number;
   commentsCount?: number;
   isCreator?: boolean;
   isTrendHost?: boolean;
@@ -639,7 +640,7 @@ export default function PostCard({
           <div className="flex items-center gap-3">
             <Button
               size="icon"
-              variant={userVoted ? "default" : "outline"}
+              variant={userVoteCount > 0 ? "default" : "outline"}
               onClick={onVoteUp}
               disabled={isDisqualified || isTrendEnded}
               data-testid="button-vote-up"

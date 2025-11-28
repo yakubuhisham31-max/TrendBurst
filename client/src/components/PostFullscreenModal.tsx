@@ -23,6 +23,7 @@ interface PostFullscreenModalProps {
   onVoteUp?: (postId: string) => void;
   onVoteDown?: (postId: string) => void;
   userVoted?: boolean;
+  userVoteCount?: number;
   rank?: number;
   allPosts?: (Post & { user?: User })[];
   onNextPost?: () => void;
@@ -42,6 +43,7 @@ export default function PostFullscreenModal({
   onVoteUp,
   onVoteDown,
   userVoted = false,
+  userVoteCount = 0,
   rank,
   allPosts,
   onNextPost,
@@ -342,15 +344,15 @@ export default function PostFullscreenModal({
               <button
                 onClick={() => onVoteUp?.(post.id)}
                 className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${
-                  userVoted 
+                  userVoteCount > 0 
                     ? "bg-primary shadow-lg shadow-primary/40" 
                     : "bg-black/50 backdrop-blur-sm hover:bg-black/70"
                 }`}
                 data-testid="button-vote-up-fullscreen"
               >
-                <ThumbsUp className={`w-6 h-6 ${userVoted ? "text-white fill-current" : "text-white"}`} />
+                <ThumbsUp className={`w-6 h-6 ${userVoteCount > 0 ? "text-white fill-current" : "text-white"}`} />
               </button>
-              <span className={`text-xs font-bold mt-1 ${userVoted ? "text-primary" : "text-white"}`} data-testid="text-votes-fullscreen">
+              <span className={`text-xs font-bold mt-1 ${userVoteCount > 0 ? "text-primary" : "text-white"}`} data-testid="text-votes-fullscreen">
                 {post.votes ?? 0}
               </span>
             </div>

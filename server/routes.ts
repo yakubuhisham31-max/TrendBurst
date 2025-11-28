@@ -607,14 +607,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const postsWithUserInfo = await Promise.all(
         posts.map(async (post) => {
           const user = await storage.getUser(post.userId);
-          const userVoted = (req as any).session.userId 
-            ? !!(await storage.getVote(post.id, (req as any).session.userId))
-            : false;
+          const userVote = (req as any).session.userId 
+            ? await storage.getVote(post.id, (req as any).session.userId)
+            : null;
           
           return {
             ...post,
             user: user ? sanitizeUser(user) : null,
-            userVoted,
+            userVoted: !!userVote,
+            userVoteCount: userVote?.count || 0,
           };
         })
       );
