@@ -403,7 +403,7 @@ export default function PostFullscreenModal({
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-white truncate">{post.user?.username}</p>
                     <VerificationBadge verified={post.user?.verified} size="sm" />
-                    {calculatedRank && !post.isDisqualified && (
+                    {calculatedRank > 0 && !post.isDisqualified && (
                       <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
                         {getRankOrdinal(calculatedRank)}
                       </span>

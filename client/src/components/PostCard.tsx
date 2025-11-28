@@ -447,7 +447,7 @@ export default function PostCard({
       </div>
 
       <div className="relative">
-        {rank && rank > 0 && (() => {
+        {rank > 0 && (() => {
           const IconComponent = rank === 1 ? Trophy : rank === 2 ? Trophy : rank === 3 ? Trophy : Zap;
           let badgeClass = "";
           
