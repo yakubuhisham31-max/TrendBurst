@@ -365,22 +365,24 @@ export default function FeedChatPage() {
           </div>
         </div>
 
-        {/* Render nested replies only if expanded (or if nested reply) */}
-        {comment.replies.length > 0 && (isExpanded || isChild) && (
+        {/* Render nested replies - for top-level show initial batch, for nested always show all */}
+        {comment.replies.length > 0 && (isExpanded || isChild || !isChild) && (
           <div className={isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-3 border-l-2 border-muted"}>
             {comment.replies.slice(0, isChild ? comment.replies.length : currentShown).map(reply => (
               <ChatCommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
             ))}
             {!isChild && currentShown < comment.replies.length && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-2 text-xs text-primary/70"
-                onClick={showMoreReplies}
-                data-testid={`button-show-more-${comment.id}`}
-              >
-                Show {Math.min(3, comment.replies.length - currentShown)} more replies
-              </Button>
+              <div className="mt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-primary/70"
+                  onClick={showMoreReplies}
+                  data-testid={`button-show-more-${comment.id}`}
+                >
+                  Show {Math.min(repliesPerPage, comment.replies.length - currentShown)} more {Math.min(repliesPerPage, comment.replies.length - currentShown) === 1 ? "reply" : "replies"}
+                </Button>
+              </div>
             )}
           </div>
         )}
