@@ -288,7 +288,7 @@ export default function PostFullscreenModal({
           )}
 
           {/* Media */}
-          <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
+          <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
             {mediaType === "video" ? (
               <>
                 <video
@@ -383,15 +383,17 @@ export default function PostFullscreenModal({
             )}
           </div>
 
-          {/* Caption - Above border */}
-          {post.caption && (
-            <div className="bg-black px-4 pt-3 pb-2">
-              <p className="text-sm text-white line-clamp-3">{post.caption}</p>
-            </div>
-          )}
+          {/* Bottom Section - Fixed at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 z-40">
+            {/* Caption - Above border */}
+            {post.caption && (
+              <div className="bg-gradient-to-t from-black via-black/90 to-transparent px-4 pt-6 pb-2">
+                <p className="text-sm text-white line-clamp-3">{post.caption}</p>
+              </div>
+            )}
 
-          {/* Post Info Bar */}
-          <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 md:pb-4 flex-shrink-0">
+            {/* Post Info Bar */}
+            <div className="bg-black border-t border-border/20 p-4 pb-20 space-y-4 md:pb-4">
             {/* User Info */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -527,6 +529,7 @@ export default function PostFullscreenModal({
                 </div>
               )}
             </div>
+          </div>
           </div>
         </div>
       </div>
