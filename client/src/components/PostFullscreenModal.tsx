@@ -434,7 +434,7 @@ export default function PostFullscreenModal({
                 <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
               </Button>
 
-              {isTrendCreator && post.userId !== user?.id && (
+              {isTrendCreator && post.userId !== user?.id && onDisqualify && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -449,7 +449,7 @@ export default function PostFullscreenModal({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
-                      onClick={() => onDisqualify?.(post.id)}
+                      onClick={() => onDisqualify(post.id)}
                       className="text-destructive cursor-pointer"
                       data-testid="menu-disqualify"
                     >
