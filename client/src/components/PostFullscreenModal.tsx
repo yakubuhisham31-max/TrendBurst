@@ -393,28 +393,23 @@ export default function PostFullscreenModal({
             )}
 
             {/* Post Info Bar */}
-            <div className="bg-black/90 px-3 py-2 pb-16 md:pb-2">
-            {/* User Info and Action Buttons in one row */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Avatar className="w-8 h-8 flex-shrink-0">
+            <div className="bg-black/90 px-3 py-2 pb-14 md:pb-2 space-y-2">
+              {/* User Info Row */}
+              <div className="flex items-center gap-2">
+                <Avatar className="w-7 h-7 flex-shrink-0">
                   <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
                   <AvatarFallback className="text-xs">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-semibold text-white truncate">{post.user?.username}</p>
-                    <VerificationBadge verified={post.user?.verified} size="sm" />
-                    {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
-                      <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/20 text-primary rounded-full whitespace-nowrap">
-                        {getRankOrdinal(calculatedRank)}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <p className="text-sm font-semibold text-white truncate">{post.user?.username}</p>
+                <VerificationBadge verified={post.user?.verified} size="sm" />
+                {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
+                  <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/20 text-primary rounded-full whitespace-nowrap">
+                    {getRankOrdinal(calculatedRank)}
+                  </span>
+                )}
               </div>
 
-              {/* Action Buttons - Same row */}
+              {/* Action Buttons Row - Below user info */}
               <div className="flex items-center gap-1">
                 <Button
                   size="icon"
@@ -478,11 +473,11 @@ export default function PostFullscreenModal({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="text-white hover:text-red-500"
+                        className="text-white hover:text-red-500 h-8 w-8"
                         disabled={isDisqualifyPending}
                         data-testid="button-disqualify-fullscreen"
                       >
-                        <MoreVertical className="w-5 h-5" />
+                        <MoreVertical className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
@@ -509,7 +504,6 @@ export default function PostFullscreenModal({
                 )}
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
