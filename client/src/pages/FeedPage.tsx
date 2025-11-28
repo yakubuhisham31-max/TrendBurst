@@ -588,6 +588,7 @@ export default function FeedPage() {
                     votes={post.votes || 0}
                     createdAt={new Date(post.createdAt!)}
                     userVoted={post.userVoted}
+                    userVoteCount={post.userVoteCount || 0}
                     commentsCount={post.commentCount || 0}
                     isTrendHost={post.userId === trend?.userId}
                     isUserTrendHost={user?.id === trend?.userId}
@@ -667,6 +668,7 @@ export default function FeedPage() {
               onVoteUp={() => handleVoteUp(fullscreenPostId)}
               onVoteDown={() => handleVoteDown(fullscreenPostId)}
               userVoted={selectedPost.userVoted}
+              userVoteCount={selectedPost.userVoteCount || 0}
               rank={voteRankMap.get(fullscreenPostId)}
               allPosts={posts as (Post & { user?: User })[]}
               onNextPost={() => {

@@ -109,6 +109,7 @@ export default function PostCard({
   votes,
   createdAt,
   userVoted,
+  userVoteCount = 0,
   commentsCount = 0,
   isCreator = false,
   isTrendHost = false,
