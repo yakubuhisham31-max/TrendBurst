@@ -324,6 +324,17 @@ export default function FeedChatPage() {
                 <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
                 Reply
               </Button>
+              {!isChild && comment.replies.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 text-xs text-primary/70"
+                  onClick={toggleReplies}
+                  data-testid={`button-toggle-replies-${comment.id}`}
+                >
+                  {isExpanded ? "Hide" : "Show"} {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                </Button>
+              )}
               {isOwnComment && (
                 <Button
                   variant="ghost"
@@ -341,8 +352,8 @@ export default function FeedChatPage() {
           </div>
         </div>
 
-        {/* Render nested replies - always visible */}
-        {comment.replies.length > 0 && (
+        {/* Render nested replies only if expanded (or if nested reply) */}
+        {comment.replies.length > 0 && (isExpanded || isChild) && (
           <div className={isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-3 border-l-2 border-muted"}>
             {comment.replies.map(reply => (
               <ChatCommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
