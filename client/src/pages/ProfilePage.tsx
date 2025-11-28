@@ -271,7 +271,7 @@ export default function ProfilePage() {
                             isHost={isOwnProfile}
                             trendNameFont={(trend as any).trendNameFont || "inter"}
                             trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
-                            onClick={() => setLocation(`/instructions/${trend.id}`)}
+                            onClick={() => setLocation(`/instructions/${trend.id}?from=profile`)}
                           />
                         ))}
                       </div>
@@ -367,7 +367,7 @@ export default function ProfilePage() {
                                     isHost={false}
                                     trendNameFont={(trend as any).trendNameFont || "inter"}
                                     trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
-                                    onClick={() => setLocation(`/instructions/${trend.id}`)}
+                                    onClick={() => setLocation(`/instructions/${trend.id}?from=profile`)}
                                     data-testid={`saved-trend-${trend.id}`}
                                   />
                                 ))}

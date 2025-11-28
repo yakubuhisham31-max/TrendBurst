@@ -28,6 +28,16 @@ export default function InstructionsPage() {
   const [, setLocation] = useLocation();
   const [selectedMedia, setSelectedMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
   
+  // Get the from parameter to determine back navigation
+  const getBackUrl = () => {
+    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const from = searchParams.get('from');
+    
+    if (from === 'profile') return '/profile';
+    if (from === 'home') return '/';
+    return `/feed/${trendId}`; // Default to feed
+  };
+  
   const { data: trend, isLoading } = useQuery<TrendWithCreator>({
     queryKey: [`/api/trends/${trendId}`],
     enabled: !!trendId,
@@ -85,7 +95,7 @@ export default function InstructionsPage() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => setLocation(`/feed/${trendId}`)}
+            onClick={() => setLocation(getBackUrl())}
             data-testid="button-back"
           >
             <ChevronLeft className="w-6 h-6" />

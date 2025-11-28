@@ -370,7 +370,7 @@ export default function HomePage() {
                     <div
                       key={trend.id}
                       className="group relative rounded-xl overflow-hidden cursor-pointer aspect-video"
-                      onClick={() => setLocation(`/instructions/${trend.id}`)}
+                      onClick={() => setLocation(`/instructions/${trend.id}?from=home`)}
                     >
                       <img
                         src={trend.coverPicture || ""}
@@ -428,7 +428,7 @@ export default function HomePage() {
                     trendNameFont={(trend as any).trendNameFont || "inter"}
                     trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
                     onClick={() => {
-                      setLocation(`/instructions/${trend.id}`);
+                      setLocation(`/instructions/${trend.id}?from=home`);
                     }}
                     onAuthModalOpen={() => setAuthModalOpen(true)}
                   />

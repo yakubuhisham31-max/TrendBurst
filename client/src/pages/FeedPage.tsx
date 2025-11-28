@@ -468,7 +468,7 @@ export default function FeedPage() {
           <Button
             size="sm"
             className="gap-1.5 bg-primary/90 hover:bg-primary text-white border-0 shadow-sm hover:shadow-md transition-all"
-            onClick={() => setLocation(`/instructions/${trendId}`)}
+            onClick={() => setLocation(`/instructions/${trendId}?from=feed`)}
             data-testid="button-instructions"
           >
             <Info className="w-3.5 h-3.5" />
