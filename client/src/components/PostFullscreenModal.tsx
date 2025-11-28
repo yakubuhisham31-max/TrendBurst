@@ -252,16 +252,10 @@ export default function PostFullscreenModal({
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
                 controls={!post.isDisqualified}
-                autoPlay={!post.isDisqualified}
-                preload="metadata"
+                autoPlay={false}
+                preload="none"
                 crossOrigin="anonymous"
                 data-testid="video-fullscreen"
-                onPlay={(e) => post.isDisqualified && (e.currentTarget.pause())}
-                onPause={(e) => {
-                  if (post.isDisqualified && !e.currentTarget.paused) {
-                    e.currentTarget.pause();
-                  }
-                }}
               />
             ) : (
               <img
@@ -313,24 +307,31 @@ export default function PostFullscreenModal({
 
           {/* Action Buttons - Horizontal Layout */}
           <div className="flex items-center gap-4">
-            {/* Vote Up */}
-            <button
-              onClick={() => onVoteUp?.(post.id)}
-              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-              data-testid="button-vote-up-fullscreen"
-            >
-              <ThumbsUp className={`w-5 h-5 ${userVoteCount > 0 ? "text-cyan-500 fill-current" : "text-white"}`} />
-              <span className="text-sm font-semibold text-white">{post.votes ?? 0}</span>
-            </button>
+            {/* Like/Dislike/Count Group */}
+            <div className="flex items-center gap-2">
+              {/* Vote Up */}
+              <button
+                onClick={() => onVoteUp?.(post.id)}
+                className="flex items-center hover:opacity-80 transition-opacity"
+                data-testid="button-vote-up-fullscreen"
+              >
+                <ThumbsUp className={`w-5 h-5 ${userVoteCount > 0 ? "text-cyan-500 fill-current" : "text-white"}`} />
+              </button>
 
-            {/* Vote Down */}
-            <button
-              onClick={() => onVoteDown?.(post.id)}
-              className="flex items-center hover:opacity-80 transition-opacity"
-              data-testid="button-vote-down-fullscreen"
-            >
-              <ThumbsDown className="w-5 h-5 text-white" />
-            </button>
+              {/* Vote Count - Centered */}
+              <span className="text-sm font-semibold text-white min-w-[2rem] text-center" data-testid="text-votes-fullscreen">
+                {post.votes ?? 0}
+              </span>
+
+              {/* Vote Down */}
+              <button
+                onClick={() => onVoteDown?.(post.id)}
+                className="flex items-center hover:opacity-80 transition-opacity"
+                data-testid="button-vote-down-fullscreen"
+              >
+                <ThumbsDown className="w-5 h-5 text-white" />
+              </button>
+            </div>
 
             {/* Comments */}
             <button
