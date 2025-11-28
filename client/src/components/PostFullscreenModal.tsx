@@ -137,12 +137,14 @@ export default function PostFullscreenModal({
   // Autoplay video on post change (swipe)
   useEffect(() => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      // Reset video to start
+      // Reset video to start and play
       videoRef.current.currentTime = 0;
-      // Play the video
+      videoRef.current.muted = true;
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
+        playPromise.then(() => {
+          videoRef.current!.muted = false;
+        }).catch(() => {
           // Autoplay was prevented, user will need to click play
         });
       }
@@ -267,7 +269,8 @@ export default function PostFullscreenModal({
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
                 controls={!post.isDisqualified}
-                autoPlay={!post.isDisqualified}
+                autoPlay
+                muted={!!post.isDisqualified}
                 preload="metadata"
                 crossOrigin="anonymous"
                 data-testid="video-fullscreen"
