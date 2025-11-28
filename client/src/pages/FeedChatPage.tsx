@@ -28,6 +28,7 @@ export default function FeedChatPage() {
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [shownRepliesCount, setShownRepliesCount] = useState<Map<string, number>>(new Map());
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -248,12 +249,20 @@ export default function FeedChatPage() {
   // Create a map for quick comment lookups by ID
   const commentMap = new Map(comments.map(c => [c.id, c]));
 
+  // Count all nested replies recursively
+  const countAllReplies = (comment: CommentWithUser & { replies: CommentWithUser[] }): number => {
+    return comment.replies.length + comment.replies.reduce((sum, reply) => sum + countAllReplies(reply as CommentWithUser & { replies: CommentWithUser[] }), 0);
+  };
+
   // Recursive chat comment component (supports replies to replies at any depth) - same as comments
   const ChatCommentThread = ({ comment, depth = 0 }: { comment: CommentWithUser & { replies: CommentWithUser[] }; depth?: number }) => {
     const isOwnComment = comment.userId === user?.id;
     const isChild = depth > 0;
     const indentClass = isChild ? `ml-${Math.min(depth * 3, 12)}` : "";
     const isExpanded = expandedReplies.has(comment.id);
+    const repliesPerPage = 3;
+    const currentShown = shownRepliesCount.get(comment.id) || repliesPerPage;
+    const totalReplies = countAllReplies(comment);
     
     // Get parent username if this is a reply to a reply
     const parentComment = comment.parentId ? commentMap.get(comment.parentId) : null;
@@ -267,6 +276,10 @@ export default function FeedChatPage() {
         newSet.add(comment.id);
       }
       setExpandedReplies(newSet);
+    };
+    
+    const showMoreReplies = () => {
+      setShownRepliesCount(new Map(shownRepliesCount).set(comment.id, currentShown + repliesPerPage));
     };
 
     return (
@@ -324,7 +337,7 @@ export default function FeedChatPage() {
                 <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
                 Reply
               </Button>
-              {!isChild && comment.replies.length > 0 && (
+              {!isChild && totalReplies > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -332,7 +345,7 @@ export default function FeedChatPage() {
                   onClick={toggleReplies}
                   data-testid={`button-toggle-replies-${comment.id}`}
                 >
-                  {isExpanded ? "Hide" : "Show"} {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                  {isExpanded ? "Hide" : "Show"} {totalReplies} {totalReplies === 1 ? "reply" : "replies"}
                 </Button>
               )}
               {isOwnComment && (
@@ -355,9 +368,20 @@ export default function FeedChatPage() {
         {/* Render nested replies only if expanded (or if nested reply) */}
         {comment.replies.length > 0 && (isExpanded || isChild) && (
           <div className={isChild ? "space-y-2 mt-2" : "space-y-2 mt-2 pl-3 border-l-2 border-muted"}>
-            {comment.replies.map(reply => (
+            {comment.replies.slice(0, isChild ? comment.replies.length : currentShown).map(reply => (
               <ChatCommentThread key={reply.id} comment={reply as CommentWithUser & { replies: CommentWithUser[] }} depth={depth + 1} />
             ))}
+            {!isChild && currentShown < comment.replies.length && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-xs text-primary/70"
+                onClick={showMoreReplies}
+                data-testid={`button-show-more-${comment.id}`}
+              >
+                Show {Math.min(3, comment.replies.length - currentShown)} more replies
+              </Button>
+            )}
           </div>
         )}
       </div>
