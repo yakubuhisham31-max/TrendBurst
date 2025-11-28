@@ -244,6 +244,9 @@ export default function FeedChatPage() {
   };
   
   const rootComments = buildCommentTree(comments);
+  
+  // Create a map for quick comment lookups by ID
+  const commentMap = new Map(comments.map(c => [c.id, c]));
 
   // Recursive chat comment component (supports replies to replies at any depth)
   const ChatCommentThread = ({ comment, depth = 0 }: { comment: CommentWithUser & { replies: CommentWithUser[] }; depth?: number }) => {
@@ -252,6 +255,10 @@ export default function FeedChatPage() {
     const isChild = depth > 0;
     const mlClass = isChild ? `ml-${Math.min((depth) * 4, 16)}` : "";
     const isExpanded = expandedReplies.has(comment.id);
+    
+    // Get parent username if this is a reply to a reply
+    const parentComment = comment.parentId ? commentMap.get(comment.parentId) : null;
+    const parentUsername = parentComment?.user?.username;
     
     const toggleReplies = () => {
       const newSet = new Set(expandedReplies);
@@ -275,6 +282,11 @@ export default function FeedChatPage() {
                 </div>
               )}
               <p className={isChild ? "text-xs" : "text-sm"} data-testid={`text-message-${comment.id}`}>
+                {parentUsername && (
+                  <span className="bg-primary-foreground/20 text-primary-foreground font-medium rounded px-1 mr-1">
+                    @{parentUsername}
+                  </span>
+                )}
                 {parseMentions(comment.text).map((part, idx) => 
                   typeof part === "string" ? (
                     <span key={idx}>{part}</span>
@@ -329,6 +341,11 @@ export default function FeedChatPage() {
                 </span>
               </div>
               <p className={`${isChild ? "text-xs" : "text-sm"} text-foreground`} data-testid={`text-message-${comment.id}`}>
+                {parentUsername && (
+                  <span className="bg-primary/20 text-primary font-medium rounded px-1 mr-1">
+                    @{parentUsername}
+                  </span>
+                )}
                 {parseMentions(comment.text).map((part, idx) => 
                   typeof part === "string" ? (
                     <span key={idx}>{part}</span>

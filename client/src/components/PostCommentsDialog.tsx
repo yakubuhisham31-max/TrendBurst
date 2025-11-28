@@ -183,12 +183,19 @@ export default function PostCommentsDialog({
   
   const rootComments = buildCommentTree(comments);
   
+  // Create a map for quick comment lookups by ID
+  const commentMap = new Map(comments.map(c => [c.id, c]));
+  
   // Recursive comment component
   const CommentThread = ({ comment, depth = 0 }: { comment: CommentWithUser & { replies: CommentWithUser[] }; depth?: number }) => {
     const isOwnComment = comment.userId === user?.id;
     const isChild = depth > 0;
     const indentClass = isChild ? `ml-${Math.min(depth * 3, 12)}` : "";
     const isExpanded = expandedReplies.has(comment.id);
+    
+    // Get parent username if this is a reply to a reply
+    const parentComment = comment.parentId ? commentMap.get(comment.parentId) : null;
+    const parentUsername = parentComment?.user?.username;
     
     const toggleReplies = () => {
       const newSet = new Set(expandedReplies);
@@ -230,6 +237,11 @@ export default function PostCommentsDialog({
               </span>
             </div>
             <p className={isChild ? "text-xs" : "text-sm"} data-testid="text-comment">
+              {parentUsername && (
+                <span className="bg-primary/20 text-primary font-medium rounded px-1 mr-1">
+                  @{parentUsername}
+                </span>
+              )}
               {parseMentions(comment.text).map((part, idx) => 
                 typeof part === "string" ? (
                   <span key={idx}>{part}</span>
