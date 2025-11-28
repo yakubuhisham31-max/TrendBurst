@@ -117,6 +117,9 @@ export default function PostFullscreenModal({
 
   if (!isOpen) return null;
 
+  const mediaUrl = post.mediaUrl || post.imageUrl || "";
+  const mediaType = post.mediaType || "image";
+
   // Prevent background scrolling when fullscreen is open and hide scrollbars
   useEffect(() => {
     const htmlStyle = document.documentElement.style as any;
@@ -130,6 +133,21 @@ export default function PostFullscreenModal({
       bodyStyle.overflow = "";
     };
   }, [isOpen]);
+
+  // Autoplay video on post change (swipe)
+  useEffect(() => {
+    if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
+      // Reset video to start
+      videoRef.current.currentTime = 0;
+      // Play the video
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay was prevented, user will need to click play
+        });
+      }
+    }
+  }, [post.id, mediaType, post.isDisqualified]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -195,9 +213,6 @@ export default function PostFullscreenModal({
     setShareOpen(true);
   };
 
-  const mediaUrl = post.mediaUrl || post.imageUrl || "";
-  const mediaType = post.mediaType || "image";
-
   return (
     <>
       <div
@@ -252,8 +267,8 @@ export default function PostFullscreenModal({
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
                 controls={!post.isDisqualified}
-                autoPlay={false}
-                preload="none"
+                autoPlay={!post.isDisqualified}
+                preload="metadata"
                 crossOrigin="anonymous"
                 data-testid="video-fullscreen"
               />
