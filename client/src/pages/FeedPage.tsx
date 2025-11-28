@@ -357,6 +357,17 @@ export default function FeedPage() {
       return;
     }
     
+    // Check if user has voted on this post
+    const post = posts.find(p => p.id === postId);
+    if (!post?.userVoted) {
+      toast({
+        title: "Can't unlike",
+        description: "You can only unlike posts you've already liked.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Decrement vote
     voteDownMutation.mutate(postId);
   };
