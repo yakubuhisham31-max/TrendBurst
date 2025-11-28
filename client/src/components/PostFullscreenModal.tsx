@@ -123,67 +123,14 @@ export default function PostFullscreenModal({
     const bodyStyle = document.body.style as any;
     
     htmlStyle.overflow = "hidden";
-    htmlStyle.scrollbarWidth = "none";
-    htmlStyle.msOverflowStyle = "none";
     bodyStyle.overflow = "hidden";
-    bodyStyle.scrollbarWidth = "none";
-    bodyStyle.msOverflowStyle = "none";
 
     return () => {
       htmlStyle.overflow = "";
-      htmlStyle.scrollbarWidth = "";
-      htmlStyle.msOverflowStyle = "";
       bodyStyle.overflow = "";
-      bodyStyle.scrollbarWidth = "";
-      bodyStyle.msOverflowStyle = "";
     };
-  }, []);
+  }, [isOpen]);
 
-  // Track video progress and play state
-  useEffect(() => {
-    if (mediaType !== "video" || !videoRef.current) return;
-    const video = videoRef.current;
-
-    const updateProgress = () => {
-      if (video.duration) {
-        setProgress((video.currentTime / video.duration) * 100);
-      }
-    };
-
-    const updatePlayState = () => setIsPlaying(!video.paused);
-
-    video.addEventListener('timeupdate', updateProgress);
-    video.addEventListener('play', updatePlayState);
-    video.addEventListener('pause', updatePlayState);
-
-    return () => {
-      video.removeEventListener('timeupdate', updateProgress);
-      video.removeEventListener('play', updatePlayState);
-      video.removeEventListener('pause', updatePlayState);
-    };
-  }, []);
-
-  // Prevent video playback when disqualified
-  useEffect(() => {
-    if (mediaType !== "video" || !videoRef.current) return;
-    if (post.isDisqualified) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  }, [post.isDisqualified]);
-
-  // Autoplay video when post changes (swiping to new post)
-  useEffect(() => {
-    if (!videoRef.current || post.isDisqualified) return;
-    const type = post.mediaType || "image";
-    if (type === "video") {
-      videoRef.current.play().catch(() => {
-        // Video play failed (e.g., user interaction required)
-      });
-    }
-  }, [post.id, post.isDisqualified]);
-
-  // Handle swipe gestures for post navigation (touch)
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };
@@ -211,7 +158,6 @@ export default function PostFullscreenModal({
     }
   };
 
-  // Handle swipe gestures for post navigation (desktop/mouse)
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerStartY.current = e.clientY;
   };
@@ -255,7 +201,7 @@ export default function PostFullscreenModal({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black z-50 w-screen h-screen overflow-hidden"
+        className="fixed inset-0 bg-black z-50 w-screen h-screen overflow-hidden flex flex-col"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
@@ -263,34 +209,43 @@ export default function PostFullscreenModal({
         data-testid="modal-fullscreen-post-backdrop"
         style={{ touchAction: "none" }}
       >
-        <div
-          className={`relative w-screen h-screen bg-black overflow-hidden flex flex-col transition-opacity duration-300 ${
-            isTransitioning ? "opacity-50" : "opacity-100"
-          }`}
-          data-testid="modal-fullscreen-post"
-        >
-          {/* Back Button */}
+        {/* Header - Back button, votes remaining, chat */}
+        <div className="relative z-40 h-16 bg-black border-b border-white/10 flex items-center justify-between px-4">
           <button
             onClick={onClose}
-            className="absolute top-6 left-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors"
             data-testid="button-close-fullscreen"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          {/* Disqualified Badge - Centered */}
-          {post.isDisqualified && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none" data-testid="badge-disqualified-fullscreen">
-              <Badge variant="destructive" className="gap-1.5 px-4 py-2 text-lg font-semibold">
-                <AlertCircle className="w-5 h-5" />
-                <span>Disqualified</span>
-              </Badge>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {remainingVotes !== null && remainingVotes >= 0 && (
+              <div className="bg-cyan-500 text-black px-3 py-1.5 rounded-full text-sm font-semibold" data-testid="badge-remaining-votes">
+                {remainingVotes} votes left
+              </div>
+            )}
+            {post.trendId && (
+              <button
+                onClick={() => onTrendChat?.(post.trendId!)}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                data-testid="button-trend-chat"
+                aria-label="Trend chat"
+              >
+                <MessageSquare className="w-5 h-5 text-white" />
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* Media */}
-          <div className="absolute inset-0 z-0 flex items-center justify-center bg-black overflow-hidden">
+        {/* Main Content Area - Media + Disqualified Badge */}
+        <div className={`relative flex-1 z-0 bg-black overflow-hidden transition-opacity duration-300 ${
+          isTransitioning ? "opacity-50" : "opacity-100"
+        }`} data-testid="modal-fullscreen-post">
+          
+          {/* Media Container */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
             {mediaType === "video" ? (
               <video
                 ref={videoRef}
@@ -318,83 +273,90 @@ export default function PostFullscreenModal({
             )}
           </div>
 
-          {/* Top Right - Votes remaining & Chat button */}
-          <div className="absolute top-6 right-6 z-40 flex items-center gap-3">
-            {remainingVotes !== null && remainingVotes >= 0 && (
-              <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full" data-testid="badge-remaining-votes">
-                <span className="text-xs font-medium text-white">{remainingVotes} votes left</span>
+          {/* Disqualified Badge - Centered */}
+          {post.isDisqualified && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" data-testid="badge-disqualified-fullscreen">
+              <Badge variant="destructive" className="gap-1.5 px-4 py-2 text-lg font-semibold">
+                <AlertCircle className="w-5 h-5" />
+                <span>Disqualified</span>
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Section - Caption, User Info, Action Buttons */}
+        <div className="relative z-30 bg-black border-t border-white/10 px-4 py-4">
+          {/* Caption */}
+          {post.caption && (
+            <p className="text-sm text-white/90 mb-3 line-clamp-2">{post.caption}</p>
+          )}
+
+          {/* User Info */}
+          <div className="flex items-center gap-3 mb-4">
+            <Avatar className="w-10 h-10 border border-white/30 flex-shrink-0">
+              <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
+              <AvatarFallback className="text-xs bg-primary/20 text-white">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm font-bold text-white truncate">{post.user?.username}</span>
+                <VerificationBadge verified={post.user?.verified} size="sm" />
+                {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
+                  <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/30 text-primary rounded-full flex-shrink-0">
+                    {getRankOrdinal(calculatedRank)}
+                  </span>
+                )}
               </div>
-            )}
-            {post.trendId && (
-              <button
-                onClick={() => onTrendChat?.(post.trendId!)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 transition-colors"
-                data-testid="button-trend-chat"
-                aria-label="Trend chat"
-              >
-                <MessageSquare className="w-5 h-5 text-white" />
-              </button>
-            )}
+              <span className="text-xs text-white/60">{formatDistanceToNow(new Date(post.createdAt || Date.now()), { addSuffix: true })}</span>
+            </div>
           </div>
 
-          {/* Right Side Action Buttons - TikTok Style */}
-          <div className="absolute right-4 bottom-28 md:bottom-20 z-40 flex flex-col items-center gap-5">
+          {/* Action Buttons - Horizontal Layout */}
+          <div className="flex items-center gap-4">
             {/* Vote Up */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={() => onVoteUp?.(post.id)}
-                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${
-                  userVoteCount > 0 
-                    ? "bg-primary shadow-lg shadow-primary/40" 
-                    : "bg-black/50 backdrop-blur-sm hover:bg-black/70"
-                }`}
-                data-testid="button-vote-up-fullscreen"
-              >
-                <ThumbsUp className={`w-6 h-6 ${userVoteCount > 0 ? "text-white fill-current" : "text-white"}`} />
-              </button>
-              <span className={`text-xs font-bold mt-1 ${userVoteCount > 0 ? "text-primary" : "text-white"}`} data-testid="text-votes-fullscreen">
-                {post.votes ?? 0}
-              </span>
-            </div>
+            <button
+              onClick={() => onVoteUp?.(post.id)}
+              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+              data-testid="button-vote-up-fullscreen"
+            >
+              <ThumbsUp className={`w-5 h-5 ${userVoteCount > 0 ? "text-cyan-500 fill-current" : "text-white"}`} />
+              <span className="text-sm font-semibold text-white">{post.votes ?? 0}</span>
+            </button>
 
             {/* Vote Down */}
             <button
               onClick={() => onVoteDown?.(post.id)}
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-all"
+              className="flex items-center hover:opacity-80 transition-opacity"
               data-testid="button-vote-down-fullscreen"
             >
-              <ThumbsDown className="w-6 h-6 text-white" />
+              <ThumbsDown className="w-5 h-5 text-white" />
             </button>
 
             {/* Comments */}
             <button
               onClick={() => setCommentsOpen(true)}
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors"
+              className="flex items-center hover:opacity-80 transition-opacity"
               data-testid="button-comment-fullscreen"
             >
-              <MessageCircle className="w-6 h-6 text-white" />
+              <MessageCircle className="w-5 h-5 text-white" />
             </button>
 
             {/* Share */}
             <button
               onClick={handleShare}
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors"
+              className="flex items-center hover:opacity-80 transition-opacity"
               data-testid="button-share-fullscreen"
             >
-              <Share2 className="w-6 h-6 text-white" />
+              <Share2 className="w-5 h-5 text-white" />
             </button>
 
             {/* Save */}
             <button
               onClick={handleSave}
-              className={`w-12 h-12 flex items-center justify-center rounded-full transition-colors ${
-                isSaved 
-                  ? "bg-primary shadow-lg shadow-primary/40" 
-                  : "bg-black/50 backdrop-blur-sm hover:bg-black/70"
-              }`}
+              className="flex items-center hover:opacity-80 transition-opacity"
               data-testid="button-save-fullscreen"
             >
-              <Bookmark className={`w-6 h-6 ${isSaved ? "text-white fill-current" : "text-white"}`} />
+              <Bookmark className={`w-5 h-5 ${isSaved ? "text-cyan-500 fill-current" : "text-white"}`} />
             </button>
 
             {/* More Options (Disqualify) */}
@@ -402,11 +364,11 @@ export default function PostFullscreenModal({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="w-12 h-12 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors"
+                    className="flex items-center hover:opacity-80 transition-opacity ml-auto"
                     disabled={isDisqualifyPending}
                     data-testid="button-disqualify-fullscreen"
                   >
-                    <MoreVertical className="w-6 h-6 text-white" />
+                    <MoreVertical className="w-5 h-5 text-white" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
@@ -431,35 +393,6 @@ export default function PostFullscreenModal({
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </div>
-
-          {/* Bottom Left - User Info & Caption */}
-          <div className="absolute bottom-0 left-0 right-16 z-10 pb-4 md:pb-3 max-h-32 overflow-hidden">
-            <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent px-4 pt-12 pb-3 h-full flex flex-col justify-end">
-              {/* User Info */}
-              <div className="flex items-center gap-2 mb-1">
-                <Avatar className="w-8 h-8 border border-white/30 flex-shrink-0">
-                  <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
-                  <AvatarFallback className="text-xs bg-primary/20 text-white">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-white truncate">{post.user?.username}</span>
-                    <VerificationBadge verified={post.user?.verified} size="sm" />
-                    {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
-                      <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/30 text-primary rounded-full flex-shrink-0">
-                        {getRankOrdinal(calculatedRank)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Caption */}
-              {post.caption && (
-                <p className="text-xs text-white/90 line-clamp-1 leading-tight">{post.caption}</p>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -498,7 +431,7 @@ export default function PostFullscreenModal({
 
       {/* Comments Dialog - Stays in fullscreen mode */}
       {commentsOpen && post.trendId && (
-        <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-background rounded-lg w-full h-full max-w-md shadow-lg flex flex-col relative">
             {/* Close Button */}
             <button
