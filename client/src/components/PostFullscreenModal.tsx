@@ -161,6 +161,15 @@ export default function PostFullscreenModal({
     };
   }, []);
 
+  // Prevent video playback when disqualified
+  useEffect(() => {
+    if (mediaType !== "video" || !videoRef.current) return;
+    if (post.isDisqualified) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, [post.isDisqualified]);
+
   // Handle swipe gestures for post navigation (touch)
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -273,12 +282,18 @@ export default function PostFullscreenModal({
                 <video
                   ref={videoRef}
                   src={mediaUrl}
-                  className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm' : ''}`}
-                  controls
+                  className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
+                  controls={!post.isDisqualified}
                   autoPlay={!post.isDisqualified}
                   preload="metadata"
                   crossOrigin="anonymous"
                   data-testid="video-fullscreen"
+                  onPlay={(e) => post.isDisqualified && (e.currentTarget.pause())}
+                  onPause={(e) => {
+                    if (post.isDisqualified && !e.currentTarget.paused) {
+                      e.currentTarget.pause();
+                    }
+                  }}
                 />
                 {/* Progress bar for fullscreen */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
