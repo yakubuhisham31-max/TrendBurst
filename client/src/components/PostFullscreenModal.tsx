@@ -255,16 +255,16 @@ export default function PostFullscreenModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 w-screen h-screen overflow-hidden"
-        style={{ backgroundColor: "#000000", touchAction: "none" }}
+        className="fixed inset-0 bg-black z-50 w-screen h-screen overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         data-testid="modal-fullscreen-post-backdrop"
+        style={{ touchAction: "none" }}
       >
         <div
-          className={`fixed inset-0 w-screen h-screen bg-black overflow-hidden flex flex-col transition-opacity duration-300 ${
+          className={`relative w-screen h-screen bg-black overflow-hidden flex flex-col transition-opacity duration-300 ${
             isTransitioning ? "opacity-50" : "opacity-100"
           }`}
           data-testid="modal-fullscreen-post"
@@ -296,6 +296,7 @@ export default function PostFullscreenModal({
                 ref={videoRef}
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
+                controls={!post.isDisqualified}
                 autoPlay={!post.isDisqualified}
                 preload="metadata"
                 crossOrigin="anonymous"
