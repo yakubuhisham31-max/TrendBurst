@@ -1,6 +1,7 @@
 import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare, Trash2, MoreVertical, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -56,6 +57,7 @@ export default function PostFullscreenModal({
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
@@ -469,7 +471,7 @@ export default function PostFullscreenModal({
                         <span>Disqualify User</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => onDisqualifyAndDelete?.(post.id)}
+                        onClick={() => setShowDeleteConfirm(true)}
                         className="text-destructive cursor-pointer flex items-center"
                         data-testid="menu-disqualify-delete"
                       >
@@ -492,6 +494,30 @@ export default function PostFullscreenModal({
         title={`Check out this post by ${post.user?.username}`}
         description={post.caption || undefined}
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent data-testid="dialog-delete-confirm-fullscreen">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this post and disqualify the user?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDisqualifyAndDelete?.(post.id);
+                setShowDeleteConfirm(false);
+              }}
+              data-testid="button-delete-confirm-fullscreen"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Comments Dialog - Stays in fullscreen mode */}
       {commentsOpen && post.trendId && (
