@@ -386,8 +386,9 @@ export default function FeedPage() {
     new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
   );
 
-  // Calculate vote-based rankings
-  const rankedByVotes = [...posts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  // Calculate vote-based rankings (excluding disqualified posts)
+  const qualifiedPosts = posts.filter(post => !post.isDisqualified);
+  const rankedByVotes = [...qualifiedPosts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
   const voteRankMap = new Map<string, number>();
   rankedByVotes.forEach((post, index) => {
     voteRankMap.set(post.id, index + 1);
