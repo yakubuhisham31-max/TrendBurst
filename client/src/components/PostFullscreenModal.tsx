@@ -259,6 +259,7 @@ export default function PostFullscreenModal({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         data-testid="modal-fullscreen-post-backdrop"
+        style={{ touchAction: "none" }}
       >
         <div
           className={`relative w-screen h-screen bg-black overflow-hidden flex flex-col transition-opacity duration-300 ${
