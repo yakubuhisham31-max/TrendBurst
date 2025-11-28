@@ -316,7 +316,7 @@ export default function PostFullscreenModal({
                 </div>
                 {/* Playing indicator */}
                 {isPlaying && (
-                  <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
                     <div className="flex gap-0.5">
                       <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0ms'}}></div>
                       <div className="w-0.5 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '150ms'}}></div>
