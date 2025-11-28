@@ -434,38 +434,40 @@ export default function PostFullscreenModal({
                 <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
               </Button>
 
-              {isTrendCreator && post.userId !== user?.id && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-white hover:text-destructive ml-auto"
-                      disabled={isDisqualifyPending}
-                      data-testid="button-disqualify-fullscreen"
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={() => onDisqualify?.(post.id)}
-                      className="text-destructive cursor-pointer"
-                      data-testid="menu-disqualify"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Disqualify User
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDisqualifyAndDelete?.(post.id)}
-                      className="text-destructive cursor-pointer"
-                      data-testid="menu-disqualify-delete"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Disqualify & Delete Post
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              {isTrendCreator && post.userId !== user?.id && onDisqualify && (
+                <div className="ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-white hover:text-red-500"
+                        disabled={isDisqualifyPending}
+                        data-testid="button-disqualify-fullscreen"
+                      >
+                        <MoreVertical className="w-5 h-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                      <DropdownMenuItem
+                        onClick={() => onDisqualify(post.id)}
+                        className="text-destructive cursor-pointer flex items-center"
+                        data-testid="menu-disqualify"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        <span>Disqualify User</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onDisqualifyAndDelete?.(post.id)}
+                        className="text-destructive cursor-pointer flex items-center"
+                        data-testid="menu-disqualify-delete"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        <span>Disqualify & Delete Post</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               )}
             </div>
           </div>
