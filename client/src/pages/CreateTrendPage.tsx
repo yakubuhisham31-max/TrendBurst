@@ -374,6 +374,22 @@ export default function CreateTrendPage() {
               </div>
             </div>
 
+            {name && (
+              <div className="p-4 rounded-lg border border-muted bg-muted/30 space-y-2">
+                <Label className="text-xs text-muted-foreground">Preview</Label>
+                <div 
+                  className={`text-3xl font-bold text-center py-4`}
+                  style={{
+                    fontFamily: trendNameFont === 'comic-sans' ? 'Comic Sans MS, cursive' : trendNameFont,
+                    color: trendNameColor,
+                  }}
+                  data-testid="preview-trend-name"
+                >
+                  {name}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="description">Short Description</Label>
               <Input
