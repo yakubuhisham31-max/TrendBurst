@@ -256,11 +256,11 @@ export default function PostFullscreenModal({
             <ArrowLeft className="w-8 h-8" />
           </button>
 
-          {/* Disqualified Badge */}
+          {/* Disqualified Badge - Centered */}
           {post.isDisqualified && (
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50" data-testid="badge-disqualified">
-              <Badge variant="destructive" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
-                <AlertCircle className="w-4 h-4" />
+            <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none" data-testid="badge-disqualified-fullscreen">
+              <Badge variant="destructive" className="gap-1.5 px-4 py-2 text-lg font-semibold">
+                <AlertCircle className="w-5 h-5" />
                 <span>Disqualified</span>
               </Badge>
             </div>
@@ -275,7 +275,7 @@ export default function PostFullscreenModal({
                   src={mediaUrl}
                   className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm' : ''}`}
                   controls
-                  autoPlay
+                  autoPlay={!post.isDisqualified}
                   preload="metadata"
                   crossOrigin="anonymous"
                   data-testid="video-fullscreen"
@@ -376,7 +376,7 @@ export default function PostFullscreenModal({
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-white truncate">{post.user?.username}</p>
                     <VerificationBadge verified={post.user?.verified} size="sm" />
-                    {calculatedRank && (
+                    {calculatedRank && !post.isDisqualified && (
                       <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full whitespace-nowrap">
                         {getRankOrdinal(calculatedRank)}
                       </span>
