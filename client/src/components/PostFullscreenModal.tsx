@@ -494,7 +494,7 @@ export default function PostFullscreenModal({
                         data-testid="menu-disqualify"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        <span>{post.isDisqualified ? "Requalify User" : "Disqualify User"}</span>
+                        <span>{post.isDisqualified ? "Undo Disqualify" : "Disqualify User"}</span>
                       </DropdownMenuItem>
                       {!post.isDisqualified && (
                         <DropdownMenuItem
