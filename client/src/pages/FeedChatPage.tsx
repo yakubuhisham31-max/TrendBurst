@@ -337,7 +337,7 @@ export default function FeedChatPage() {
                 <Reply className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} mr-1`} />
                 Reply
               </Button>
-              {!isChild && totalReplies > 0 && (
+              {!isChild && totalReplies > 0 && !isExpanded && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -345,7 +345,7 @@ export default function FeedChatPage() {
                   onClick={toggleReplies}
                   data-testid={`button-toggle-replies-${comment.id}`}
                 >
-                  {isExpanded ? "Hide" : "Show"} {totalReplies} {totalReplies === 1 ? "reply" : "replies"}
+                  Show {totalReplies} {totalReplies === 1 ? "reply" : "replies"}
                 </Button>
               )}
               {isOwnComment && (
@@ -381,6 +381,19 @@ export default function FeedChatPage() {
                   data-testid={`button-show-more-${comment.id}`}
                 >
                   Show {Math.min(repliesPerPage, comment.replies.length - currentShown)} more {Math.min(repliesPerPage, comment.replies.length - currentShown) === 1 ? "reply" : "replies"}
+                </Button>
+              </div>
+            )}
+            {!isChild && isExpanded && (
+              <div className="mt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-primary/70"
+                  onClick={toggleReplies}
+                  data-testid={`button-hide-replies-${comment.id}`}
+                >
+                  Hide {totalReplies} {totalReplies === 1 ? "reply" : "replies"}
                 </Button>
               </div>
             )}
