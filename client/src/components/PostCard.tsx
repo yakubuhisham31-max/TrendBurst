@@ -312,13 +312,16 @@ export default function PostCard({
             // Pause all other videos in the DOM to prevent multiple playback
             const allVideos = document.querySelectorAll('video');
             allVideos.forEach((v: any) => {
-              if (v !== video) {
+              if (v !== video && !v.paused) {
                 v.pause();
               }
             });
-            video.play().catch(() => {
-              // Video play failed (e.g., user interaction required)
-            });
+            setTimeout(() => {
+              video.play().catch(() => {
+                // Video play failed (e.g., user interaction required)
+              });
+              setHasAutoPlayed(true);
+            }, 50);
             setHasAutoPlayed(true);
           } else {
             // Stop preloading when out of view to save bandwidth

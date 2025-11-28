@@ -273,7 +273,7 @@ export default function PostFullscreenModal({
                 <video
                   ref={videoRef}
                   src={mediaUrl}
-                  className="w-full h-full object-contain"
+                  className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm' : ''}`}
                   controls
                   autoPlay
                   preload="metadata"
@@ -327,7 +327,7 @@ export default function PostFullscreenModal({
                 <img
                   src={mediaUrl}
                   alt="Post"
-                  className="w-full h-full object-contain"
+                  className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm' : ''}`}
                   data-testid="img-fullscreen"
                 />
                 {/* Remaining votes badge and chat button for images */}
