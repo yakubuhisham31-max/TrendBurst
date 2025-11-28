@@ -265,21 +265,3 @@ body {
     inset: -1px;
   }
 }
-
-/* Ensure video controls are visible in fullscreen */
-video {
-  -webkit-appearance: media-playback-inline-enter;
-}
-
-video::-webkit-media-controls {
-  display: flex !important;
-}
-
-video::-webkit-media-controls-panel {
-  display: flex !important;
-  position: static !important;
-}
-
-video::-moz-media-controls {
-  display: flex !important;
-}
