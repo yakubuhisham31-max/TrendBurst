@@ -383,126 +383,122 @@ export default function PostFullscreenModal({
             )}
           </div>
 
-          {/* Bottom Section - Fixed at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 z-40">
-            {/* Caption - Above border */}
-            {post.caption && (
-              <div className="bg-gradient-to-t from-black via-black/90 to-transparent px-3 pt-3 pb-0.5">
-                <p className="text-xs text-white/90 line-clamp-2">{post.caption}</p>
-              </div>
+          {/* Right Side Action Buttons - TikTok Style */}
+          <div className="absolute right-3 bottom-32 md:bottom-24 z-40 flex flex-col items-center gap-4">
+            {/* Vote Up */}
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => onVoteUp?.(post.id)}
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                data-testid="button-vote-up-fullscreen"
+              >
+                <ThumbsUp className="w-5 h-5 text-white" />
+              </button>
+              {(post.votes ?? 0) > 0 && (
+                <span className="text-xs font-semibold text-white mt-1" data-testid="text-votes-fullscreen">
+                  {post.votes}
+                </span>
+              )}
+            </div>
+
+            {/* Vote Down */}
+            <button
+              onClick={() => onVoteDown?.(post.id)}
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+              data-testid="button-vote-down-fullscreen"
+            >
+              <ThumbsDown className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Comments */}
+            <button
+              onClick={() => setCommentsOpen(true)}
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+              data-testid="button-comment-fullscreen"
+            >
+              <MessageCircle className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Share */}
+            <button
+              onClick={handleShare}
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+              data-testid="button-share-fullscreen"
+            >
+              <Share2 className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Save */}
+            <button
+              onClick={handleSave}
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+              data-testid="button-save-fullscreen"
+            >
+              <Bookmark className={`w-5 h-5 text-white ${isSaved ? "fill-current" : ""}`} />
+            </button>
+
+            {/* More Options (Disqualify) */}
+            {isTrendCreator && post.userId !== user?.id && onDisqualify && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                    disabled={isDisqualifyPending}
+                    data-testid="button-disqualify-fullscreen"
+                  >
+                    <MoreVertical className="w-5 h-5 text-white" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    onClick={() => onDisqualify(post.id)}
+                    className="text-destructive cursor-pointer flex items-center"
+                    data-testid="menu-disqualify"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    <span>{post.isDisqualified ? "Undo Disqualify" : "Disqualify User"}</span>
+                  </DropdownMenuItem>
+                  {!post.isDisqualified && (
+                    <DropdownMenuItem
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="text-destructive cursor-pointer flex items-center"
+                      data-testid="menu-disqualify-delete"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      <span>Disqualify & Delete Post</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
+          </div>
 
-            {/* Post Info Bar */}
-            <div className="bg-black/90 px-3 py-2 pb-14 md:pb-2 space-y-2">
-              {/* User Info Row */}
-              <div className="flex items-center gap-2">
-                <Avatar className="w-7 h-7 flex-shrink-0">
+          {/* Bottom Left - User Info & Caption */}
+          <div className="absolute bottom-0 left-0 right-16 z-40 pb-6 md:pb-4">
+            <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pt-16 pb-4">
+              {/* User Info */}
+              <div className="flex items-center gap-2 mb-2">
+                <Avatar className="w-10 h-10 border-2 border-white/30">
                   <AvatarImage src={post.user?.profilePicture || undefined} alt={post.user?.username} />
-                  <AvatarFallback className="text-xs">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-sm bg-primary/20 text-white">{post.user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <p className="text-sm font-semibold text-white truncate">{post.user?.username}</p>
-                <VerificationBadge verified={post.user?.verified} size="sm" />
-                {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
-                  <span className="text-xs font-bold px-1.5 py-0.5 bg-primary/20 text-primary rounded-full whitespace-nowrap">
-                    {getRankOrdinal(calculatedRank)}
-                  </span>
-                )}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-white">{post.user?.username}</span>
+                    <VerificationBadge verified={post.user?.verified} size="sm" />
+                    {typeof calculatedRank === 'number' && calculatedRank > 0 && !post.isDisqualified && (
+                      <span className="text-xs font-bold px-2 py-0.5 bg-primary/30 text-primary rounded-full">
+                        {getRankOrdinal(calculatedRank)}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Action Buttons Row - Below user info */}
-              <div className="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:text-primary h-8 w-8"
-                  onClick={() => onVoteUp?.(post.id)}
-                  data-testid="button-vote-up-fullscreen"
-                >
-                  <ThumbsUp className="w-4 h-4" />
-                </Button>
-
-                {(post.votes ?? 0) > 0 && (
-                  <span className="text-xs font-bold text-white" data-testid="text-votes-fullscreen">
-                    {post.votes}
-                  </span>
-                )}
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:text-destructive h-8 w-8"
-                  onClick={() => onVoteDown?.(post.id)}
-                  data-testid="button-vote-down-fullscreen"
-                >
-                  <ThumbsDown className="w-4 h-4" />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:text-primary h-8 w-8"
-                  onClick={() => setCommentsOpen(true)}
-                  data-testid="button-comment-fullscreen"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:text-primary h-8 w-8"
-                  onClick={handleShare}
-                  data-testid="button-share-fullscreen"
-                >
-                  <Share2 className="w-4 h-4" />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:text-primary h-8 w-8"
-                  onClick={handleSave}
-                  data-testid="button-save-fullscreen"
-                >
-                  <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
-                </Button>
-
-                {isTrendCreator && post.userId !== user?.id && onDisqualify && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-white hover:text-red-500 h-8 w-8"
-                        disabled={isDisqualifyPending}
-                        data-testid="button-disqualify-fullscreen"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52">
-                      <DropdownMenuItem
-                        onClick={() => onDisqualify(post.id)}
-                        className="text-destructive cursor-pointer flex items-center"
-                        data-testid="menu-disqualify"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        <span>{post.isDisqualified ? "Undo Disqualify" : "Disqualify User"}</span>
-                      </DropdownMenuItem>
-                      {!post.isDisqualified && (
-                        <DropdownMenuItem
-                          onClick={() => setShowDeleteConfirm(true)}
-                          className="text-destructive cursor-pointer flex items-center"
-                          data-testid="menu-disqualify-delete"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          <span>Disqualify & Delete Post</span>
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
+              {/* Caption */}
+              {post.caption && (
+                <p className="text-sm text-white/90 line-clamp-2 leading-relaxed">{post.caption}</p>
+              )}
             </div>
           </div>
         </div>
