@@ -381,9 +381,9 @@ export default function FeedPage() {
 
   const isTrendCreator = user?.id === trend?.userId;
 
-  // Sort posts by time (newest first) for display
+  // Sort posts by time (oldest first) for display
   const sortedPosts = [...posts].sort((a, b) => 
-    new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
   );
 
   // Calculate vote-based rankings
