@@ -60,6 +60,7 @@ export default function PostFullscreenModal({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [hasAttemptedAutoplay, setHasAttemptedAutoplay] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
@@ -136,10 +137,12 @@ export default function PostFullscreenModal({
 
   // Autoplay video on post change (swipe)
   useEffect(() => {
+    setHasAttemptedAutoplay(false);
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
       // Reset video to start and play
       videoRef.current.currentTime = 0;
       videoRef.current.muted = true;
+      setHasAttemptedAutoplay(true);
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
@@ -150,6 +153,23 @@ export default function PostFullscreenModal({
       }
     }
   }, [post.id, mediaType, post.isDisqualified]);
+
+  // Fallback autoplay trigger when video is ready to play
+  const handleVideoCanPlay = () => {
+    if (!hasAttemptedAutoplay && videoRef.current && mediaType === "video" && !post.isDisqualified) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.muted = true;
+      setHasAttemptedAutoplay(true);
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          videoRef.current!.muted = false;
+        }).catch(() => {
+          // Autoplay was prevented
+        });
+      }
+    }
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -273,6 +293,7 @@ export default function PostFullscreenModal({
                 muted={!!post.isDisqualified}
                 preload="metadata"
                 crossOrigin="anonymous"
+                onCanPlay={handleVideoCanPlay}
                 data-testid="video-fullscreen"
               />
             ) : (
