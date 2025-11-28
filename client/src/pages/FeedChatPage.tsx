@@ -260,7 +260,7 @@ export default function FeedChatPage() {
     const isChild = depth > 0;
     const indentClass = isChild ? `ml-${Math.min(depth * 3, 12)}` : "";
     const isExpanded = expandedReplies.has(comment.id);
-    const repliesPerPage = 3;
+    const repliesPerPage = 2;
     const currentShown = shownRepliesCount.get(comment.id) || repliesPerPage;
     const totalReplies = countAllReplies(comment);
     
