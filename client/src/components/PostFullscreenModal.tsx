@@ -443,15 +443,28 @@ export default function PostFullscreenModal({
                 </Button>
               </div>
 
-              <Button
-                variant="ghost"
-                className="gap-2 text-white hover:text-primary"
-                onClick={() => setCommentsOpen(true)}
-                data-testid="button-comment-fullscreen"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>{post.commentCount || 0}</span>
-              </Button>
+              {(post.commentCount ?? 0) > 0 && (
+                <Button
+                  variant="ghost"
+                  className="gap-2 text-white hover:text-primary"
+                  onClick={() => setCommentsOpen(true)}
+                  data-testid="button-comment-fullscreen"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>{post.commentCount}</span>
+                </Button>
+              )}
+              {(post.commentCount ?? 0) === 0 && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-white hover:text-primary"
+                  onClick={() => setCommentsOpen(true)}
+                  data-testid="button-comment-fullscreen"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </Button>
+              )}
 
               <Button
                 size="icon"
