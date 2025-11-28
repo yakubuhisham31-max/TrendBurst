@@ -1,5 +1,6 @@
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare, Trash2, MoreVertical } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare, Trash2, MoreVertical, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -252,6 +253,16 @@ export default function PostFullscreenModal({
           >
             <ArrowLeft className="w-8 h-8" />
           </button>
+
+          {/* Disqualified Badge */}
+          {post.isDisqualified && (
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50" data-testid="badge-disqualified">
+              <Badge variant="destructive" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                <AlertCircle className="w-4 h-4" />
+                <span>Disqualified</span>
+              </Badge>
+            </div>
+          )}
 
           {/* Media */}
           <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
