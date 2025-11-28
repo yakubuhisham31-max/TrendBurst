@@ -387,13 +387,13 @@ export default function PostFullscreenModal({
           <div className="absolute bottom-0 left-0 right-0 z-40">
             {/* Caption - Above border */}
             {post.caption && (
-              <div className="bg-gradient-to-t from-black via-black/90 to-transparent px-4 pt-4 pb-1">
-                <p className="text-sm text-white line-clamp-2">{post.caption}</p>
+              <div className="bg-gradient-to-t from-black via-black/90 to-transparent px-3 pt-3 pb-0.5">
+                <p className="text-xs text-white/90 line-clamp-2">{post.caption}</p>
               </div>
             )}
 
             {/* Post Info Bar */}
-            <div className="bg-black border-t border-border/20 px-4 py-3 pb-20 md:pb-3">
+            <div className="bg-black/90 px-3 py-2 pb-16 md:pb-2">
             {/* User Info and Action Buttons in one row */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-1 min-w-0">
