@@ -158,7 +158,7 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Reset autoplay tracking when modal opens or post changes (on swipe)
+  // Reset autoplay tracking when modal opens
   useEffect(() => {
     if (isOpen) {
       hasAutoplayedThisOpen.current = false;
@@ -168,20 +168,24 @@ export default function PostFullscreenModal({
         videoRef.current.pause();
       }
     }
-  }, [isOpen, post.id, mediaUrl]);
+  }, [isOpen]);
 
-  // Trigger autoplay when video metadata is loaded (always autoplay on each swipe since key forces re-mount)
+  // Trigger autoplay when video metadata is loaded (only once per modal opening)
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          videoRef.current!.muted = false;
-        }).catch(() => {
-          // Autoplay was prevented, user will need to click play
-        });
+      // Only autoplay once per modal opening
+      if (!hasAutoplayedThisOpen.current) {
+        hasAutoplayedThisOpen.current = true;
+        videoRef.current.currentTime = 0;
+        videoRef.current.muted = true;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            videoRef.current!.muted = false;
+          }).catch(() => {
+            // Autoplay was prevented, user will need to click play
+          });
+        }
       }
     }
   };
@@ -310,7 +314,6 @@ export default function PostFullscreenModal({
           <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
             {mediaType === "video" ? (
               <video
-                key={`video-${post.id}`}
                 ref={videoRef}
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}

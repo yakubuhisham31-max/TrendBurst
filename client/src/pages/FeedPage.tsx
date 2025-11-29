@@ -596,6 +596,7 @@ export default function FeedPage() {
                     isDisqualified={!!post.isDisqualified}
                     isBlurred={isBlurred}
                     isTrendEnded={isTrendEnded}
+                    isFullscreenOpen={!!fullscreenPostId}
                     onVoteUp={() => handleVoteUp(post.id)}
                     onVoteDown={() => handleVoteDown(post.id)}
                     onComment={() => {
