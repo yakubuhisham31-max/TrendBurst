@@ -170,22 +170,18 @@ export default function PostFullscreenModal({
     }
   }, [isOpen, post.id, mediaUrl]);
 
-  // Trigger autoplay when video metadata is loaded (only once per modal opening)
+  // Trigger autoplay when video metadata is loaded (always autoplay on each swipe since key forces re-mount)
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      // Only autoplay once per modal opening
-      if (!hasAutoplayedThisOpen.current) {
-        hasAutoplayedThisOpen.current = true;
-        videoRef.current.currentTime = 0;
-        videoRef.current.muted = true;
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            videoRef.current!.muted = false;
-          }).catch(() => {
-            // Autoplay was prevented, user will need to click play
-          });
-        }
+      videoRef.current.currentTime = 0;
+      videoRef.current.muted = true;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          videoRef.current!.muted = false;
+        }).catch(() => {
+          // Autoplay was prevented, user will need to click play
+        });
       }
     }
   };
