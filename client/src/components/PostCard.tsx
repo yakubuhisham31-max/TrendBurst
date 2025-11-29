@@ -346,7 +346,14 @@ export default function PostCard({
         clearTimeout(tapTimeoutRef.current);
       }
     };
-  }, [mediaType, isDisqualified, isBlurred]);
+  }, [mediaType, isDisqualified, isBlurred, isFullscreenOpen]);
+
+  // Pause video when fullscreen opens
+  useEffect(() => {
+    if (isFullscreenOpen && mediaType === 'video' && videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [isFullscreenOpen, mediaType]);
 
   return (
     <Card id={`post-${id}`} className="overflow-hidden transition-all" data-testid="card-post">
