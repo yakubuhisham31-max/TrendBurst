@@ -1614,19 +1614,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const viewTracking = await storage.getViewTracking(userId, "chat", trendId);
       const lastViewed = viewTracking?.lastViewedAt || new Date(0);
       
-      // Count comments created after last viewed time for this trend
-      const unreadComments = await db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(schema.comments)
-        .where(
-          and(
-            eq(schema.comments.trendId, trendId),
-            sql`${schema.comments.createdAt} > ${lastViewed}`
-          )
-        );
+      // Get all comments for this trend
+      const allComments = await storage.getCommentsByTrend(trendId);
       
-      const count = unreadComments[0]?.count || 0;
-      res.json({ count: Number(count) });
+      // Count comments created after last viewed time
+      const unreadCount = allComments.filter(comment => {
+        const commentDate = new Date(comment.createdAt || 0);
+        return commentDate > lastViewed;
+      }).length;
+      
+      res.json({ count: unreadCount });
     } catch (error) {
       console.error("Error fetching unread chat count:", error);
       res.status(500).json({ message: "Internal server error" });
