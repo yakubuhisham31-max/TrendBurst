@@ -437,6 +437,7 @@ export default function RankingsPage() {
               setFullscreenPostId(rankingsData.rankings[currentIndex - 1].post.id);
             }
           }}
+          shouldAutoplay={true}
         />
       )}
     </div>

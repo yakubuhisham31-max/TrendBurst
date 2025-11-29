@@ -33,6 +33,7 @@ interface PostFullscreenModalProps {
   onDisqualify?: (postId: string) => void;
   onDisqualifyAndDelete?: (postId: string) => void;
   isDisqualifyPending?: boolean;
+  shouldAutoplay?: boolean;
 }
 
 export default function PostFullscreenModal({
@@ -53,6 +54,7 @@ export default function PostFullscreenModal({
   onDisqualify,
   onDisqualifyAndDelete,
   isDisqualifyPending = false,
+  shouldAutoplay = false,
 }: PostFullscreenModalProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -60,6 +62,7 @@ export default function PostFullscreenModal({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [chatViewed, setChatViewed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
@@ -134,9 +137,9 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Trigger autoplay when video metadata is loaded
+  // Trigger autoplay when video metadata is loaded (only if shouldAutoplay is true)
   const handleVideoLoadedMetadata = () => {
-    if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
+    if (shouldAutoplay && videoRef.current && mediaType === "video" && !post.isDisqualified) {
       videoRef.current.currentTime = 0;
       videoRef.current.muted = true;
       const playPromise = videoRef.current.play();
@@ -245,16 +248,21 @@ export default function PostFullscreenModal({
             {post.trendId && (
               <div className="relative">
                 <button
-                  onClick={() => onTrendChat?.(post.trendId!)}
+                  onClick={() => {
+                    setChatViewed(true);
+                    onTrendChat?.(post.trendId!);
+                  }}
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                   data-testid="button-trend-chat"
                   aria-label="Trend chat"
                 >
                   <MessageSquare className="w-5 h-5 text-white" />
                 </button>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">1</span>
-                </div>
+                {!chatViewed && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-bold text-white">1</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
