@@ -41,7 +41,6 @@ interface PostCardProps {
   isDisqualified?: boolean;
   isBlurred?: boolean;
   isTrendEnded?: boolean;
-  isFullscreenOpen?: boolean;
   onVoteUp?: () => void;
   onVoteDown?: () => void;
   onComment?: () => void;
@@ -118,7 +117,6 @@ export default function PostCard({
   isDisqualified = false,
   isBlurred = false,
   isTrendEnded = false,
-  isFullscreenOpen = false,
   onVoteUp,
   onVoteDown,
   onComment,
@@ -301,9 +299,9 @@ export default function PostCard({
     }
   };
 
-  // Auto-play video when in view (Instagram style), but NOT for disqualified, blurred, or when fullscreen is open
+  // Auto-play video when in view (Instagram style), but NOT for disqualified or blurred posts
   useEffect(() => {
-    if (mediaType !== 'video' || !videoRef.current || isDisqualified || isBlurred || isFullscreenOpen) return;
+    if (mediaType !== 'video' || !videoRef.current || isDisqualified || isBlurred) return;
 
     const video = videoRef.current;
     const observer = new IntersectionObserver(

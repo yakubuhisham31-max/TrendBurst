@@ -64,7 +64,6 @@ export default function PostFullscreenModal({
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
-  const hasAutoplayedThisOpen = useRef(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -158,34 +157,18 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Reset autoplay tracking when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      hasAutoplayedThisOpen.current = false;
-    } else {
-      // Pause video when modal closes
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-    }
-  }, [isOpen]);
-
-  // Trigger autoplay when video metadata is loaded (only once per modal opening)
+  // Trigger autoplay when video metadata is loaded
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      // Only autoplay once per modal opening
-      if (!hasAutoplayedThisOpen.current) {
-        hasAutoplayedThisOpen.current = true;
-        videoRef.current.currentTime = 0;
-        videoRef.current.muted = true;
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            videoRef.current!.muted = false;
-          }).catch(() => {
-            // Autoplay was prevented, user will need to click play
-          });
-        }
+      videoRef.current.currentTime = 0;
+      videoRef.current.muted = true;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          videoRef.current!.muted = false;
+        }).catch(() => {
+          // Autoplay was prevented, user will need to click play
+        });
       }
     }
   };
