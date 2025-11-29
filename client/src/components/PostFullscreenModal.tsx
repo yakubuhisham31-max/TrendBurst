@@ -158,21 +158,36 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Trigger autoplay when video metadata is loaded (only once per post)
+  // Reset autoplay tracking when modal opens with a different post
+  useEffect(() => {
+    if (isOpen && lastAutplayedPostId.current !== post.id) {
+      // Don't reset here, let the first onLoadedMetadata call handle it
+    }
+    // Pause video when modal closes
+    if (!isOpen && videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [isOpen, post.id]);
+
+  // Trigger autoplay when video metadata is loaded (only once per post opening)
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
       // Only autoplay if this is a different post than the one we last autoplayed
+      // This prevents autoplay when returning from chat since post.id is still the same
       if (lastAutplayedPostId.current !== post.id) {
         lastAutplayedPostId.current = post.id;
-        videoRef.current.currentTime = 0;
-        videoRef.current.muted = true;
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            videoRef.current!.muted = false;
-          }).catch(() => {
-            // Autoplay was prevented, user will need to click play
-          });
+        // Only play if video is paused (fresh load, not a re-render)
+        if (videoRef.current.paused) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.muted = true;
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              videoRef.current!.muted = false;
+            }).catch(() => {
+              // Autoplay was prevented, user will need to click play
+            });
+          }
         }
       }
     }
