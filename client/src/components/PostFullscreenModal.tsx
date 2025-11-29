@@ -60,6 +60,7 @@ export default function PostFullscreenModal({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [chatViewed, setChatViewed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
@@ -96,6 +97,28 @@ export default function PostFullscreenModal({
   });
 
   const remainingVotes = voteCountData ? 10 - voteCountData.count : null;
+
+  // Get unread chat message count
+  const { data: unreadChatData } = useQuery<{ count: number }>({
+    queryKey: ["/api/unread-chat-count", post.trendId],
+    enabled: !!user && isOpen && !!post.trendId && !chatViewed,
+    refetchInterval: 5000,
+  });
+
+  const unreadMessageCount = unreadChatData?.count || 0;
+
+  // Update view tracking mutation for chat
+  const updateViewMutation = useMutation({
+    mutationFn: async ({ type, identifier }: { type: string; identifier: string }) => {
+      const response = await apiRequest("POST", "/api/view-tracking", { type, identifier });
+      return response.json();
+    },
+    onSuccess: () => {
+      setChatViewed(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/unread-chat-count", post.trendId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/counts"] });
+    },
+  });
 
   // Save post mutation
   const saveMutation = useMutation({
@@ -245,16 +268,21 @@ export default function PostFullscreenModal({
             {post.trendId && (
               <div className="relative">
                 <button
-                  onClick={() => onTrendChat?.(post.trendId!)}
+                  onClick={() => {
+                    updateViewMutation.mutate({ type: "chat", identifier: post.trendId! });
+                    onTrendChat?.(post.trendId!);
+                  }}
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                   data-testid="button-trend-chat"
                   aria-label="Trend chat"
                 >
                   <MessageSquare className="w-5 h-5 text-white" />
                 </button>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">1</span>
-                </div>
+                {!chatViewed && unreadMessageCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-bold text-white">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

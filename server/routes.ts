@@ -1604,6 +1604,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/unread-chat-count/:trendId - Get unread message count for a trend (protected)
+  app.get("/api/unread-chat-count/:trendId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).session.userId;
+      const trendId = req.params.trendId;
+      
+      // Get when user last viewed this chat
+      const viewTracking = await storage.getViewTracking(userId, "chat", trendId);
+      const lastViewed = viewTracking?.lastViewedAt || new Date(0);
+      
+      // Count comments created after last viewed time for this trend
+      const unreadComments = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(schema.comments)
+        .where(
+          and(
+            eq(schema.comments.trendId, trendId),
+            sql`${schema.comments.createdAt} > ${lastViewed}`
+          )
+        );
+      
+      const count = unreadComments[0]?.count || 0;
+      res.json({ count: Number(count) });
+    } catch (error) {
+      console.error("Error fetching unread chat count:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Saved Items routes
 
   // POST /api/saved/trends/:trendId - Save a trend (protected)
