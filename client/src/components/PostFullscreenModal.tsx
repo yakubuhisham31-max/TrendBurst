@@ -301,7 +301,6 @@ export default function PostFullscreenModal({
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
                 controls={!post.isDisqualified}
-                autoPlay
                 muted
                 preload="metadata"
                 crossOrigin="anonymous"
