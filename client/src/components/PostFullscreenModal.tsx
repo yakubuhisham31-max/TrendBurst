@@ -64,7 +64,7 @@ export default function PostFullscreenModal({
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
-  const lastAutplayedPostId = useRef<string | null>(null);
+  const hasAutoplayedThisOpen = useRef(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -158,36 +158,33 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Reset autoplay tracking when modal opens with a different post
+  // Reset autoplay tracking when modal opens
   useEffect(() => {
-    if (isOpen && lastAutplayedPostId.current !== post.id) {
-      // Don't reset here, let the first onLoadedMetadata call handle it
+    if (isOpen) {
+      hasAutoplayedThisOpen.current = false;
+    } else {
+      // Pause video when modal closes
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
     }
-    // Pause video when modal closes
-    if (!isOpen && videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [isOpen, post.id]);
+  }, [isOpen]);
 
-  // Trigger autoplay when video metadata is loaded (only once per post opening)
+  // Trigger autoplay when video metadata is loaded (only once per modal opening)
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      // Only autoplay if this is a different post than the one we last autoplayed
-      // This prevents autoplay when returning from chat since post.id is still the same
-      if (lastAutplayedPostId.current !== post.id) {
-        lastAutplayedPostId.current = post.id;
-        // Only play if video is paused (fresh load, not a re-render)
-        if (videoRef.current.paused) {
-          videoRef.current.currentTime = 0;
-          videoRef.current.muted = true;
-          const playPromise = videoRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              videoRef.current!.muted = false;
-            }).catch(() => {
-              // Autoplay was prevented, user will need to click play
-            });
-          }
+      // Only autoplay once per modal opening
+      if (!hasAutoplayedThisOpen.current) {
+        hasAutoplayedThisOpen.current = true;
+        videoRef.current.currentTime = 0;
+        videoRef.current.muted = true;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            videoRef.current!.muted = false;
+          }).catch(() => {
+            // Autoplay was prevented, user will need to click play
+          });
         }
       }
     }
