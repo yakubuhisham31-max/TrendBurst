@@ -161,35 +161,56 @@ export default function PostFullscreenModal({
   // Pause all background videos when fullscreen modal opens (like YouTube/Instagram)
   useEffect(() => {
     if (isOpen) {
-      // Get all video elements on the page
-      const allVideos = document.querySelectorAll("video");
-
-      allVideos.forEach((video) => {
-        // Don't pause the fullscreen video
-        if (video !== videoRef.current) {
-          // Pause the video
-          video.pause();
-          pausedVideosRef.current.add(video);
-
-          // Add play event listener to prevent it from playing
-          const preventPlay = (e: Event) => {
-            video.pause();
-          };
-          video.addEventListener("play", preventPlay);
-          (video as any)._preventPlayListener = preventPlay;
-        }
-      });
-
-      // Clean up listeners when closing, but keep videos paused
-      return () => {
-        pausedVideosRef.current.forEach((video) => {
-          const listener = (video as any)._preventPlayListener;
-          if (listener) {
-            video.removeEventListener("play", listener);
-            delete (video as any)._preventPlayListener;
+      // Function to pause all background videos
+      const pauseBackgroundVideos = () => {
+        const allVideos = document.querySelectorAll("video");
+        allVideos.forEach((video) => {
+          if (video !== videoRef.current) {
+            if (!video.paused) {
+              video.pause();
+            }
+            // Ensure volume is muted for background videos
+            video.muted = true;
           }
         });
-        pausedVideosRef.current.clear();
+      };
+
+      // Add play event listener to prevent videos from playing
+      const preventPlay = (e: Event) => {
+        const video = e.target as HTMLVideoElement;
+        if (video !== videoRef.current) {
+          video.pause();
+          video.muted = true;
+        }
+      };
+
+      // Initial pause of all background videos
+      pauseBackgroundVideos();
+
+      // Set up document-level play capture to stop any video play attempts
+      document.addEventListener("play", preventPlay, true);
+
+      // Use MutationObserver to catch new videos added to the DOM
+      const observer = new MutationObserver(() => {
+        pauseBackgroundVideos();
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: false,
+      });
+
+      // Also set up a periodic check to ensure no background videos are playing
+      const checkInterval = setInterval(() => {
+        pauseBackgroundVideos();
+      }, 500);
+
+      // Clean up
+      return () => {
+        document.removeEventListener("play", preventPlay, true);
+        observer.disconnect();
+        clearInterval(checkInterval);
       };
     }
   }, [isOpen]);
