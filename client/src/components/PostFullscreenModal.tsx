@@ -173,6 +173,14 @@ export default function PostFullscreenModal({
     }
   };
 
+  // Auto-play video when post changes (for swipe navigation)
+  useEffect(() => {
+    if (mediaType === "video" && videoRef.current && !post.isDisqualified && isOpen) {
+      // Reset and load new video
+      videoRef.current.load();
+    }
+  }, [post.id, mediaUrl]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };
