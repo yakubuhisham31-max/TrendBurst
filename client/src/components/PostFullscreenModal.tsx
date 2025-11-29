@@ -158,7 +158,7 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Reset autoplay tracking when modal opens
+  // Reset autoplay tracking when modal opens or post changes (on swipe)
   useEffect(() => {
     if (isOpen) {
       hasAutoplayedThisOpen.current = false;
@@ -168,7 +168,7 @@ export default function PostFullscreenModal({
         videoRef.current.pause();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, post.id]);
 
   // Trigger autoplay when video metadata is loaded (only once per modal opening)
   const handleVideoLoadedMetadata = () => {
