@@ -1,4 +1,4 @@
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare, Trash2, MoreVertical, AlertCircle, Bell } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, Bookmark, X, MessageSquare, Trash2, MoreVertical, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -250,9 +250,11 @@ export default function PostFullscreenModal({
                   data-testid="button-trend-chat"
                   aria-label="Trend chat"
                 >
-                  <Bell className="w-5 h-5 text-white" />
+                  <MessageSquare className="w-5 h-5 text-white" />
                 </button>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold text-white">1</span>
+                </div>
               </div>
             )}
           </div>
@@ -326,70 +328,64 @@ export default function PostFullscreenModal({
             </div>
           </div>
 
-          {/* Action Buttons - Horizontal Layout with Better Spacing */}
-          <div className="flex items-center justify-between gap-6">
-            {/* Like/Dislike/Count Group */}
-            <div className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-lg">
-              {/* Vote Up */}
-              <button
-                onClick={() => onVoteUp?.(post.id)}
-                className="flex items-center hover:opacity-80 transition-opacity"
-                data-testid="button-vote-up-fullscreen"
-              >
-                <ThumbsUp className={`w-5 h-5 ${userVoteCount > 0 ? "text-cyan-500 fill-current" : "text-white"}`} />
-              </button>
+          {/* Action Buttons - Simple Horizontal Layout */}
+          <div className="flex items-center gap-6">
+            {/* Vote Up */}
+            <button
+              onClick={() => onVoteUp?.(post.id)}
+              className="flex items-center hover:opacity-80 transition-opacity"
+              data-testid="button-vote-up-fullscreen"
+            >
+              <ThumbsUp className={`w-5 h-5 ${userVoteCount > 0 ? "text-cyan-500 fill-current" : "text-white"}`} />
+            </button>
 
-              {/* Vote Count - Centered */}
-              <span className="text-sm font-semibold text-white min-w-[2rem] text-center" data-testid="text-votes-fullscreen">
-                {post.votes ?? 0}
-              </span>
+            {/* Vote Count */}
+            <span className="text-sm font-semibold text-white min-w-[2rem] text-center" data-testid="text-votes-fullscreen">
+              {post.votes ?? 0}
+            </span>
 
-              {/* Vote Down */}
-              <button
-                onClick={() => onVoteDown?.(post.id)}
-                className="flex items-center hover:opacity-80 transition-opacity"
-                data-testid="button-vote-down-fullscreen"
-              >
-                <ThumbsDown className="w-5 h-5 text-white" />
-              </button>
-            </div>
+            {/* Vote Down */}
+            <button
+              onClick={() => onVoteDown?.(post.id)}
+              className="flex items-center hover:opacity-80 transition-opacity"
+              data-testid="button-vote-down-fullscreen"
+            >
+              <ThumbsDown className="w-5 h-5 text-white" />
+            </button>
 
-            {/* Middle Actions - Comments & Share */}
-            <div className="flex items-center gap-6">
-              {/* Comments */}
-              <button
-                onClick={() => setCommentsOpen(true)}
-                className="flex items-center hover:opacity-80 transition-opacity"
-                data-testid="button-comment-fullscreen"
-              >
-                <MessageCircle className="w-5 h-5 text-white" />
-              </button>
+            {/* Comments */}
+            <button
+              onClick={() => setCommentsOpen(true)}
+              className="flex items-center hover:opacity-80 transition-opacity"
+              data-testid="button-comment-fullscreen"
+            >
+              <MessageCircle className="w-5 h-5 text-white" />
+            </button>
 
-              {/* Share */}
-              <button
-                onClick={handleShare}
-                className="flex items-center hover:opacity-80 transition-opacity"
-                data-testid="button-share-fullscreen"
-              >
-                <Share2 className="w-5 h-5 text-white" />
-              </button>
+            {/* Share */}
+            <button
+              onClick={handleShare}
+              className="flex items-center hover:opacity-80 transition-opacity"
+              data-testid="button-share-fullscreen"
+            >
+              <Share2 className="w-5 h-5 text-white" />
+            </button>
 
-              {/* Save */}
-              <button
-                onClick={handleSave}
-                className="flex items-center hover:opacity-80 transition-opacity"
-                data-testid="button-save-fullscreen"
-              >
-                <Bookmark className={`w-5 h-5 ${isSaved ? "text-cyan-500 fill-current" : "text-white"}`} />
-              </button>
-            </div>
+            {/* Save */}
+            <button
+              onClick={handleSave}
+              className="flex items-center hover:opacity-80 transition-opacity"
+              data-testid="button-save-fullscreen"
+            >
+              <Bookmark className={`w-5 h-5 ${isSaved ? "text-cyan-500 fill-current" : "text-white"}`} />
+            </button>
 
             {/* More Options (Disqualify) */}
             {isTrendCreator && post.userId !== user?.id && onDisqualify && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="flex items-center hover:opacity-80 transition-opacity"
+                    className="flex items-center hover:opacity-80 transition-opacity ml-auto"
                     disabled={isDisqualifyPending}
                     data-testid="button-disqualify-fullscreen"
                   >
