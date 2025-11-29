@@ -64,6 +64,7 @@ export default function PostFullscreenModal({
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
+  const pausedVideosRef = useRef<Set<HTMLVideoElement>>(new Set());
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -162,22 +163,33 @@ export default function PostFullscreenModal({
     if (isOpen) {
       // Get all video elements on the page
       const allVideos = document.querySelectorAll("video");
-      const pausedVideos: HTMLVideoElement[] = [];
 
       allVideos.forEach((video) => {
         // Don't pause the fullscreen video
         if (video !== videoRef.current) {
-          if (!video.paused) {
+          // Pause the video
+          video.pause();
+          pausedVideosRef.current.add(video);
+
+          // Add play event listener to prevent it from playing
+          const preventPlay = (e: Event) => {
             video.pause();
-            pausedVideos.push(video);
-          }
+          };
+          video.addEventListener("play", preventPlay);
+          (video as any)._preventPlayListener = preventPlay;
         }
       });
 
-      // When closing, don't resume - let feed remain paused
+      // Clean up listeners when closing, but keep videos paused
       return () => {
-        // Intentionally don't resume background videos
-        // This prevents auto-playing in the background
+        pausedVideosRef.current.forEach((video) => {
+          const listener = (video as any)._preventPlayListener;
+          if (listener) {
+            video.removeEventListener("play", listener);
+            delete (video as any)._preventPlayListener;
+          }
+        });
+        pausedVideosRef.current.clear();
       };
     }
   }, [isOpen]);
