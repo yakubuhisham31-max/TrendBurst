@@ -314,6 +314,7 @@ export default function PostFullscreenModal({
           <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
             {mediaType === "video" ? (
               <video
+                key={`video-${post.id}`}
                 ref={videoRef}
                 src={mediaUrl}
                 className={`w-full h-full object-contain ${post.isDisqualified ? 'blur-sm pointer-events-none' : ''}`}
