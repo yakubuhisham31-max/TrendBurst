@@ -694,7 +694,6 @@ export default function FeedPage() {
               onDisqualify={() => disqualifyMutation.mutate(fullscreenPostId)}
               onDisqualifyAndDelete={handleDisqualifyAndDelete}
               isDisqualifyPending={disqualifyMutation.isPending || deletePostMutation.isPending}
-              shouldAutoplay={false}
             />
           ) : null;
         })()
