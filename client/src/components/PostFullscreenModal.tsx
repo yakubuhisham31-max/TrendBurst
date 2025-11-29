@@ -157,6 +157,31 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
+  // Pause all background videos when fullscreen modal opens (like YouTube/Instagram)
+  useEffect(() => {
+    if (isOpen) {
+      // Get all video elements on the page
+      const allVideos = document.querySelectorAll("video");
+      const pausedVideos: HTMLVideoElement[] = [];
+
+      allVideos.forEach((video) => {
+        // Don't pause the fullscreen video
+        if (video !== videoRef.current) {
+          if (!video.paused) {
+            video.pause();
+            pausedVideos.push(video);
+          }
+        }
+      });
+
+      // When closing, don't resume - let feed remain paused
+      return () => {
+        // Intentionally don't resume background videos
+        // This prevents auto-playing in the background
+      };
+    }
+  }, [isOpen]);
+
   // Trigger autoplay when video metadata is loaded
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
