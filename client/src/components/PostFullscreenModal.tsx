@@ -168,7 +168,7 @@ export default function PostFullscreenModal({
         videoRef.current.pause();
       }
     }
-  }, [isOpen, post.id]);
+  }, [isOpen, post.id, mediaUrl]);
 
   // Trigger autoplay when video metadata is loaded (only once per modal opening)
   const handleVideoLoadedMetadata = () => {
