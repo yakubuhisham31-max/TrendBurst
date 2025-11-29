@@ -64,6 +64,7 @@ export default function PostFullscreenModal({
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartY = useRef(0);
   const pointerStartY = useRef(0);
+  const lastAutplayedPostId = useRef<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -157,18 +158,22 @@ export default function PostFullscreenModal({
     };
   }, [isOpen]);
 
-  // Trigger autoplay when video metadata is loaded
+  // Trigger autoplay when video metadata is loaded (only once per post)
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current && mediaType === "video" && !post.isDisqualified) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          videoRef.current!.muted = false;
-        }).catch(() => {
-          // Autoplay was prevented, user will need to click play
-        });
+      // Only autoplay if this is a different post than the one we last autoplayed
+      if (lastAutplayedPostId.current !== post.id) {
+        lastAutplayedPostId.current = post.id;
+        videoRef.current.currentTime = 0;
+        videoRef.current.muted = true;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            videoRef.current!.muted = false;
+          }).catch(() => {
+            // Autoplay was prevented, user will need to click play
+          });
+        }
       }
     }
   };
