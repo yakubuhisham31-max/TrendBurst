@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Star, Calendar, Loader2, Play, Trophy } from "lucide-react";
 import { SiInstagram, SiTiktok, SiX, SiYoutube } from "react-icons/si";
 import FollowButton from "@/components/FollowButton";
+import VerificationBadge from "@/components/VerificationBadge";
 import MediaLightbox from "@/components/MediaLightbox";
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, format } from "date-fns";
 import type { Trend, User } from "@shared/schema";
@@ -117,6 +118,7 @@ export default function InstructionsPage() {
                   <span className="font-semibold" data-testid="text-host-username">
                     {trend.creator.username}
                   </span>
+                  <VerificationBadge verified={trend.creator.verified} size="sm" />
                   <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" data-testid="icon-host" />
                 </div>
                 {trend.creator.bio && (
