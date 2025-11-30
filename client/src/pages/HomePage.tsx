@@ -96,16 +96,25 @@ export default function HomePage() {
 
   // Filter trends based on subcategory
   const trends = useMemo(() => {
-    if (!selectedSubcategory) return allTrends;
+    // Helper function to sort with verified creators first
+    const sortByVerified = (items: TrendWithCreator[]) => {
+      return [...items].sort((a, b) => {
+        const aVerified = a.creator?.verified ? 1 : 0;
+        const bVerified = b.creator?.verified ? 1 : 0;
+        return bVerified - aVerified;
+      });
+    };
+
+    if (!selectedSubcategory) return sortByVerified(allTrends);
 
     const now = new Date();
 
     switch (selectedSubcategory) {
       case "New":
-        return allTrends.filter(trend => {
+        return sortByVerified(allTrends.filter(trend => {
           const hoursSinceCreation = differenceInHours(now, trend.createdAt || now);
           return hoursSinceCreation <= 72; // Created within last 3 days (72 hours)
-        });
+        }));
       
       case "Trending":
         // Trending: Only show trends with very high engagement
@@ -118,25 +127,31 @@ export default function HomePage() {
             engagement: (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3
           }))
           .filter(trend => trend.engagement >= ENGAGEMENT_THRESHOLD)
-          .sort((a, b) => b.engagement - a.engagement)
+          .sort((a, b) => {
+            const aVerified = a.creator?.verified ? 1 : 0;
+            const bVerified = b.creator?.verified ? 1 : 0;
+            const verifiedDiff = bVerified - aVerified;
+            if (verifiedDiff !== 0) return verifiedDiff;
+            return b.engagement - a.engagement;
+          })
           .slice(0, 20); // Top 20 trending
       
       case "Ending Soon":
-        return allTrends.filter(trend => {
+        return sortByVerified(allTrends.filter(trend => {
           if (!trend.endDate) return false;
           const daysUntilEnd = differenceInDays(trend.endDate, now);
           // Only show trends that haven't ended yet and will end within 3 days
           return trend.endDate > now && daysUntilEnd <= 3 && daysUntilEnd >= 0;
-        });
+        }));
       
       case "Ended":
-        return allTrends.filter(trend => {
+        return sortByVerified(allTrends.filter(trend => {
           if (!trend.endDate) return false;
           return trend.endDate < now;
-        });
+        }));
       
       default:
-        return allTrends;
+        return sortByVerified(allTrends);
     }
   }, [allTrends, selectedSubcategory]);
 
