@@ -1,18 +1,32 @@
 User-agent: *
 Allow: /
-Allow: /feed
-Allow: /rankings
-Allow: /profile
-Allow: /dashboard
-
-# Disallow pages that don't need indexing
+Allow: /api/
+Allow: /favicon.png
+Allow: /manifest.json
 Disallow: /login
 Disallow: /register
+Disallow: /feed
+Disallow: /rankings
+Disallow: /profile
+Disallow: /dashboard
 Disallow: /edit
 Disallow: /create
+Disallow: /*?*
 
-# Sitemap
+User-agent: Googlebot
+Allow: /
+Allow: /api/
+Allow: /favicon.png
+Allow: /manifest.json
+Disallow: /login
+Disallow: /register
+Disallow: /feed
+Disallow: /rankings
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /edit
+Disallow: /create
+Disallow: /*?*
+
 Sitemap: https://trendx.social/sitemap.xml
-
-# Crawl delay for respectful crawling
 Crawl-delay: 1
