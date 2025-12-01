@@ -493,21 +493,19 @@ export default function FeedPage() {
           <div className="w-10"></div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-3 flex-wrap">
+        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center justify-center gap-2 flex-wrap">
           <Button
-            variant="default"
             size="sm"
-            className="gap-2 font-medium shadow-md rounded-lg hover-elevate"
+            className="gap-1.5 bg-primary/90 hover:bg-primary text-white border-0 shadow-sm hover:shadow-md transition-all"
             onClick={() => setLocation(`/instructions/${trendId}?from=feed`)}
             data-testid="button-instructions"
           >
-            <Info className="w-4 h-4" />
-            <span>Instructions</span>
+            <Info className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium">Instructions</span>
           </Button>
           <Button
-            variant="secondary"
             size="sm"
-            className="gap-2 font-medium shadow-md rounded-lg hover-elevate"
+            className="gap-1.5 bg-muted-foreground/60 hover:bg-muted-foreground text-white border-0 shadow-sm hover:shadow-md transition-all"
             onClick={() => {
               if (!user) {
                 setAuthModalOpen(true);
@@ -517,46 +515,42 @@ export default function FeedPage() {
             }}
             data-testid="button-rankings"
           >
-            <Trophy className="w-4 h-4" />
-            <span>Rankings</span>
+            <Trophy className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium">Rankings</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 font-medium rounded-lg hover-elevate"
-            data-testid="button-votes-left"
-          >
-            <Flame className="w-4 h-4" />
-            <span>{votesRemaining} left</span>
-          </Button>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 hover:border-primary/40 transition-colors">
+            <span className="text-xs font-semibold text-primary">{votesRemaining} votes left</span>
+          </div>
         </div>
 
         {/* Trend Stats */}
         {trend && !trendLoading && (
-          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-center gap-3 flex-wrap">
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-center gap-2 flex-wrap">
             {trend.participants !== undefined && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 font-medium rounded-lg hover-elevate"
-                data-testid="button-participants"
-              >
-                <Users className="w-4 h-4" />
-                <span>{trend.participants} joined</span>
-              </Button>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 border border-primary/20 hover:border-primary/40 transition-colors">
+                <Users className="w-3 h-3 text-primary" />
+                <span className="text-xs font-semibold text-foreground">{trend.participants}</span>
+              </div>
             )}
             {trend.endDate && (
-              <Button
-                variant={isTrendEnded ? "destructive" : "outline"}
-                size="sm"
-                className="gap-2 font-medium rounded-lg hover-elevate"
-                data-testid="button-time-left"
-              >
-                <Clock className="w-4 h-4" />
-                <span>
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-colors ${
+                isTrendEnded 
+                  ? 'bg-destructive/5 border-destructive/20 hover:border-destructive/40' 
+                  : 'bg-chart-3/5 border-chart-3/20 hover:border-chart-3/40'
+              }`}>
+                <Clock className={`w-3 h-3 ${
+                  isTrendEnded 
+                    ? 'text-destructive' 
+                    : 'text-chart-3'
+                }`} />
+                <span className={`text-xs font-semibold ${
+                  isTrendEnded 
+                    ? 'text-destructive' 
+                    : 'text-foreground'
+                }`}>
                   {isTrendEnded ? 'Ended' : formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}
                 </span>
-              </Button>
+              </div>
             )}
           </div>
         )}
