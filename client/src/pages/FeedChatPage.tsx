@@ -59,6 +59,7 @@ export default function FeedChatPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/counts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/unread-chat-count", trendId] });
     },
   });
 
