@@ -15,7 +15,7 @@ import { uploadToR2, createPreviewURL } from "@/lib/uploadToR2";
 import type { InsertTrend } from "@shared/schema";
 
 const categories = ["Entertainment", "Sports", "AI", "Arts", "Technology", "Gaming", "Other", "Food", "Fashion", "Photography"];
-const fonts = ["inter", "poppins", "playfair", "georgia", "courier", "comic-sans"];
+const fonts = ["inter", "poppins", "playfair", "georgia", "courier", "comic-sans", "montserrat", "raleway", "roboto", "opensans", "lora", "oswald", "unbounded", "spacemono", "ibmplex", "dmsans"];
 const colors = ["#FFFFFF", "#000000", "#FF0000", "#00C8FF", "#FFD700", "#00FF00", "#FF69B4", "#9370DB", "#FF8C00", "#FF1493"];
 
 export default function CreateTrendPage() {
@@ -380,7 +380,19 @@ export default function CreateTrendPage() {
                 <div 
                   className={`text-3xl font-bold text-center py-4`}
                   style={{
-                    fontFamily: trendNameFont === 'comic-sans' ? 'Comic Sans MS, cursive' : trendNameFont,
+                    fontFamily: 
+                      trendNameFont === 'comic-sans' ? 'Comic Sans MS, cursive' :
+                      trendNameFont === 'montserrat' ? 'Montserrat, sans-serif' :
+                      trendNameFont === 'raleway' ? 'Raleway, sans-serif' :
+                      trendNameFont === 'roboto' ? 'Roboto, sans-serif' :
+                      trendNameFont === 'opensans' ? 'Open Sans, sans-serif' :
+                      trendNameFont === 'lora' ? 'Lora, serif' :
+                      trendNameFont === 'oswald' ? 'Oswald, sans-serif' :
+                      trendNameFont === 'unbounded' ? 'Unbounded, sans-serif' :
+                      trendNameFont === 'spacemono' ? '"Space Mono", monospace' :
+                      trendNameFont === 'ibmplex' ? '"IBM Plex Mono", monospace' :
+                      trendNameFont === 'dmsans' ? '"DM Sans", sans-serif' :
+                      trendNameFont,
                     color: trendNameColor,
                   }}
                   data-testid="preview-trend-name"
