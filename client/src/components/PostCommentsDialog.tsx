@@ -63,7 +63,7 @@ export default function PostCommentsDialog({
   });
 
   // Fetch rankings to build user rank map
-  const { data: rankingsData } = useQuery<{ rankings: Array<{ userId: string; votes: number }> }>({
+  const { data: rankingsData } = useQuery<{ rankings: Array<{ rank: number; post: { userId: string; [key: string]: unknown } }> }>({
     queryKey: [`/api/rankings/${trendId}`],
     enabled: open && !!trendId,
   });
@@ -71,8 +71,10 @@ export default function PostCommentsDialog({
   // Create rank map from rankings
   const userRankMap = new Map<string, number>();
   if (rankingsData?.rankings) {
-    rankingsData.rankings.forEach((ranking, index) => {
-      userRankMap.set(ranking.userId, index + 1);
+    rankingsData.rankings.forEach((ranking) => {
+      if (ranking.post?.userId) {
+        userRankMap.set(ranking.post.userId, ranking.rank);
+      }
     });
   }
 
