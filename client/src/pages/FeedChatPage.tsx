@@ -51,6 +51,19 @@ export default function FeedChatPage() {
     refetchInterval: 5000,
   });
 
+  // Fetch rankings to build user rank map
+  const { data: rankingsData } = useQuery<{ rankings: Array<{ userId: string; votes: number }> }>({
+    queryKey: [`/api/rankings/${trendId}`],
+    enabled: !!trendId,
+  });
+
+  // Create rank map from rankings
+  const userRankMap = new Map<string, number>();
+  if (rankingsData?.rankings) {
+    rankingsData.rankings.forEach((ranking, index) => {
+      userRankMap.set(ranking.userId, index + 1);
+    });
+  }
 
   // Update view tracking mutation
   const updateViewMutation = useMutation({
@@ -305,6 +318,12 @@ export default function FeedChatPage() {
               <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
                 {comment.user?.username || "Unknown"}
               </span>
+              {comment.user?.id && userRankMap.has(comment.user.id) && (
+                <Badge variant="outline" className="flex items-center gap-1 bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400">
+                  <Trophy className="w-3 h-3" />
+                  <span>#{userRankMap.get(comment.user.id)}</span>
+                </Badge>
+              )}
               {comment.user?.id === trend?.userId && (
                 <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
               )}
