@@ -62,7 +62,7 @@ export default function PostCommentsDialog({
   });
 
   // Fetch rankings to get user ranks
-  const { data: rankingsData } = useQuery({
+  const { data: rankingsData } = useQuery<{ rankings: any[] }>({
     queryKey: [`/api/rankings/${trendId}`],
     enabled: open && !!trendId,
   });
@@ -70,7 +70,7 @@ export default function PostCommentsDialog({
   // Create a map of userId to rank for quick lookup
   const userRankMap = new Map<string, number>();
   if (rankingsData?.rankings) {
-    rankingsData.rankings.forEach((ranking: any, index: number) => {
+    rankingsData.rankings.forEach((ranking, index: number) => {
       if (ranking.user?.id) {
         userRankMap.set(ranking.user.id, index + 1);
       }
