@@ -136,7 +136,16 @@ export default function TrendCard({
       await apiRequest("DELETE", `/api/trends/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trends"] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (
+            key.startsWith('/api/trends') || 
+            key.startsWith('/api/dashboard') ||
+            key.startsWith('/api/saved')
+          );
+        }
+      });
       toast({
         title: "Trend deleted",
         description: "Your trend has been deleted successfully",
