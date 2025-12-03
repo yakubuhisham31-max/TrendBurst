@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { AuthModal } from "@/components/AuthModal";
 import VerificationBadge from "@/components/VerificationBadge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -70,9 +71,9 @@ export default function PostCommentsDialog({
   // Create a map of userId to rank for quick lookup
   const userRankMap = new Map<string, number>();
   if (rankingsData?.rankings) {
-    rankingsData.rankings.forEach((ranking, index: number) => {
-      if (ranking.user?.id) {
-        userRankMap.set(ranking.user.id, index + 1);
+    rankingsData.rankings.forEach((ranking: any, index: number) => {
+      if (ranking.userId) {
+        userRankMap.set(ranking.userId, index + 1);
       }
     });
   }
@@ -259,10 +260,10 @@ export default function PostCommentsDialog({
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
               {comment.user?.id && userRankMap.has(comment.user.id) && (
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30">
-                  <Trophy className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">#{userRankMap.get(comment.user.id)}</span>
-                </div>
+                <Badge variant="outline" className="flex items-center gap-1 bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400">
+                  <Trophy className="w-3 h-3" />
+                  <span>#{userRankMap.get(comment.user.id)}</span>
+                </Badge>
               )}
               {comment.user?.id === trend?.userId && (
                 <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
