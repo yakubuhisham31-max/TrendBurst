@@ -71,11 +71,16 @@ export default function PostCommentsDialog({
   // Create a map of userId to rank for quick lookup
   const userRankMap = new Map<string, number>();
   if (rankingsData?.rankings) {
+    console.log('PostComments - Building userRankMap from rankings:', rankingsData.rankings);
     rankingsData.rankings.forEach((ranking: any, index: number) => {
-      if (ranking.userId) {
-        userRankMap.set(ranking.userId, index + 1);
+      console.log(`Ranking ${index}:`, ranking, 'userId:', ranking.userId || ranking.user?.id);
+      if (ranking.userId || ranking.user?.id) {
+        const userId = ranking.userId || ranking.user?.id;
+        userRankMap.set(userId, index + 1);
+        console.log(`Set rank ${index + 1} for user ${userId}`);
       }
     });
+    console.log('Final userRankMap:', userRankMap);
   }
 
   // Create comment mutation

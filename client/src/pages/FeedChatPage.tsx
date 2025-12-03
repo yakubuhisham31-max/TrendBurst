@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2, Trophy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -61,11 +60,16 @@ export default function FeedChatPage() {
   // Create a map of userId to rank for quick lookup
   const userRankMap = new Map<string, number>();
   if (rankingsData?.rankings) {
+    console.log('Building userRankMap from rankings:', rankingsData.rankings);
     rankingsData.rankings.forEach((ranking: any, index: number) => {
-      if (ranking.userId) {
-        userRankMap.set(ranking.userId, index + 1);
+      console.log(`Ranking ${index}:`, ranking, 'userId:', ranking.userId || ranking.user?.id);
+      if (ranking.userId || ranking.user?.id) {
+        const userId = ranking.userId || ranking.user?.id;
+        userRankMap.set(userId, index + 1);
+        console.log(`Set rank ${index + 1} for user ${userId}`);
       }
     });
+    console.log('Final userRankMap:', userRankMap);
   }
 
   // Update view tracking mutation
@@ -321,7 +325,7 @@ export default function FeedChatPage() {
               <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
                 {comment.user?.username || "Unknown"}
               </span>
-              {comment.user?.id && userRankMap.has(comment.user.id) && (
+              {comment.user?.id && (console.log('Checking rank for user:', comment.user.id, 'has rank:', userRankMap.has(comment.user.id)), userRankMap.has(comment.user.id)) && (
                 <Badge variant="outline" className="flex items-center gap-1 bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400">
                   <Trophy className="w-3 h-3" />
                   <span>#{userRankMap.get(comment.user.id)}</span>
