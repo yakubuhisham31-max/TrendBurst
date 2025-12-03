@@ -320,12 +320,27 @@ export default function FeedChatPage() {
               <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
                 {comment.user?.username || "Unknown"}
               </span>
-              {comment.user?.id && userRankMap.has(comment.user.id) && (
-                <Badge variant="outline" className="flex items-center gap-1 bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400">
-                  <Trophy className="w-3 h-3" />
-                  <span>#{userRankMap.get(comment.user.id)}</span>
-                </Badge>
-              )}
+              {comment.user?.id && userRankMap.has(comment.user.id) && (() => {
+                const rank = userRankMap.get(comment.user.id)!;
+                const getRankStyles = () => {
+                  switch (rank) {
+                    case 1:
+                      return "bg-yellow-500/15 border-yellow-600/40 text-yellow-700 dark:text-yellow-400";
+                    case 2:
+                      return "bg-gray-400/15 border-gray-500/40 text-gray-700 dark:text-gray-300";
+                    case 3:
+                      return "bg-orange-600/15 border-orange-700/40 text-orange-700 dark:text-orange-400";
+                    default:
+                      return "bg-foreground/5 border-foreground/20 text-foreground/60";
+                  }
+                };
+                return (
+                  <Badge variant="outline" className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 h-auto ${getRankStyles()}`}>
+                    {rank <= 3 && <Trophy className="w-2.5 h-2.5" />}
+                    <span className="font-semibold">#{rank}</span>
+                  </Badge>
+                );
+              })()}
               {comment.user?.id === trend?.userId && (
                 <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
               )}
