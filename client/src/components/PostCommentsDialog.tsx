@@ -274,10 +274,10 @@ export default function PostCommentsDialog({
                   }
                 };
                 return (
-                  <div className="flex items-center gap-1">
-                    <Trophy className={`w-3.5 h-3.5 ${getTrophyColor()}`} />
+                  <Badge variant="outline" className="flex items-center gap-1 px-2 py-1 h-6 bg-background">
+                    <Trophy className={`w-3 h-3 ${getTrophyColor()} flex-shrink-0`} />
                     <span className="text-xs font-semibold text-foreground/70">#{rank}</span>
-                  </div>
+                  </Badge>
                 );
               })()}
               {comment.user?.id === trend?.userId && (
