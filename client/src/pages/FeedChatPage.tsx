@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { parseMentions } from "@/lib/mentions";
+import VerificationBadge from "@/components/VerificationBadge";
 import type { Comment, Trend, User, Post } from "@shared/schema";
 
 type CommentWithUser = Comment & { user: User | null };
@@ -320,6 +321,7 @@ export default function FeedChatPage() {
               <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
                 {comment.user?.username || "Unknown"}
               </span>
+              <VerificationBadge verified={comment.user?.verified} size="sm" />
               {comment.user?.id && userRankMap.has(comment.user.id) && (() => {
                 const rank = userRankMap.get(comment.user.id)!;
                 const getTrophyColor = () => {
