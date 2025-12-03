@@ -12,7 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Star, Reply, Trash2 } from "lucide-react";
+import { Star, Reply, Trash2, Trophy } from "lucide-react";
 import { parseMentions } from "@/lib/mentions";
 import type { Comment, User, Trend, Post } from "@shared/schema";
 
@@ -60,6 +60,22 @@ export default function PostCommentsDialog({
     enabled: open && !!postId,
     refetchInterval: 5000,
   });
+
+  // Fetch rankings to get user ranks
+  const { data: rankingsData } = useQuery({
+    queryKey: [`/api/rankings/${trendId}`],
+    enabled: open && !!trendId,
+  });
+
+  // Create a map of userId to rank for quick lookup
+  const userRankMap = new Map<string, number>();
+  if (rankingsData?.rankings) {
+    rankingsData.rankings.forEach((ranking: any, index: number) => {
+      if (ranking.user?.id) {
+        userRankMap.set(ranking.user.id, index + 1);
+      }
+    });
+  }
 
   // Create comment mutation
   const createCommentMutation = useMutation({
@@ -242,6 +258,12 @@ export default function PostCommentsDialog({
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
+              {comment.user?.id && userRankMap.has(comment.user.id) && (
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30">
+                  <Trophy className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">#{userRankMap.get(comment.user.id)}</span>
+                </div>
+              )}
               {comment.user?.id === trend?.userId && (
                 <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
               )}
