@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { AuthModal } from "@/components/AuthModal";
 import VerificationBadge from "@/components/VerificationBadge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -62,26 +61,6 @@ export default function PostCommentsDialog({
     refetchInterval: 5000,
   });
 
-  // Fetch rankings to get user ranks
-  const { data: rankingsData } = useQuery<{ rankings: any[] }>({
-    queryKey: [`/api/rankings/${trendId}`],
-    enabled: open && !!trendId,
-  });
-
-  // Create a map of userId to rank for quick lookup
-  const userRankMap = new Map<string, number>();
-  if (rankingsData?.rankings) {
-    console.log('PostComments - Building userRankMap from rankings:', rankingsData.rankings);
-    rankingsData.rankings.forEach((ranking: any, index: number) => {
-      console.log(`Ranking ${index}:`, ranking, 'userId:', ranking.userId || ranking.user?.id);
-      if (ranking.userId || ranking.user?.id) {
-        const userId = ranking.userId || ranking.user?.id;
-        userRankMap.set(userId, index + 1);
-        console.log(`Set rank ${index + 1} for user ${userId}`);
-      }
-    });
-    console.log('Final userRankMap:', userRankMap);
-  }
 
   // Create comment mutation
   const createCommentMutation = useMutation({
@@ -264,12 +243,6 @@ export default function PostCommentsDialog({
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
-              {comment.user?.id && userRankMap.has(comment.user.id) && (
-                <Badge variant="outline" className="flex items-center gap-1 bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400">
-                  <Trophy className="w-3 h-3" />
-                  <span>#{userRankMap.get(comment.user.id)}</span>
-                </Badge>
-              )}
               {comment.user?.id === trend?.userId && (
                 <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
               )}

@@ -4,9 +4,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2, Trophy } from "lucide-react";
+import { ChevronLeft, Users, Eye, Send, Star, Reply, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
@@ -51,26 +50,6 @@ export default function FeedChatPage() {
     refetchInterval: 5000,
   });
 
-  // Fetch rankings to get user ranks
-  const { data: rankingsData } = useQuery<{ rankings: any[] }>({
-    queryKey: [`/api/rankings/${trendId}`],
-    enabled: !!trendId,
-  });
-
-  // Create a map of userId to rank for quick lookup
-  const userRankMap = new Map<string, number>();
-  if (rankingsData?.rankings) {
-    console.log('Building userRankMap from rankings:', rankingsData.rankings);
-    rankingsData.rankings.forEach((ranking: any, index: number) => {
-      console.log(`Ranking ${index}:`, ranking, 'userId:', ranking.userId || ranking.user?.id);
-      if (ranking.userId || ranking.user?.id) {
-        const userId = ranking.userId || ranking.user?.id;
-        userRankMap.set(userId, index + 1);
-        console.log(`Set rank ${index + 1} for user ${userId}`);
-      }
-    });
-    console.log('Final userRankMap:', userRankMap);
-  }
 
   // Update view tracking mutation
   const updateViewMutation = useMutation({
@@ -325,12 +304,6 @@ export default function FeedChatPage() {
               <span className={`${isChild ? "text-xs font-medium" : "text-sm font-medium"} truncate`} data-testid="text-commenter" title={comment.user?.username}>
                 {comment.user?.username || "Unknown"}
               </span>
-              {comment.user?.id && (console.log('Checking rank for user:', comment.user.id, 'has rank:', userRankMap.has(comment.user.id)), userRankMap.has(comment.user.id)) && (
-                <Badge variant="outline" className="flex items-center gap-1 bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400">
-                  <Trophy className="w-3 h-3" />
-                  <span>#{userRankMap.get(comment.user.id)}</span>
-                </Badge>
-              )}
               {comment.user?.id === trend?.userId && (
                 <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
               )}
