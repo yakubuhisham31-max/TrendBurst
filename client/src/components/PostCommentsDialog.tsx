@@ -277,10 +277,10 @@ export default function PostCommentsDialog({
                   }
                 };
                 return (
-                  <Badge variant="outline" className="flex items-center gap-1 px-2 py-1 h-6 bg-background">
+                  <div className="flex items-center gap-0.5">
                     <Trophy className={`w-3 h-3 ${getTrophyColor()} flex-shrink-0`} />
-                    <span className="text-xs font-semibold text-foreground/70">#{rank}</span>
-                  </Badge>
+                    <span className="text-xs font-bold text-foreground/80">{rank}</span>
+                  </div>
                 );
               })()}
               <span className="text-xs text-muted-foreground">
