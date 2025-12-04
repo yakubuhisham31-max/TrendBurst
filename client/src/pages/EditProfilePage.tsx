@@ -53,6 +53,12 @@ export default function EditProfilePage() {
         twitter: user.twitterUrl || "",
         youtube: user.youtubeUrl || "",
       });
+      // Pre-fill current password with asterisks to indicate it's set
+      setPasswordData({
+        currentPassword: "••••••••",
+        newPassword: "",
+        confirmPassword: "",
+      });
       // Reset the preview when user changes
       setSelectedProfileFile(null);
       if (profilePreviewUrl) {
@@ -188,6 +194,16 @@ export default function EditProfilePage() {
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if current password field is still in the placeholder state
+    if (passwordData.currentPassword === "••••••••" || passwordData.currentPassword.trim() === "") {
+      toast({
+        title: "Error",
+        description: "Please enter your current password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         title: "Error",
