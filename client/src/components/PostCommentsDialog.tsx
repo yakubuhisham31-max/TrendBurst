@@ -259,6 +259,9 @@ export default function PostCommentsDialog({
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
+              {comment.user?.id === trend?.userId && (
+                <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
+              )}
               {comment.user?.id && userRankMap.has(comment.user.id) && (() => {
                 const rank = userRankMap.get(comment.user.id)!;
                 const getTrophyColor = () => {
@@ -280,9 +283,6 @@ export default function PostCommentsDialog({
                   </Badge>
                 );
               })()}
-              {comment.user?.id === trend?.userId && (
-                <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
-              )}
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
               </span>
