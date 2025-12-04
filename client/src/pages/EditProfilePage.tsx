@@ -53,9 +53,9 @@ export default function EditProfilePage() {
         twitter: user.twitterUrl || "",
         youtube: user.youtubeUrl || "",
       });
-      // Pre-fill current password with asterisks to indicate it's set
+      // Reset password fields
       setPasswordData({
-        currentPassword: "••••••••",
+        currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
@@ -194,8 +194,8 @@ export default function EditProfilePage() {
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if current password field is still in the placeholder state
-    if (passwordData.currentPassword === "••••••••" || passwordData.currentPassword.trim() === "") {
+    // Check if current password field is empty
+    if (passwordData.currentPassword.trim() === "") {
       toast({
         title: "Error",
         description: "Please enter your current password.",
@@ -372,7 +372,7 @@ export default function EditProfilePage() {
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, currentPassword: e.target.value })
                   }
-                  placeholder="Enter your current password"
+                  placeholder="••••••••"
                   data-testid="input-current-password"
                 />
               </div>
