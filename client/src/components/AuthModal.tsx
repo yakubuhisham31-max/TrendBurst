@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -137,9 +138,8 @@ export function AuthModal({
 
               <div className="space-y-2">
                 <Label htmlFor="login-password" className="text-sm">Password</Label>
-                <Input
+                <PasswordInput
                   id="login-password"
-                  type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -190,9 +190,8 @@ export function AuthModal({
 
               <div className="space-y-2">
                 <Label htmlFor="register-password" className="text-sm">Password</Label>
-                <Input
+                <PasswordInput
                   id="register-password"
-                  type="password"
                   placeholder="••••••••"
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}

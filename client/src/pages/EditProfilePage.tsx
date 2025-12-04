@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -349,9 +350,8 @@ export default function EditProfilePage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
+                <PasswordInput
                   id="currentPassword"
-                  type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, currentPassword: e.target.value })
@@ -363,9 +363,8 @@ export default function EditProfilePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
-                <Input
+                <PasswordInput
                   id="newPassword"
-                  type="password"
                   value={passwordData.newPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, newPassword: e.target.value })
@@ -377,9 +376,8 @@ export default function EditProfilePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, confirmPassword: e.target.value })
