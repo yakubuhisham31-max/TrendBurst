@@ -61,7 +61,7 @@ export default function FeedPage() {
   const { data: posts = [], isLoading: postsLoading } = useQuery<PostWithUser[]>({
     queryKey: ["/api/posts/trend", trendId],
     enabled: !!trendId,
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // Fetch vote count for current user

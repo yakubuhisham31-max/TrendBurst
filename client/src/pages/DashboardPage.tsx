@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, BarChart3, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { Trend } from "@shared/schema";
@@ -75,8 +76,58 @@ export default function DashboardPage() {
         </div>
 
         {statsLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Trends Created</CardTitle>
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Participants</CardTitle>
+                <div className="w-10 h-10 rounded-full bg-chart-2/10 flex items-center justify-center">
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+                <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center">
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Trends</CardTitle>
+                <div className="w-10 h-10 rounded-full bg-chart-5/10 flex items-center justify-center">
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
           </div>
         ) : stats ? (
           <>

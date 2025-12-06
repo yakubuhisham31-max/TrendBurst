@@ -63,39 +63,29 @@ export default function NotificationBell() {
 
   // Save subscription to backend
   const saveSubscriptionToBackend = async (OS: any) => {
-    console.log("⏳ Waiting for OneSignal to create subscription (up to 10s)...");
-    
     // Wait for subscription to be created - OneSignal v16 needs time to assign IDs
     let subscriptionId = null;
-    for (let i = 0; i < 20; i++) {
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    while (!subscriptionId && attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 500));
       const id = OS.User.PushSubscription.id;
       if (id && id !== 'pending') {
         subscriptionId = id;
-        console.log(`✅ Got subscription ID after ${(i + 1) * 500}ms`);
         break;
       }
+      attempts++;
     }
     
     if (!subscriptionId) {
-      console.error("❌ OneSignal subscription ID not available after 10s");
-      console.error("⚠️  Push notifications may not work. Try again or check OneSignal dashboard.");
       return;
     }
     
-    // Capture all necessary IDs for tracking
     try {
-      console.log(`   📱 Push Subscription ID: ${subscriptionId}`);
-      
-      // Get OneSignal's internal user ID
       const oneSignalUserId = OS.User.onesignal_id;
-      console.log(`   🆔 OneSignal User ID: ${oneSignalUserId || 'pending'}`);
-      
-      // Get push token if available
       const pushToken = OS.User.PushSubscription.token;
-      console.log(`   🔑 Push Token: ${pushToken ? '✓ present' : '✗ not available'}`);
       
-      // Save subscription IDs to backend
       const response = await apiRequest("POST", "/api/push/subscribe", {
         subscriptionId,
         oneSignalUserId: oneSignalUserId,
@@ -105,20 +95,10 @@ export default function NotificationBell() {
       const responseText = await response.text();
       
       if (!response.ok) {
-        console.error("❌ Subscription save failed:", response.status, responseText);
         throw new Error(responseText || "Failed to save subscription");
       }
-      
-      const data = JSON.parse(responseText);
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("✅ SUBSCRIPTION SAVED TO DATABASE");
-      console.log(`   Trendx User ID: ${data.ids.userId}`);
-      console.log(`   OneSignal External ID: ${data.ids.externalId}`);
-      console.log(`   Subscription ID: ${data.ids.subscriptionId}`);
-      console.log(`   OneSignal User ID: ${data.ids.oneSignalUserId}`);
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     } catch (idError) {
-      console.error("❌ Failed to save subscription:", (idError as Error).message);
+      // Silently fail - user can retry by clicking bell again
     }
   };
 
@@ -126,7 +106,6 @@ export default function NotificationBell() {
   const requestPushPermission = async () => {
     try {
       if (!(window as any).OneSignal) {
-        console.log("⚠️  OneSignal SDK not loaded yet");
         return;
       }
 
@@ -134,29 +113,24 @@ export default function NotificationBell() {
 
       // If permission not yet granted, request it
       if (Notification.permission !== "granted") {
-        console.log("🔔 Requesting push notification permission...");
         const permissionGranted = await OS.Notifications.requestPermission();
         
         if (!permissionGranted) {
-          console.log("ℹ️  Push notifications denied by user");
           return;
         }
-        console.log("✅ Push notifications enabled!");
-      } else {
-        console.log("✅ Push notifications already enabled - saving subscription...");
       }
 
       // Whether permission was just granted or already existed, save the subscription
       await saveSubscriptionToBackend(OS);
     } catch (error) {
-      console.error("❌ Push permission error:", (error as Error).message);
+      // Silently fail
     }
   };
 
   // Fetch unread count
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds
   });
 
   // Play sound when new notifications arrive

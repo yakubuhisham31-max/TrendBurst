@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Trophy, Loader2, Star, Play, Crown, Flame, Zap, Info, Inbox } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -91,8 +92,30 @@ export default function RankingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded" />
+            <div className="flex flex-col flex-1 gap-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+        </header>
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
