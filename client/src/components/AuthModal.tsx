@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ export function AuthModal({
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const { toast } = useToast();
@@ -65,6 +67,16 @@ export function AuthModal({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!agreedToTerms) {
+      toast({
+        title: "Please accept terms",
+        description: "You must agree to the Terms and Conditions to continue",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/auth/register", {
@@ -198,6 +210,30 @@ export function AuthModal({
                   data-testid="input-register-password"
                   required
                 />
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="terms-modal"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                  data-testid="checkbox-terms-modal"
+                />
+                <Label 
+                  htmlFor="terms-modal" 
+                  className="text-xs text-muted-foreground cursor-pointer font-normal leading-relaxed"
+                >
+                  I agree to Trendx's{" "}
+                  <a 
+                    href="/terms" 
+                    className="text-primary hover:underline font-medium"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="link-terms-modal"
+                  >
+                    Terms and Conditions
+                  </a>
+                </Label>
               </div>
 
               <Button
