@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import HomePage from "@/pages/HomePage";
+import SignupPage from "@/pages/SignupPage";
+import RegisterPage from "@/pages/RegisterPage";
 import CreateTrendPage from "@/pages/CreateTrendPage";
 import DashboardPage from "@/pages/DashboardPage";
 import EditTrendPage from "@/pages/EditTrendPage";
@@ -65,6 +67,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
+      <Route path="/signup" component={(props) => <PublicOnlyRoute component={SignupPage} {...props} />} />
+      <Route path="/register" component={(props) => <PublicOnlyRoute component={RegisterPage} {...props} />} />
       <Route path="/create-trend" component={(props) => <ProtectedRoute component={CreateTrendPage} {...props} />} />
       <Route path="/dashboard" component={(props) => <ProtectedRoute component={DashboardPage} {...props} />} />
       <Route path="/edit-trend/:id" component={(props) => <ProtectedRoute component={EditTrendPage} {...props} />} />
