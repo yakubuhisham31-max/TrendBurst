@@ -34,80 +34,122 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">1. Acceptance of Terms</h3>
+          <h3 className="text-lg font-semibold">1. You Own Your Content</h3>
           <p className="text-muted-foreground">
-            By creating an account and using Trendx, you agree to comply with these Terms and Conditions. If you do not agree, please do not use our platform.
+            Anything you upload — videos, audio, images, captions — belongs to you. Trendx does not claim ownership of your content.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">2. User Responsibilities</h3>
+          <h3 className="text-lg font-semibold">2. You Allow Trendx to Show Your Content</h3>
           <p className="text-muted-foreground">
-            You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to:
+            To run the platform, you give Trendx permission to:
           </p>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-            <li>Provide accurate and truthful information during registration</li>
-            <li>Use the platform in accordance with all applicable laws and regulations</li>
-            <li>Not engage in any form of harassment, abuse, or hate speech</li>
-            <li>Respect intellectual property rights of others</li>
-            <li>Not post content that is illegal, explicit, or violates platform guidelines</li>
+            <li>Display your entries inside contests</li>
+            <li>Show them on leaderboards and feeds</li>
+            <li>Feature them in highlights or recommendations</li>
+            <li>Repost contest entries on Trendx social pages</li>
+          </ul>
+          <p className="text-muted-foreground text-sm">
+            This permission is used only for platform and contest promotion.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-lg font-semibold">3. Contest Brands Can Use Your Entry for the Contest</h3>
+          <p className="text-muted-foreground">
+            When you join a contest hosted by a brand, you give that brand permission to:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li>Repost your entry on social platforms</li>
+            <li>Use your video to promote the contest</li>
+            <li>Share winners and top entries</li>
+            <li>Create recap or highlight videos</li>
+            <li>Make reaction or commentary videos</li>
+          </ul>
+          <p className="text-muted-foreground text-sm">
+            This permission is only for contest-related purposes. You still own your content.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-lg font-semibold">4. What Trendx and Brands Cannot Do</h3>
+          <p className="text-muted-foreground">
+            Trendx and brands are not allowed to:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li>Claim ownership of your content</li>
+            <li>Use your entry for unrelated advertisements</li>
+            <li>Sell or license your content</li>
+            <li>Use it in long-term commercial campaigns</li>
+            <li>Edit your content in misleading ways</li>
           </ul>
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">3. Content and Intellectual Property</h3>
+          <h3 className="text-lg font-semibold">5. Removal of Content</h3>
           <p className="text-muted-foreground">
-            You retain all rights to content you create and post on Trendx. By posting content, you grant Trendx a non-exclusive, worldwide, royalty-free license to use, reproduce, and display your content within the platform. You are solely responsible for ensuring you have the rights to post any content on Trendx.
-          </p>
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-lg font-semibold">4. Trends and Competitions</h3>
-          <p className="text-muted-foreground">
-            Trend creators are responsible for establishing and enforcing trend rules. Participants agree to follow all trend guidelines. Trendx reserves the right to remove content that violates platform policies or trend rules. Trend creators may disqualify participants for violation of trend rules.
-          </p>
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-lg font-semibold">5. Prohibited Conduct</h3>
-          <p className="text-muted-foreground">
-            You agree not to:
+            You may delete your content anytime, except:
           </p>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-            <li>Harass, threaten, or abuse other users</li>
-            <li>Engage in hate speech or discrimination</li>
-            <li>Post explicit or adult content</li>
-            <li>Spam or engage in misleading activity</li>
-            <li>Attempt to gain unauthorized access to platform systems</li>
-            <li>Violate any applicable laws or regulations</li>
+            <li>While a contest is still active</li>
+            <li>If your content has already been used in a recap or highlight video</li>
           </ul>
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-lg font-semibold">6. Limitation of Liability</h3>
-          <p className="text-muted-foreground">
-            Trendx is provided on an "as-is" basis. We do not guarantee uninterrupted service or the absence of errors. Trendx shall not be liable for any indirect, incidental, or consequential damages resulting from your use of the platform.
+          <p className="text-muted-foreground text-sm">
+            Already-published recaps, winner posts, and highlight videos may remain online.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">7. Account Termination</h3>
+          <h3 className="text-lg font-semibold">6. Community Guidelines</h3>
           <p className="text-muted-foreground">
-            Trendx reserves the right to suspend or terminate accounts that violate these Terms and Conditions or engage in prohibited conduct. Users may request account deletion at any time through their account settings.
+            Do not upload:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li>Harmful or offensive content</li>
+            <li>Stolen or copyrighted material</li>
+            <li>Content that breaks the laws of your country</li>
+          </ul>
+          <p className="text-muted-foreground text-sm">
+            Violation may lead to removal or suspension.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">8. Changes to Terms</h3>
+          <h3 className="text-lg font-semibold">7. Your Privacy</h3>
           <p className="text-muted-foreground">
-            Trendx reserves the right to modify these Terms and Conditions at any time. Continued use of the platform following changes constitutes acceptance of the modified terms.
+            Trendx collects only the information needed to run the platform, such as:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li>Username</li>
+            <li>Email</li>
+            <li>Profile details</li>
+            <li>Contest participation history</li>
+          </ul>
+          <p className="text-muted-foreground text-sm">
+            Trendx does not sell your information. A full Privacy Policy will be provided later.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">9. Contact</h3>
+          <h3 className="text-lg font-semibold">8. Updates</h3>
           <p className="text-muted-foreground">
-            If you have questions about these Terms and Conditions, please contact us through the platform's support system.
+            Trendx may update these terms occasionally. You will be notified in the app when major changes are made.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-lg font-semibold">9. Support</h3>
+          <p className="text-muted-foreground">
+            For questions or support, contact us at:{" "}
+            <a 
+              href="mailto:trendx.social1@gmail.com" 
+              className="text-primary hover:underline font-medium"
+              data-testid="link-support-email"
+            >
+              trendx.social1@gmail.com
+            </a>
           </p>
         </section>
 
