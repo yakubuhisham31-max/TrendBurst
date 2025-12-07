@@ -19,6 +19,7 @@ import RankingsPage from "@/pages/RankingsPage";
 import FeedChatPage from "@/pages/FeedChatPage";
 import TrendAnalyticsPage from "@/pages/TrendAnalyticsPage";
 import NotFound from "@/pages/not-found";
+import TermsPage from "@/pages/TermsPage";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
   const { user, isLoading } = useAuth();
@@ -75,6 +76,7 @@ function Router() {
       <Route path="/rankings/:id" component={RankingsPage} />
       <Route path="/feed-chat/:id" component={FeedChatPage} />
       <Route path="/analytics/:id" component={(props) => <ProtectedRoute component={TrendAnalyticsPage} {...props} />} />
+      <Route path="/terms" component={TermsPage} />
       
       <Route component={NotFound} />
     </Switch>

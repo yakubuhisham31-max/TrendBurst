@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -24,6 +25,9 @@ const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Please confirm your password"),
   profilePicture: z.string().optional(),
+  agreedToTerms: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the Terms and Conditions",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -45,6 +49,7 @@ export default function RegisterPage() {
       password: "",
       confirmPassword: "",
       profilePicture: "",
+      agreedToTerms: false,
     },
   });
 
@@ -229,6 +234,36 @@ export default function RegisterPage() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="agreedToTerms"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start gap-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="checkbox-terms"
+                    />
+                  </FormControl>
+                  <div className="flex-1">
+                    <FormLabel className="text-sm text-muted-foreground cursor-pointer font-normal leading-relaxed">
+                      I agree to Trendx's{" "}
+                      <Link
+                        href="/terms"
+                        className="text-primary hover:underline font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                        data-testid="link-terms"
+                      >
+                        Terms and Conditions
+                      </Link>
+                    </FormLabel>
+                    <FormMessage className="mt-1" />
+                  </div>
                 </FormItem>
               )}
             />

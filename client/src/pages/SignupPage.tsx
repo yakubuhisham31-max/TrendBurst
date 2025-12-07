@@ -7,6 +7,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,13 +15,13 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
-  const { checkAuth } = useAuth();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [bio, setBio] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const signupMutation = useMutation({
     mutationFn: async () => {
@@ -33,7 +34,6 @@ export default function SignupPage() {
       return response.json();
     },
     onSuccess: async () => {
-      await checkAuth();
       setLocation("/onboarding/categories");
     },
     onError: (error: Error) => {
@@ -48,6 +48,15 @@ export default function SignupPage() {
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!agreedToTerms) {
+      toast({
+        title: "Please accept terms",
+        description: "You must agree to the Terms and Conditions to continue",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -148,6 +157,28 @@ export default function SignupPage() {
               required
               data-testid="input-confirm-password"
             />
+          </div>
+
+          <div className="flex items-start gap-3 pt-2">
+            <Checkbox
+              id="terms"
+              checked={agreedToTerms}
+              onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+              data-testid="checkbox-terms"
+            />
+            <Label 
+              htmlFor="terms" 
+              className="text-sm text-muted-foreground cursor-pointer font-normal leading-relaxed"
+            >
+              I agree to Trendx's{" "}
+              <a 
+                href="/terms" 
+                className="text-primary hover:underline font-medium"
+                data-testid="link-terms"
+              >
+                Terms and Conditions
+              </a>
+            </Label>
           </div>
 
           <Button
