@@ -229,14 +229,38 @@ export function AuthModal({
         </DialogHeader>
 
         {showOTPVerification ? (
-          <form onSubmit={handleVerifyOTP} className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="otp-code" className="text-sm">Verification Code</Label>
-                <span className={`text-xs font-semibold ${otpExpired ? 'text-red-500' : timeLeft < 60 ? 'text-orange-500' : 'text-gray-500'}`}>
-                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-                </span>
+          <form onSubmit={handleVerifyOTP} className="space-y-6">
+            {/* Timer Circle */}
+            <div className="flex justify-center">
+              <div className="relative w-32 h-32 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                  {/* Background circle */}
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-200 dark:text-gray-700" />
+                  {/* Progress circle */}
+                  <circle 
+                    cx="60" 
+                    cy="60" 
+                    r="54" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    strokeDasharray={`${(timeLeft / 180) * 339.29} 339.29`}
+                    className={`transition-all duration-1000 ${otpExpired ? 'text-red-500' : timeLeft < 60 ? 'text-orange-500' : 'text-cyan-500'}`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className={`text-4xl font-bold tabular-nums ${otpExpired ? 'text-red-600 dark:text-red-400' : timeLeft < 60 ? 'text-orange-600 dark:text-orange-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                    {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">expires in</span>
+                </div>
               </div>
+            </div>
+
+            {/* Input Section */}
+            <div className="space-y-3">
+              <Label htmlFor="otp-code" className="text-sm font-semibold block">Enter Verification Code</Label>
               <Input
                 id="otp-code"
                 type="text"
@@ -246,33 +270,44 @@ export function AuthModal({
                 maxLength={6}
                 data-testid="input-otp-code"
                 disabled={otpExpired}
+                className="text-center text-2xl tracking-widest font-bold py-6"
                 required
               />
-              <p className="text-xs text-gray-500">Check your email for the code</p>
-              {devOtpCode && (
-                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded text-center">
-                  <p className="text-xs text-blue-600 dark:text-blue-300 font-mono font-bold text-lg tracking-widest">{devOtpCode}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">Development Mode - Code shown for testing</p>
-                </div>
-              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Check your email for the 6-digit code</p>
             </div>
+
+            {/* Dev OTP Code */}
+            {devOtpCode && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 border-2 border-blue-200 dark:border-blue-800 rounded-lg text-center">
+                <p className="text-xs text-blue-600 dark:text-blue-300 mb-2">Development Mode</p>
+                <p className="text-2xl text-blue-600 dark:text-blue-300 font-mono font-bold tracking-widest">{devOtpCode}</p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
             {otpExpired ? (
-              <Button type="button" onClick={handleResendOTP} className="w-full" disabled={isLoading} data-testid="button-resend-otp">
-                {isLoading ? "Sending..." : "Resend Code"}
-              </Button>
+              <div className="space-y-2">
+                <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded text-center">
+                  <p className="text-xs text-red-600 dark:text-red-300 font-semibold">Code expired</p>
+                </div>
+                <Button type="button" onClick={handleResendOTP} className="w-full" disabled={isLoading} data-testid="button-resend-otp">
+                  {isLoading ? "Sending..." : "Resend Code"}
+                </Button>
+              </div>
             ) : (
-              <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-verify-otp">
+              <Button type="submit" className="w-full py-6 text-base font-semibold" disabled={isLoading || !otpCode} data-testid="button-verify-otp">
                 {isLoading ? "Verifying..." : "Verify Code"}
               </Button>
             )}
-            <Button type="button" variant="ghost" className="w-full" onClick={() => {
+            
+            <Button type="button" variant="outline" className="w-full" onClick={() => {
               setShowOTPVerification(false);
               setOtpCode("");
               setDevOtpCode(null);
               setTimeLeft(180);
               setOtpExpired(false);
             }}>
-              Back to Registration
+              Back
             </Button>
           </form>
         ) : (
