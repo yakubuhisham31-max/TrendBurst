@@ -33,7 +33,10 @@ export async function sendOTPEmail(email: string, code: string): Promise<void> {
     });
     console.log(`✅ OTP sent to ${email}`);
   } catch (error) {
-    console.error(`❌ Failed to send OTP to ${email}:`, error);
-    throw error;
+    console.error(`⚠️  Failed to send OTP email (email service may not be configured):`, error);
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+    console.log(`ℹ️  Continuing in development mode - OTP code is: ${code}`);
   }
 }
