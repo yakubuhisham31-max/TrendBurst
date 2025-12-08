@@ -143,9 +143,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to send welcome notification:", error);
       });
       
-      sendAccountVerifiedEmail(newUser.email, newUser.username).catch((error) => {
-        console.error("Failed to send account verified email:", error);
-      });
+      if (newUser.email) {
+        sendAccountVerifiedEmail(newUser.email, newUser.username).catch((error) => {
+          console.error("Failed to send account verified email:", error);
+        });
+      }
     } catch (error) {
       console.error("Verify OTP error:", error);
       res.status(500).json({ message: "OTP verification failed" });
@@ -1653,11 +1655,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Mark as verified
       const updatedUser = await storage.updateUser(userId, { verified: 1 });
       
-      if (updatedUser) {
+      if (updatedUser && updatedUser.email) {
         // Send verification badge email asynchronously
         sendVerificationBadgeEmail(updatedUser.email, updatedUser.username).catch((error) => {
           console.error("Failed to send verification badge email:", error);
         });
+      }
+
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update user" });
       }
 
       res.json({ message: "User verified successfully", user: sanitizeUser(updatedUser) });
