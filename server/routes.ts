@@ -19,7 +19,7 @@ import * as notificationService from "./notificationService";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
-import { sendOTPEmail, sendAccountVerifiedEmail } from "./emailService";
+import { sendOTPEmail, sendAccountVerifiedEmail, sendVerificationBadgeEmail } from "./emailService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -1637,6 +1637,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sanitizeUser(updatedUser));
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // PATCH /api/users/:userId/verify - Mark user as verified and send email (admin only)
+  app.patch("/api/users/:userId/verify", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Mark as verified
+      const updatedUser = await storage.updateUser(userId, { verified: 1 });
+      
+      if (updatedUser) {
+        // Send verification badge email asynchronously
+        sendVerificationBadgeEmail(updatedUser.email, updatedUser.username).catch((error) => {
+          console.error("Failed to send verification badge email:", error);
+        });
+      }
+
+      res.json({ message: "User verified successfully", user: sanitizeUser(updatedUser) });
+    } catch (error) {
+      console.error("Verify user error:", error);
+      res.status(500).json({ message: "Failed to verify user" });
     }
   });
 

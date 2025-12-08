@@ -1,3 +1,58 @@
+export async function sendVerificationBadgeEmail(email: string, username: string): Promise<void> {
+  const apiKey = process.env.BREVO_API_KEY;
+  
+  if (!apiKey) {
+    console.warn("⚠️ BREVO_API_KEY not configured");
+    return;
+  }
+
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || "noreply@trendx.social";
+
+  try {
+    console.log(`📧 Sending verification badge email via Brevo to ${email}`);
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          email: fromEmail,
+          name: "Trendx",
+        },
+        to: [
+          {
+            email: email,
+          },
+        ],
+        subject: "You're Now Verified on Trendx",
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #00d4ff;">Congratulations, ${username}!</h2>
+            <p>You've been verified on Trendx. Your profile now displays a verification badge.</p>
+            <p>This recognizes your credibility and influence in the Trendx community.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">Thank you for being part of the Trendx community!</p>
+          </div>
+        `,
+      }),
+    });
+
+    console.log(`📬 Brevo verification badge email response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`❌ Brevo verification badge email error:`, errorData);
+      throw new Error(`Brevo error: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log(`✅ Verification badge email sent to ${email}. Message ID:`, responseData.messageId);
+  } catch (error) {
+    console.error(`❌ Failed to send verification badge email via Brevo:`, error);
+  }
+}
+
 export async function sendAccountVerifiedEmail(email: string, username: string): Promise<void> {
   const apiKey = process.env.BREVO_API_KEY;
   
