@@ -10,6 +10,9 @@ export async function sendOTPEmail(email: string, code: string): Promise<void> {
     return;
   }
 
+  // Use configured from address or default
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || "noreply@trendx.social";
+
   try {
     const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
@@ -24,7 +27,7 @@ export async function sendOTPEmail(email: string, code: string): Promise<void> {
           },
         ],
         from: {
-          email: "noreply@trendx.social",
+          email: fromEmail,
           name: "Trendx",
         },
         subject: "Your Trendx Email Verification Code",

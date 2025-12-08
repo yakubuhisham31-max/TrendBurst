@@ -22,6 +22,8 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [bio, setBio] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [step, setStep] = useState<"signup" | "otp">("signup");
+  const [otpCode, setOtpCode] = useState("");
 
   const signupMutation = useMutation({
     mutationFn: async () => {
@@ -34,12 +36,38 @@ export default function SignupPage() {
       return response.json();
     },
     onSuccess: async () => {
-      setLocation("/onboarding/categories");
+      setStep("otp");
     },
     onError: (error: Error) => {
       toast({
         title: "Signup failed",
-        description: error.message,
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/auth/verify-otp", {
+        email,
+        code: otpCode,
+        username,
+        password,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Account created successfully!",
+      });
+      setLocation("/onboarding/categories");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Invalid or expired code",
         variant: "destructive",
       });
     },
@@ -77,6 +105,84 @@ export default function SignupPage() {
 
     signupMutation.mutate();
   };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode) {
+      toast({
+        title: "Please enter code",
+        description: "Enter the 6-digit verification code",
+        variant: "destructive",
+      });
+      return;
+    }
+    verifyOtpMutation.mutate();
+  };
+
+  if (step === "otp") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 sm:p-10 space-y-6">
+          <div className="text-center space-y-4">
+            <img 
+              src={logoImage} 
+              alt="Trendz" 
+              className="h-24 sm:h-32 mx-auto object-contain"
+              data-testid="img-logo"
+            />
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold">Verify Your Email</h1>
+              <p className="text-muted-foreground text-sm">
+                We sent a 6-digit code to<br />
+                <span className="font-medium">{email}</span>
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="otp">Verification Code</Label>
+              <Input
+                id="otp"
+                type="text"
+                placeholder="Enter 6-digit code"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.slice(0, 6))}
+                maxLength={6}
+                required
+                data-testid="input-otp"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={verifyOtpMutation.isPending || otpCode.length !== 6}
+              data-testid="button-verify-otp"
+            >
+              {verifyOtpMutation.isPending ? "Verifying..." : "Verify & Create Account"}
+            </Button>
+          </form>
+
+          <div className="text-center">
+            <button
+              onClick={() => setStep("signup")}
+              className="text-sm text-primary hover:underline"
+              data-testid="button-back-to-signup"
+            >
+              Back to signup
+            </button>
+          </div>
+
+          <div className="text-center pt-4 border-t">
+            <p className="text-xs text-muted-foreground" data-testid="text-copyright">
+              © 2025 TrendX. All rights reserved.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
