@@ -163,6 +163,14 @@ export const oneSignalSubscriptions = pgTable("one_signal_subscriptions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const emailVerificationCodes = pgTable("email_verification_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  code: text("code").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -279,3 +287,10 @@ export const insertOneSignalSubscriptionSchema = createInsertSchema(oneSignalSub
 });
 
 export type InsertOneSignalSubscription = z.infer<typeof insertOneSignalSubscriptionSchema>;
+
+export type EmailVerificationCode = typeof emailVerificationCodes.$inferSelect;
+export const insertEmailVerificationCodeSchema = createInsertSchema(emailVerificationCodes).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertEmailVerificationCode = z.infer<typeof insertEmailVerificationCodeSchema>;

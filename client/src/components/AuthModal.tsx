@@ -32,6 +32,8 @@ export function AuthModal({
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -95,16 +97,53 @@ export function AuthModal({
         throw new Error(error.message || "Registration failed");
       }
 
-      toast({ title: "Success!", description: "Account created! You're now signed in" });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
-      // Close auth modal and show notification permission modal
-      onOpenChange(false);
-      setShowNotificationModal(true);
+      toast({ title: "Check your email!", description: "We sent you a verification code" });
+      setShowOTPVerification(true);
     } catch (error: any) {
       toast({ 
         title: "Registration failed", 
         description: error.message || "Could not create account",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode) {
+      toast({ title: "Enter OTP", description: "Please enter the verification code", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: registerEmail,
+          code: otpCode,
+          username: registerUsername,
+          password: registerPassword,
+        }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "OTP verification failed");
+      }
+
+      toast({ title: "Success!", description: "Account created! You're now signed in" });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      onOpenChange(false);
+      setShowNotificationModal(true);
+    } catch (error: any) {
+      toast({
+        title: "OTP verification failed",
+        description: error.message || "Invalid code",
         variant: "destructive"
       });
     } finally {
@@ -122,11 +161,38 @@ export function AuthModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle>{showOTPVerification ? "Verify Email" : title}</DialogTitle>
+          <DialogDescription>{showOTPVerification ? "Enter the 6-digit code sent to your email" : description}</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {showOTPVerification ? (
+          <form onSubmit={handleVerifyOTP} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="otp-code" className="text-sm">Verification Code</Label>
+              <Input
+                id="otp-code"
+                type="text"
+                placeholder="000000"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                maxLength={6}
+                data-testid="input-otp-code"
+                required
+              />
+              <p className="text-xs text-gray-500">Check your email for the code</p>
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-verify-otp">
+              {isLoading ? "Verifying..." : "Verify Code"}
+            </Button>
+            <Button type="button" variant="ghost" className="w-full" onClick={() => {
+              setShowOTPVerification(false);
+              setOtpCode("");
+            }}>
+              Back to Registration
+            </Button>
+          </form>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Sign In</TabsTrigger>
             <TabsTrigger value="register">Sign Up</TabsTrigger>
@@ -247,6 +313,7 @@ export function AuthModal({
             </form>
           </TabsContent>
         </Tabs>
+        )}
       </DialogContent>
 
       {/* Notification Permission Modal */}

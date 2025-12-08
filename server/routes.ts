@@ -19,6 +19,7 @@ import * as notificationService from "./notificationService";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
+import { sendOTPEmail } from "./emailService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -69,6 +70,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/auth/send-otp", async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email required" });
+      }
+
+      // Generate 6-digit OTP
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Store in database
+      await storage.createVerificationCode(email, code, expiresAt);
+
+      // Send email
+      await sendOTPEmail(email, code);
+
+      res.json({ message: "OTP sent to email" });
+    } catch (error) {
+      console.error("Send OTP error:", error);
+      res.status(500).json({ message: "Failed to send OTP" });
+    }
+  });
+
+  app.post("/api/auth/verify-otp", async (req: any, res) => {
+    try {
+      const { email, code, username, password } = req.body;
+      if (!email || !code || !username || !password) {
+        return res.status(400).json({ message: "Email, code, username, and password required" });
+      }
+
+      // Verify OTP exists and is not expired
+      const verification = await storage.getVerificationCode(code);
+      if (!verification || verification.email !== email || new Date() > verification.expiresAt) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Create user
+      const hashedPassword = await hashPassword(password);
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password: hashedPassword,
+      });
+
+      // Delete OTP
+      await storage.deleteVerificationCode(code);
+
+      // Set session
+      req.session.userId = newUser.id;
+      req.session.save((err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.status(201).json({ message: "Account created successfully", user: sanitizeUser(newUser) });
+      });
+
+      // Send welcome notification asynchronously
+      notificationService.sendWelcomeNotification(newUser.id).catch((error) => {
+        console.error("Failed to send welcome notification:", error);
+      });
+    } catch (error) {
+      console.error("Verify OTP error:", error);
+      res.status(500).json({ message: "OTP verification failed" });
+    }
+  });
+
   app.post("/api/auth/register", async (req: any, res) => {
     try {
       const { username, email, password } = req.body;
@@ -88,27 +167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      // Hash password and create user
-      const hashedPassword = await hashPassword(password);
-      const newUser = await storage.createUser({
-        username,
-        email,
-        password: hashedPassword,
-      });
+      // Send OTP instead of creating user immediately
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      await storage.createVerificationCode(email, code, expiresAt);
+      await sendOTPEmail(email, code);
 
-      // Set session
-      req.session.userId = newUser.id;
-      req.session.save((err: any) => {
-        if (err) {
-          return res.status(500).json({ message: "Session error" });
-        }
-        res.status(201).json({ message: "Account created successfully", user: sanitizeUser(newUser) });
-      });
-
-      // Send welcome push notification asynchronously (don't wait)
-      notificationService.sendWelcomeNotification(newUser.id).catch((error) => {
-        console.error("Failed to send welcome notification:", error);
-      });
+      res.status(201).json({ message: "OTP sent to email. Please verify to complete registration." });
     } catch (error) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Registration failed" });

@@ -24,6 +24,8 @@ import type {
   InsertNotification,
   OneSignalSubscription,
   InsertOneSignalSubscription,
+  EmailVerificationCode,
+  InsertEmailVerificationCode,
 } from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
@@ -128,6 +130,12 @@ export interface IStorage {
     topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
     engagementRate: number;
   }>;
+
+  // Email Verification
+  createVerificationCode(email: string, code: string, expiresAt: Date): Promise<EmailVerificationCode>;
+  getVerificationCode(code: string): Promise<EmailVerificationCode | undefined>;
+  deleteVerificationCode(code: string): Promise<void>;
+  deleteExpiredVerificationCodes(): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -932,6 +940,25 @@ export class DbStorage implements IStorage {
       })),
       engagementRate: parseFloat(engagementRate.toFixed(2)),
     };
+  }
+
+  // Email Verification
+  async createVerificationCode(email: string, code: string, expiresAt: Date): Promise<EmailVerificationCode> {
+    const result = await db.insert(schema.emailVerificationCodes).values({ email, code, expiresAt }).returning();
+    return result[0];
+  }
+
+  async getVerificationCode(code: string): Promise<EmailVerificationCode | undefined> {
+    const result = await db.select().from(schema.emailVerificationCodes).where(eq(schema.emailVerificationCodes.code, code));
+    return result[0];
+  }
+
+  async deleteVerificationCode(code: string): Promise<void> {
+    await db.delete(schema.emailVerificationCodes).where(eq(schema.emailVerificationCodes.code, code));
+  }
+
+  async deleteExpiredVerificationCodes(): Promise<void> {
+    await db.delete(schema.emailVerificationCodes).where(sql`${schema.emailVerificationCodes.expiresAt} < NOW()`);
   }
 }
 

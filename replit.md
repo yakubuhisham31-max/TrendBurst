@@ -6,16 +6,20 @@ Mini Feed, or "Trendx", is a social media platform centered on trend-based conte
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Updates (November 25, 2025)
+## Recent Updates (December 8, 2025)
+- **OTP Email Verification:** Implemented secure 6-digit OTP-based email verification for signup
+  - Users receive OTP codes via email (10-minute expiration)
+  - Database table: `emailVerificationCodes` tracks codes with expiry
+  - Backend routes: `/api/auth/send-otp` and `/api/auth/verify-otp`
+  - Frontend: OTP verification screen appears after signup, validates code before account creation
+  - Email service: Uses nodemailer for SMTP email delivery
+- **Deployment Fixed:** Updated to Autoscale deployment target with dynamic PORT environment variable support
+- **Notifications Reference:** Documented all 20+ push notification types with daily rate limits
+
+## Previous Updates (November 25, 2025)
 - **UI Improvements:** Long username handling with truncate + tooltip across comments, chat, sidebar, and analytics
-- **Analytics Enhancements:** 
-  - Added play button overlay on video thumbnails in top posts
-  - Implemented smart navigation tracking: closing fullscreen from analytics returns to analytics page
-  - Media holders display images/videos with proper aspect ratio
-- **Navigation Fixes:**
-  - Back button in Ranking page now uses explicit navigation instead of history
-  - Back button in trend discussion/chat now reliably returns to feed
-  - Fullscreen modal respects origin page (analytics vs feed) for navigation
+- **Analytics Enhancements:** Added play button overlay on video thumbnails, smart navigation tracking
+- **Navigation Fixes:** Back button reliability across ranking, chat, and fullscreen views
 
 ## System Architecture
 
