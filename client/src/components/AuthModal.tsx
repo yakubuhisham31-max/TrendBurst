@@ -93,17 +93,21 @@ export function AuthModal({
         credentials: "include",
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Registration failed");
+        throw new Error(data.message || "Registration failed");
       }
 
-      const data = await response.json();
+      console.log("Register response:", data);
       toast({ title: "Check your email!", description: "We sent you a verification code" });
       setShowOTPVerification(true);
       // Store dev OTP code if available
       if (data.devOtpCode) {
+        console.log("Setting dev OTP code:", data.devOtpCode);
         setDevOtpCode(data.devOtpCode);
+      } else {
+        console.warn("No devOtpCode in response");
       }
     } catch (error: any) {
       toast({ 
