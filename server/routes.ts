@@ -19,7 +19,7 @@ import * as notificationService from "./notificationService";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
-import { sendOTPEmail, sendWelcomeEmail } from "./emailService";
+import { sendOTPEmail, sendAccountVerifiedEmail } from "./emailService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (for Render and monitoring)
@@ -138,13 +138,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(201).json({ message: "Account created successfully", user: sanitizeUser(newUser) });
       });
 
-      // Send welcome notification and email asynchronously
+      // Send welcome notification and account verified email asynchronously
       notificationService.sendWelcomeNotification(newUser.id).catch((error) => {
         console.error("Failed to send welcome notification:", error);
       });
       
-      sendWelcomeEmail(newUser.email, newUser.username).catch((error) => {
-        console.error("Failed to send welcome email:", error);
+      sendAccountVerifiedEmail(newUser.email, newUser.username).catch((error) => {
+        console.error("Failed to send account verified email:", error);
       });
     } catch (error) {
       console.error("Verify OTP error:", error);
