@@ -14,6 +14,7 @@ export async function sendOTPEmail(email: string, code: string): Promise<void> {
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || "noreply@trendx.social";
 
   try {
+    console.log(`📧 Sending OTP email via SendGrid from ${fromEmail} to ${email}`);
     const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: {
@@ -50,12 +51,16 @@ export async function sendOTPEmail(email: string, code: string): Promise<void> {
       }),
     });
 
+    console.log(`📬 SendGrid API response status: ${response.status}`);
+    
     if (!response.ok) {
       const errorData = await response.json();
+      console.error(`❌ SendGrid error details:`, errorData);
       throw new Error(`SendGrid error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
-    console.log(`✅ OTP sent to ${email} via SendGrid`);
+    const responseData = await response.json();
+    console.log(`✅ OTP sent to ${email} via SendGrid. Response:`, responseData);
   } catch (error) {
     console.error(`❌ Failed to send OTP email via SendGrid:`, error);
     if (process.env.NODE_ENV === "production") {
