@@ -34,6 +34,7 @@ export function AuthModal({
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showOTPVerification, setShowOTPVerification] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -97,8 +98,13 @@ export function AuthModal({
         throw new Error(error.message || "Registration failed");
       }
 
+      const data = await response.json();
       toast({ title: "Check your email!", description: "We sent you a verification code" });
       setShowOTPVerification(true);
+      // Store dev OTP code if available
+      if (data.devOtpCode) {
+        setDevOtpCode(data.devOtpCode);
+      }
     } catch (error: any) {
       toast({ 
         title: "Registration failed", 
@@ -180,6 +186,12 @@ export function AuthModal({
                 required
               />
               <p className="text-xs text-gray-500">Check your email for the code</p>
+              {devOtpCode && (
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded text-center">
+                  <p className="text-xs text-blue-600 dark:text-blue-300 font-mono font-bold text-lg tracking-widest">{devOtpCode}</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">Development Mode - Code shown for testing</p>
+                </div>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-verify-otp">
               {isLoading ? "Verifying..." : "Verify Code"}
@@ -187,6 +199,7 @@ export function AuthModal({
             <Button type="button" variant="ghost" className="w-full" onClick={() => {
               setShowOTPVerification(false);
               setOtpCode("");
+              setDevOtpCode(null);
             }}>
               Back to Registration
             </Button>

@@ -173,7 +173,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createVerificationCode(email, code, expiresAt);
       await sendOTPEmail(email, code);
 
-      res.status(201).json({ message: "OTP sent to email. Please verify to complete registration." });
+      const response: any = { message: "OTP sent to email. Please verify to complete registration." };
+      // Include code in development mode for testing
+      if (process.env.NODE_ENV === "development") {
+        response.devOtpCode = code;
+      }
+      res.status(201).json(response);
     } catch (error) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Registration failed" });
