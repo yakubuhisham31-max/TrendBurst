@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate 6-digit OTP
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes
 
       // Store in database
       await storage.createVerificationCode(email, code, expiresAt);
@@ -175,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send OTP instead of creating user immediately
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
       await storage.createVerificationCode(email, code, expiresAt);
       await sendOTPEmail(email, code);
 

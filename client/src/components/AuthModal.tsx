@@ -5,7 +5,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { NotificationPermissionModal } from "@/components/NotificationPermissionModal";
@@ -35,7 +35,27 @@ export function AuthModal({
   const [showOTPVerification, setShowOTPVerification] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(180); // 3 minutes
+  const [otpExpired, setOtpExpired] = useState(false);
   const { toast } = useToast();
+
+  // Timer effect for OTP countdown
+  useEffect(() => {
+    if (!showOTPVerification || timeLeft <= 0) return;
+    
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setOtpExpired(true);
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showOTPVerification, timeLeft]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +181,39 @@ export function AuthModal({
     }
   };
 
+  const handleResendOTP = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: registerEmail }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to resend OTP");
+      }
+
+      const data = await response.json();
+      toast({ title: "Code sent!", description: "We sent you a new verification code" });
+      setOtpCode("");
+      setTimeLeft(180);
+      setOtpExpired(false);
+      if (data.devOtpCode) {
+        setDevOtpCode(data.devOtpCode);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to resend",
+        description: error.message || "Could not resend OTP",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleNotificationModalClose = () => {
     setShowNotificationModal(false);
     // Reload after notification modal is done
@@ -178,7 +231,12 @@ export function AuthModal({
         {showOTPVerification ? (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="otp-code" className="text-sm">Verification Code</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="otp-code" className="text-sm">Verification Code</Label>
+                <span className={`text-xs font-semibold ${otpExpired ? 'text-red-500' : timeLeft < 60 ? 'text-orange-500' : 'text-gray-500'}`}>
+                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </span>
+              </div>
               <Input
                 id="otp-code"
                 type="text"
@@ -187,6 +245,7 @@ export function AuthModal({
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 maxLength={6}
                 data-testid="input-otp-code"
+                disabled={otpExpired}
                 required
               />
               <p className="text-xs text-gray-500">Check your email for the code</p>
@@ -197,13 +256,21 @@ export function AuthModal({
                 </div>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-verify-otp">
-              {isLoading ? "Verifying..." : "Verify Code"}
-            </Button>
+            {otpExpired ? (
+              <Button type="button" onClick={handleResendOTP} className="w-full" disabled={isLoading} data-testid="button-resend-otp">
+                {isLoading ? "Sending..." : "Resend Code"}
+              </Button>
+            ) : (
+              <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-verify-otp">
+                {isLoading ? "Verifying..." : "Verify Code"}
+              </Button>
+            )}
             <Button type="button" variant="ghost" className="w-full" onClick={() => {
               setShowOTPVerification(false);
               setOtpCode("");
               setDevOtpCode(null);
+              setTimeLeft(180);
+              setOtpExpired(false);
             }}>
               Back to Registration
             </Button>
