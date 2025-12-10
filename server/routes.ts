@@ -2250,6 +2250,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test email endpoint (for verification purposes)
+  app.post("/api/test-email", async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email required" });
+      }
+
+      const apiKey = process.env.BREVO_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Brevo API key not configured" });
+      }
+
+      console.log(`📧 Sending test email to ${email}`);
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: {
+            email: "trendx.social1@gmail.com",
+            name: "Trendx",
+          },
+          to: [
+            {
+              email: email,
+            },
+          ],
+          subject: "Test Email from Trendx",
+          htmlContent: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #00d4ff;">Test Email from Trendx</h2>
+              <p>This is a test email to confirm that the Brevo email integration is working correctly.</p>
+              <p style="color: #00d4ff; font-weight: bold;">If you received this, the integration is working! ✅</p>
+              <p style="color: #999; font-size: 12px; margin-top: 30px;">Sent at ${new Date().toLocaleString()}</p>
+            </div>
+          `,
+        }),
+      });
+
+      console.log(`📬 Brevo test email response status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(`❌ Brevo test email error:`, errorData);
+        return res.status(response.status).json({ message: "Failed to send email", error: errorData });
+      }
+
+      const responseData = await response.json();
+      console.log(`✅ Test email sent successfully. Message ID:`, responseData.messageId);
+      res.json({ 
+        message: "Test email sent successfully!", 
+        messageId: responseData.messageId,
+        sentTo: email
+      });
+    } catch (error) {
+      console.error(`❌ Test email error:`, error);
+      res.status(500).json({ message: "Error sending test email", error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
