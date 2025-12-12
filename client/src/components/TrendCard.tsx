@@ -15,6 +15,7 @@ import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getTrendStatus, getDaysLeft } from "@/lib/trendStatus";
 import { useToast } from "@/hooks/use-toast";
 import ShareDialog from "./ShareDialog";
 import FollowButton from "./FollowButton";
@@ -177,24 +178,8 @@ export default function TrendCard({
     },
   });
 
-  const getTrendStatus = () => {
-    if (!endDate) return null;
-    const now = new Date();
-    const daysUntilEnd = differenceInDays(endDate, now);
-    
-    if (endDate < now) return "ended";
-    if (daysUntilEnd <= 3) return "ending-soon";
-    return "active";
-  };
-
-  const getDaysLeft = () => {
-    if (!endDate) return null;
-    const now = new Date();
-    return differenceInDays(endDate, now);
-  };
-
-  const status = getTrendStatus();
-  const daysLeft = getDaysLeft();
+  const status = getTrendStatus(endDate);
+  const daysLeft = getDaysLeft(endDate);
 
   const cycleNotifications = (e: React.MouseEvent) => {
     e.stopPropagation();

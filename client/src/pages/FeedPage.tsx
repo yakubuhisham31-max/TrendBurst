@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { ChevronLeft, Info, Trophy, MessageSquare, Plus, Users, Flame, Clock } from "lucide-react";
+import { ChevronLeft, Info, Trophy, MessageSquare, Plus, Users, Flame, Clock, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
 import CreatePostDialog from "@/components/CreatePostDialog";
@@ -15,6 +15,7 @@ import { AuthModal } from "@/components/AuthModal";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getTrendStatus, getDaysLeft } from "@/lib/trendStatus";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import type { Post, Trend, User } from "@shared/schema";
@@ -84,7 +85,9 @@ export default function FeedPage() {
   });
 
   const votesRemaining = 10 - (voteCountData?.count || 0);
-  const isTrendEnded = trend?.endDate ? new Date(trend.endDate) < new Date() : false;
+  const trendStatus = getTrendStatus(trend?.endDate);
+  const daysLeft = getDaysLeft(trend?.endDate);
+  const isTrendEnded = trendStatus === "ended";
   const userHasPosted = posts.some(post => post.userId === user?.id);
   const isUserDisqualified = disqualificationStatus?.isDisqualified || false;
   const unreadChatCount = trendId && notificationCounts?.chat?.[trendId] || 0;
@@ -534,21 +537,27 @@ export default function FeedPage() {
             )}
             {trend.endDate && (
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-colors ${
-                isTrendEnded 
+                trendStatus === "ended"
                   ? 'bg-destructive/5 border-destructive/20 hover:border-destructive/40' 
+                  : trendStatus === "ending-soon"
+                  ? 'bg-amber-400/10 border-amber-400/30 hover:border-amber-400/50'
                   : 'bg-chart-3/5 border-chart-3/20 hover:border-chart-3/40'
               }`}>
                 <Clock className={`w-3 h-3 ${
-                  isTrendEnded 
+                  trendStatus === "ended"
                     ? 'text-destructive' 
+                    : trendStatus === "ending-soon"
+                    ? 'text-amber-500'
                     : 'text-chart-3'
                 }`} />
                 <span className={`text-xs font-semibold ${
-                  isTrendEnded 
+                  trendStatus === "ended"
                     ? 'text-destructive' 
+                    : trendStatus === "ending-soon"
+                    ? 'text-amber-600'
                     : 'text-foreground'
                 }`}>
-                  {isTrendEnded ? 'Ended' : formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}
+                  {trendStatus === "ended" ? 'Ended' : trendStatus === "ending-soon" ? `Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}` : formatDistanceToNow(new Date(trend.endDate), { addSuffix: true })}
                 </span>
               </div>
             )}
