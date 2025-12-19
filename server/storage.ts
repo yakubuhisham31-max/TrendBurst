@@ -129,6 +129,7 @@ export interface IStorage {
     averageVotesPerPost: number;
     topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
     engagementRate: number;
+    views: number;
   }>;
 
   // Email Verification
@@ -864,6 +865,7 @@ export class DbStorage implements IStorage {
     averageVotesPerPost: number;
     topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
     engagementRate: number;
+    views: number;
   }> {
     // Get posts for this trend
     const posts = await db
@@ -939,6 +941,7 @@ export class DbStorage implements IStorage {
         imageUrl: p.imageUrl || undefined,
       })),
       engagementRate: parseFloat(engagementRate.toFixed(2)),
+      views: trend?.views || 0,
     };
   }
 
