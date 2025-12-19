@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, TrendingUp, Users, Award, Activity, Loader2, BarChart3, Edit } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, Award, Eye, Loader2, BarChart3, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { Trend } from "@shared/schema";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import { differenceInDays } from "date-fns";
 interface DashboardStats {
   trendsCreated: number;
   totalParticipants: number;
-  totalPosts: number;
+  totalViews: number;
   activeTrends: number;
   trendxPoints: number;
 }
@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Views</CardTitle>
                 <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center">
                   <Skeleton className="h-5 w-5 rounded" />
                 </div>
@@ -158,16 +158,16 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card data-testid="card-posts" className="hover-elevate transition-all">
+              <Card data-testid="card-views" className="hover-elevate transition-all">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Views</CardTitle>
                   <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center">
-                    <Activity className="h-5 w-5 text-chart-4" />
+                    <Eye className="h-5 w-5 text-chart-4" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{stats.totalPosts}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Posts in your trends</p>
+                  <div className="text-3xl font-bold">{stats.totalViews}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Total views across trends</p>
                 </CardContent>
               </Card>
 

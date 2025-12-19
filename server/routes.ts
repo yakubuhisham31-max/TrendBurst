@@ -428,19 +428,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const now = new Date();
       const activeTrends = userTrends.filter(t => !t.endDate || (t.endDate && new Date(t.endDate) > now)).length;
 
-      let totalPosts = 0;
+      let totalViews = 0;
       let uniqueParticipants = new Set<string>();
 
       for (const trend of userTrends) {
         const posts = await storage.getPostsByTrend(trend.id);
-        totalPosts += posts.length;
+        totalViews += trend.views || 0;
         posts.forEach((post) => uniqueParticipants.add(post.userId));
       }
 
       res.json({
         trendsCreated,
         totalParticipants: uniqueParticipants.size,
-        totalPosts,
+        totalViews,
         activeTrends,
         trendxPoints: user.trendxPoints || 0,
       });
