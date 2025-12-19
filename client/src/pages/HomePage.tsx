@@ -12,6 +12,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getTrendStatus } from "@/lib/trendStatus";
 import type { Trend, User } from "@shared/schema";
 import { differenceInDays, differenceInHours } from "date-fns";
 import logoImage from "@assets/trendx_background_fully_transparent (1)_1761635187125.png";
@@ -133,18 +134,10 @@ export default function HomePage() {
           .slice(0, 20); // Top 20 trending
       
       case "Ending Soon":
-        return allTrends.filter(trend => {
-          if (!trend.endDate) return false;
-          const daysUntilEnd = differenceInDays(trend.endDate, now);
-          // Only show trends that haven't ended yet and will end within 3 days
-          return trend.endDate > now && daysUntilEnd <= 3 && daysUntilEnd >= 0;
-        });
+        return allTrends.filter(trend => getTrendStatus(trend.endDate) === "ending-soon");
       
       case "Ended":
-        return allTrends.filter(trend => {
-          if (!trend.endDate) return false;
-          return trend.endDate < now;
-        });
+        return allTrends.filter(trend => getTrendStatus(trend.endDate) === "ended");
       
       default:
         return sortByVerified(allTrends);

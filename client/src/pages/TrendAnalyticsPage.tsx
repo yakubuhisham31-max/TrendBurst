@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, TrendingUp, Users, MessageSquare, Flame, Target, Play } from "lucide-react";
+import { ChevronLeft, TrendingUp, Users, MessageSquare, Eye, Target, Play } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ interface TrendAnalytics {
   averageVotesPerPost: number;
   topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
   engagementRate: number;
+  views?: number;
 }
 
 export default function TrendAnalyticsPage() {
@@ -88,14 +89,14 @@ export default function TrendAnalyticsPage() {
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-muted-foreground font-medium mb-1">Total Posts</p>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Total Views</p>
                 {analyticsLoading ? (
                   <Skeleton className="w-12 h-8" />
                 ) : (
-                  <p className="text-2xl font-bold">{analytics?.totalPosts || 0}</p>
+                  <p className="text-2xl font-bold">{analytics?.views || 0}</p>
                 )}
               </div>
-              <Flame className="w-5 h-5 text-orange-500 opacity-60" />
+              <Eye className="w-5 h-5 text-cyan-500 opacity-60" />
             </div>
           </Card>
 
