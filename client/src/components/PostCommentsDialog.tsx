@@ -259,38 +259,26 @@ export default function PostCommentsDialog({
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
-              {comment.user?.id === trend?.userId && (
-                <Star className={`${isChild ? "w-2.5 h-2.5" : "w-3 h-3"} fill-yellow-500 text-yellow-500`} data-testid="icon-host" />
-              )}
-              {comment.user?.id && userRankMap.has(comment.user.id) && (() => {
+              {comment.user?.id === trend?.userId ? (
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider" data-testid="badge-creator">
+                  Creator
+                </Badge>
+              ) : comment.user?.id && userRankMap.has(comment.user.id) ? (() => {
                 const rank = userRankMap.get(comment.user.id)!;
-                const getTrophyColor = () => {
-                  switch (rank) {
-                    case 1:
-                      return "text-yellow-500";
-                    case 2:
-                      return "text-gray-400";
-                    case 3:
-                      return "text-orange-600";
-                    default:
-                      return "text-foreground/40";
-                  }
+                const getRankBadge = () => {
+                  if (rank === 1) return { label: "#1", className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" };
+                  if (rank === 2) return { label: "#2", className: "bg-gray-400/10 text-gray-500 border-gray-400/20" };
+                  if (rank === 3) return { label: "#3", className: "bg-orange-600/10 text-orange-700 border-orange-600/20" };
+                  if (rank <= 10) return { label: "Top 10", className: "bg-primary/10 text-primary border-primary/20" };
+                  return { label: `#${rank}`, className: "bg-muted text-muted-foreground border-transparent" };
                 };
-                const getOrdinalRank = (n: number) => {
-                  const j = n % 10;
-                  const k = n % 100;
-                  if (j === 1 && k !== 11) return `${n}st`;
-                  if (j === 2 && k !== 12) return `${n}nd`;
-                  if (j === 3 && k !== 13) return `${n}rd`;
-                  return `${n}th`;
-                };
+                const badge = getRankBadge();
                 return (
-                  <div className="flex items-center gap-0.5">
-                    <Trophy className={`w-3 h-3 ${getTrophyColor()} flex-shrink-0`} />
-                    <span className="text-xs font-bold text-foreground/80">{getOrdinalRank(rank)}</span>
-                  </div>
+                  <Badge variant="outline" className={`${badge.className} text-[10px] h-4 px-1.5 font-bold`} data-testid={`badge-rank-${rank}`}>
+                    {badge.label}
+                  </Badge>
                 );
-              })()}
+              })() : null}
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(comment.createdAt!), { addSuffix: true })}
               </span>
