@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -327,9 +328,19 @@ export default function PostFullscreenModal({
 
           <div className="flex items-center gap-4">
             {remainingVotes !== null && remainingVotes >= 0 && (
-              <div className="bg-cyan-500 text-black px-3 py-1.5 rounded-full text-sm font-semibold" data-testid="badge-remaining-votes">
-                {remainingVotes} votes left
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={remainingVotes}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.2, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                  className="bg-cyan-500 text-black px-3 py-1.5 rounded-full text-sm font-semibold"
+                  data-testid="badge-remaining-votes"
+                >
+                  {remainingVotes} votes left
+                </motion.div>
+              </AnimatePresence>
             )}
             {post.trendId && (
               <div className="relative">
