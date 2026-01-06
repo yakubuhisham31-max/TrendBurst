@@ -106,15 +106,25 @@ export default function HomePage() {
       });
     };
 
+    // Filter active trends vs ended trends
+    const activeTrends = allTrends.filter(trend => getTrendStatus(trend.endDate) !== "ended");
+    const endedTrends = allTrends.filter(trend => getTrendStatus(trend.endDate) === "ended");
+
+    // If "Ended" subcategory is selected, only show ended trends
+    if (selectedSubcategory === "Ended") return endedTrends;
+
+    // For any other view (main category or other subcategories), only show active trends
+    const baseTrends = activeTrends;
+
     // If no subcategory selected (main category view), sort by verified
-    if (!selectedSubcategory) return sortByVerified(allTrends);
+    if (!selectedSubcategory) return sortByVerified(baseTrends);
 
     const now = new Date();
 
-    // For subcategories (New, Trending, Ending Soon, Ended), don't sort by verified
+    // For subcategories (New, Trending, Ending Soon), filter from baseTrends
     switch (selectedSubcategory) {
       case "New":
-        return allTrends.filter(trend => {
+        return baseTrends.filter(trend => {
           const hoursSinceCreation = differenceInHours(now, trend.createdAt || now);
           return hoursSinceCreation <= 72; // Created within last 3 days (72 hours)
         });
@@ -124,7 +134,7 @@ export default function HomePage() {
         // Engagement calculation: views + (participants * 2) + (chatCount * 3)
         // Very high engagement threshold: 300 or more
         const ENGAGEMENT_THRESHOLD = 300;
-        return [...allTrends]
+        return [...baseTrends]
           .map(trend => ({
             ...trend,
             engagement: (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3
@@ -134,13 +144,10 @@ export default function HomePage() {
           .slice(0, 20); // Top 20 trending
       
       case "Ending Soon":
-        return allTrends.filter(trend => getTrendStatus(trend.endDate) === "ending-soon");
-      
-      case "Ended":
-        return allTrends.filter(trend => getTrendStatus(trend.endDate) === "ended");
+        return baseTrends.filter(trend => getTrendStatus(trend.endDate) === "ending-soon");
       
       default:
-        return sortByVerified(allTrends);
+        return sortByVerified(baseTrends);
     }
   }, [allTrends, selectedSubcategory]);
 
