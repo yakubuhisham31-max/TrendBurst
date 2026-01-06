@@ -259,7 +259,7 @@ export default function PostCommentsDialog({
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
-              {comment.user?.id === trend?.userId ? (
+              {comment.user?.id === post?.userId ? (
                 <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider" data-testid="badge-creator">
                   Creator
                 </Badge>
