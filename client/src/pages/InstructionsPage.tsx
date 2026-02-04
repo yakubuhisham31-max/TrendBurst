@@ -205,9 +205,16 @@ export default function InstructionsPage() {
 
           <div>
             <h3 className="text-lg font-semibold mb-2">How It Works</h3>
-            <p className="text-muted-foreground" data-testid="text-instructions">
-              {trend.instructions}
-            </p>
+            <div 
+              className="text-muted-foreground whitespace-pre-wrap break-words" 
+              data-testid="text-instructions"
+              dangerouslySetInnerHTML={{ 
+                __html: (trend.instructions || "").replace(
+                  /(https?:\/\/[^\s]+)/g, 
+                  '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">$1</a>'
+                ) 
+              }}
+            />
           </div>
 
           {rules.length > 0 && (
