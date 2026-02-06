@@ -323,19 +323,15 @@ export default function FeedChatPage() {
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
               {comment.user?.id === trend?.userId && (
-                <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider gap-0.5" data-testid="badge-trend-creator">
-                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                  Creator
-                </Badge>
+                <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" data-testid="badge-trend-creator" />
               )}
               {comment.user?.id && userRankMap.has(comment.user.id) ? (() => {
                 const rank = userRankMap.get(comment.user.id)!;
                 const getRankBadge = () => {
-                  if (rank === 1) return { label: "#1", className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" };
-                  if (rank === 2) return { label: "#2", className: "bg-gray-400/10 text-gray-500 border-gray-400/20" };
-                  if (rank === 3) return { label: "#3", className: "bg-orange-600/10 text-orange-700 border-orange-600/20" };
-                  if (rank <= 10) return { label: "Top 10", className: "bg-primary/10 text-primary border-primary/20" };
-                  return { label: `#${rank}`, className: "bg-muted text-muted-foreground border-transparent" };
+                  if (rank === 1) return { label: "1st", className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" };
+                  if (rank === 2) return { label: "2nd", className: "bg-gray-400/10 text-gray-500 border-gray-400/20" };
+                  if (rank === 3) return { label: "3rd", className: "bg-orange-600/10 text-orange-700 border-orange-600/20" };
+                  return { label: `${rank}th`, className: "bg-muted text-muted-foreground border-transparent" };
                 };
                 const badge = getRankBadge();
                 return (
