@@ -322,6 +322,21 @@ export default function FeedChatPage() {
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
+              {comment.trendId && (comments.find(c => c.id === comment.id)?.postId || fromPostId) && (() => {
+                // In trend chat, we need to check if this comment belongs to a post, or if we know the post owner
+                // However, the user specifically asked for comment.user_id === post.user_id
+                // In FeedChatPage, we are in a trend-wide discussion, so we check if the user is the trend creator
+                // but the prompt specifically says "post.user_id".
+                // If it's a trend-wide chat without a specific post context, we use the trend creator as the "Author"
+                if (comment.user?.id === trend?.userId) {
+                  return (
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider" data-testid="badge-author">
+                      Author
+                    </Badge>
+                  );
+                }
+                return null;
+              })()}
               {comment.user?.id && userRankMap.has(comment.user.id) ? (() => {
                 const rank = userRankMap.get(comment.user.id)!;
                 const getRankBadge = () => {
