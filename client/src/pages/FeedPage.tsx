@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -521,9 +522,18 @@ export default function FeedPage() {
             <Trophy className="w-3.5 h-3.5" />
             <span className="text-xs font-medium">Rankings</span>
           </Button>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 hover:border-primary/40 transition-colors">
-            <span className="text-xs font-semibold text-primary">{votesRemaining} votes left</span>
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={votesRemaining}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.2, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 hover:border-primary/40 transition-colors"
+            >
+              <span className="text-xs font-semibold text-primary">{votesRemaining} votes left</span>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Trend Stats */}
