@@ -301,8 +301,6 @@ app.get("/OneSignalSDKUpdaterWorker.js", (req, res) => {
     console.error('Error:', err);
   });
 
-  // Serve static files (production mode)
-  // Note: Using production mode to avoid Vite config top-level await issues
   log('Serving static files from client/dist');
   serveStatic(app);
 
