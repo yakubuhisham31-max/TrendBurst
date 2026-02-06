@@ -61,11 +61,11 @@ export default function CreatePostDialog({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (50MB)
-    if (file.size > 52428800) {
+    // Validate file size (70MB)
+    if (file.size > 73400320) {
       toast({
         title: "File too large",
-        description: "Maximum file size is 50MB",
+        description: "Maximum file size is 70MB",
         variant: "destructive",
       });
       return;
@@ -157,7 +157,7 @@ export default function CreatePostDialog({
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Images (PNG, JPG) or Videos (MP4, WebM) up to 50MB
+                      Images (PNG, JPG) or Videos (MP4, WebM) up to 70MB
                     </p>
                   </div>
                   <Input
