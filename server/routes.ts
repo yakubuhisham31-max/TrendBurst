@@ -733,6 +733,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/posts/:id - Get a single post by ID
+  app.get("/api/posts/:id", async (req, res) => {
+    try {
+      const post = await storage.getPost(req.params.id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // POST /api/posts - Create post (protected)
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
