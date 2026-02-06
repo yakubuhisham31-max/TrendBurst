@@ -460,10 +460,13 @@ export default function PostFullscreenModal({
             {/* Comments */}
             <button
               onClick={() => setCommentsOpen(true)}
-              className="flex items-center hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1 hover:opacity-80 transition-opacity"
               data-testid="button-comment-fullscreen"
             >
               <MessageCircle className="w-5 h-5 text-white" />
+              <span className="text-sm font-semibold text-white" data-testid="text-comments-count-fullscreen">
+                {post.commentCount ?? 0}
+              </span>
             </button>
 
             {/* Share */}
