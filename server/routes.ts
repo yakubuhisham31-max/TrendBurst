@@ -22,6 +22,15 @@ import path from "path";
 import { sendOTPEmail, sendAccountVerifiedEmail, sendVerificationBadgeEmail } from "./emailService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add cache-busting middleware for the entire API
+  app.use((_req, res, next) => {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+    res.set("Surrogate-Control", "no-store");
+    next();
+  });
+
   // Health check endpoint (for Render and monitoring)
   app.get("/health", (_req, res) => {
     res.status(200).json({ 
