@@ -259,11 +259,18 @@ export default function PostCommentsDialog({
                 {comment.user?.username || "Unknown"}
               </span>
               <VerificationBadge verified={comment.user?.verified} size="sm" />
-              {comment.user?.id === post?.userId ? (
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider" data-testid="badge-creator">
+              {comment.user?.id === trend?.userId && (
+                <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider gap-0.5" data-testid="badge-trend-creator">
+                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
                   Creator
                 </Badge>
-              ) : comment.user?.id && userRankMap.has(comment.user.id) ? (() => {
+              )}
+              {comment.user?.id === post?.userId && (
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider" data-testid="badge-author">
+                  Author
+                </Badge>
+              )}
+              {comment.user?.id && userRankMap.has(comment.user.id) ? (() => {
                 const rank = userRankMap.get(comment.user.id)!;
                 const getRankBadge = () => {
                   if (rank === 1) return { label: "#1", className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" };
