@@ -295,9 +295,12 @@ export default function TrendCard({
               />
             )}
             {isTrending && (
-              <Badge className="bg-yellow-500 text-yellow-950 px-2.5 py-1 gap-1 items-center border-0 rounded-full whitespace-nowrap flex-shrink-0" data-testid="badge-trending">
-                <Flame className="w-3.5 h-3.5" />
-                Trending
+              <Badge 
+                className="bg-white/15 backdrop-blur-md text-white px-3 py-1 gap-1.5 items-center border border-white/20 rounded-full shadow-lg transition-all duration-300 group-hover:bg-yellow-500/90 group-hover:text-yellow-950 group-hover:border-transparent group-hover:scale-105" 
+                data-testid="badge-trending"
+              >
+                <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Trending</span>
               </Badge>
             )}
             <DropdownMenu>
