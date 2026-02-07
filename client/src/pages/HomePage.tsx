@@ -151,6 +151,19 @@ export default function HomePage() {
     }
   }, [allTrends, selectedSubcategory]);
 
+  const trendingTrendIds = useMemo(() => {
+    const ENGAGEMENT_THRESHOLD = 300;
+    const activeTrends = allTrends.filter(trend => getTrendStatus(trend.endDate) !== "ended");
+    const ids = new Set<string>();
+    for (const trend of activeTrends) {
+      const engagement = (trend.views || 0) + (trend.participants || 0) * 2 + (trend.chatCount || 0) * 3;
+      if (engagement >= ENGAGEMENT_THRESHOLD) {
+        ids.add(trend.id);
+      }
+    }
+    return ids;
+  }, [allTrends]);
+
   // Filter by search query
   const filteredTrends = useMemo(() => {
     if (!searchQuery.trim()) return trends;
@@ -435,7 +448,7 @@ export default function HomePage() {
                     chatCount={trend.chatCount || 0}
                     createdAt={trend.createdAt || new Date()}
                     endDate={trend.endDate || undefined}
-                    isTrending={selectedSubcategory === "Trending"}
+                    isTrending={trendingTrendIds.has(trend.id)}
                     trendNameFont={(trend as any).trendNameFont || "inter"}
                     trendNameColor={(trend as any).trendNameColor || "#FFFFFF"}
                     onClick={() => {
