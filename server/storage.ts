@@ -88,7 +88,7 @@ export interface IStorage {
   getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined>;
   updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking>;
   trackTrendView(userId: string, trendId: string): Promise<void>;
-  getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number> }>;
+  getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number>, subcategory: Record<string, number> }>;
   
   // Saved Items
   saveTrend(userId: string, trendId: string): Promise<SavedTrend>;
@@ -574,14 +574,13 @@ export class DbStorage implements IStorage {
     }
   }
 
-  async getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number> }> {
+  async getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number>, subcategory: Record<string, number> }> {
     const categoryCounts: Record<string, number> = {};
     const chatCounts: Record<string, number> = {};
+    const subcategoryCounts: Record<string, number> = {};
     
-    // Get all view tracking records for this user
     const viewRecords = await db.select().from(schema.viewTracking).where(eq(schema.viewTracking.userId, userId));
     
-    // Count new trends per category
     const categoryRecords = viewRecords.filter(r => r.type === 'category');
     const categories = ['AI', 'Arts', 'Entertainment', 'Fashion', 'Food', 'Gaming', 'Photography', 'Sports', 'Technology', 'Other'];
     
@@ -597,7 +596,6 @@ export class DbStorage implements IStorage {
       categoryCounts[category] = newTrends.length;
     }
     
-    // Count new chat messages per trend
     const chatRecords = viewRecords.filter(r => r.type === 'chat');
     for (const record of chatRecords) {
       const lastViewed = record.lastViewedAt || new Date(0);
@@ -611,7 +609,59 @@ export class DbStorage implements IStorage {
       chatCounts[record.identifier] = newMessages.length;
     }
     
-    return { category: categoryCounts, chat: chatCounts };
+    const subcategoryNames = ['New', 'Trending', 'Ending Soon', 'Ended'];
+    const subcategoryRecords = viewRecords.filter(r => r.type === 'subcategory');
+    const allTrends = await db.select().from(schema.trends);
+    const now = new Date();
+    const ENGAGEMENT_THRESHOLD = 300;
+
+    for (const sub of subcategoryNames) {
+      const record = subcategoryRecords.find(r => r.identifier === sub);
+      const lastViewed = record?.lastViewedAt || new Date(0);
+
+      let matchingTrends: typeof allTrends;
+      switch (sub) {
+        case "New":
+          matchingTrends = allTrends.filter(t => {
+            const created = t.createdAt ? new Date(t.createdAt) : now;
+            const hoursSince = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+            const isActive = !t.endDate || new Date(t.endDate) > now;
+            return hoursSince <= 72 && isActive;
+          });
+          break;
+        case "Trending":
+          matchingTrends = allTrends.filter(t => {
+            const isActive = !t.endDate || new Date(t.endDate) > now;
+            const engagement = (t.views || 0) + (t.participants || 0) * 2 + (t.chatCount || 0) * 3;
+            return isActive && engagement >= ENGAGEMENT_THRESHOLD;
+          });
+          break;
+        case "Ending Soon":
+          matchingTrends = allTrends.filter(t => {
+            if (!t.endDate) return false;
+            const end = new Date(t.endDate);
+            const daysLeft = (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+            return daysLeft > 0 && daysLeft <= 3;
+          });
+          break;
+        case "Ended":
+          matchingTrends = allTrends.filter(t => {
+            if (!t.endDate) return false;
+            return new Date(t.endDate) <= now;
+          });
+          break;
+        default:
+          matchingTrends = [];
+      }
+
+      const newCount = matchingTrends.filter(t => {
+        const created = t.createdAt ? new Date(t.createdAt) : new Date(0);
+        return created > lastViewed;
+      }).length;
+      subcategoryCounts[sub] = newCount;
+    }
+    
+    return { category: categoryCounts, chat: chatCounts, subcategory: subcategoryCounts };
   }
 
   // Saved Items

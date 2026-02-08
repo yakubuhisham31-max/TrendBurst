@@ -71,10 +71,10 @@ export default function HomePage() {
   });
 
   // Fetch notification counts
-  const { data: notificationCounts } = useQuery<{ category: Record<string, number>, chat: Record<string, number> }>({
+  const { data: notificationCounts } = useQuery<{ category: Record<string, number>, chat: Record<string, number>, subcategory: Record<string, number> }>({
     queryKey: ["/api/notifications/counts"],
     enabled: !!user,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Update view tracking mutation
@@ -94,6 +94,13 @@ export default function HomePage() {
       updateViewMutation.mutate({ type: "category", identifier: selectedCategory });
     }
   }, [selectedCategory, user]);
+
+  // Mark subcategory as viewed when selected
+  useEffect(() => {
+    if (user && selectedSubcategory) {
+      updateViewMutation.mutate({ type: "subcategory", identifier: selectedSubcategory });
+    }
+  }, [selectedSubcategory, user]);
 
   // Filter trends based on subcategory
   const trends = useMemo(() => {
@@ -253,20 +260,31 @@ export default function HomePage() {
             {/* Subcategories */}
             <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
               <div className="flex gap-2 min-w-max pb-1">
-                {subcategories.map((subcategory) => (
-                  <Button
-                    key={subcategory}
-                    variant={selectedSubcategory === subcategory ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setSelectedSubcategory(
-                      selectedSubcategory === subcategory ? null : subcategory
-                    )}
-                    className="whitespace-nowrap rounded-full text-xs font-medium"
-                    data-testid={`button-subcategory-${subcategory.toLowerCase().replace(' ', '-')}`}
-                  >
-                    {subcategory}
-                  </Button>
-                ))}
+                {subcategories.map((subcategory) => {
+                  const subCount = notificationCounts?.subcategory?.[subcategory] || 0;
+                  return (
+                    <Button
+                      key={subcategory}
+                      variant={selectedSubcategory === subcategory ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setSelectedSubcategory(
+                        selectedSubcategory === subcategory ? null : subcategory
+                      )}
+                      className="whitespace-nowrap rounded-full text-xs font-medium gap-1.5 relative"
+                      data-testid={`button-subcategory-${subcategory.toLowerCase().replace(' ', '-')}`}
+                    >
+                      {subcategory}
+                      {subCount > 0 && (
+                        <Badge 
+                          className="ml-1 h-4 min-w-4 px-1.5 bg-destructive text-destructive-foreground rounded-full text-xs font-bold"
+                          data-testid={`badge-notification-${subcategory.toLowerCase().replace(' ', '-')}`}
+                        >
+                          {subCount > 99 ? "99+" : subCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
 
