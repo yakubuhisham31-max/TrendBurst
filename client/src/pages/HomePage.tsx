@@ -123,32 +123,30 @@ export default function HomePage() {
     // For any other view (main category or other subcategories), only show active trends
     const baseTrends = activeTrends;
 
-    // If no subcategory selected (main category view), sort by verified
+    // If no subcategory selected (main category view), promote verified users' newest trend
     if (!selectedSubcategory) {
-      // Limit each verified user to only 1 promoted trend at a time.
-      // The newest trend from each verified user stays at the top,
-      // while their other trends are displayed as regular trends.
+      // Sort all trends by newest first
+      const sortedByTime = [...baseTrends].sort((a, b) => {
+        const aTime = new Date(a.createdAt || 0).getTime();
+        const bTime = new Date(b.createdAt || 0).getTime();
+        return bTime - aTime;
+      });
+
+      // Pick 1 promoted trend per verified user (their newest active trend)
       const promotedTrends: TrendWithCreator[] = [];
       const regularTrends: TrendWithCreator[] = [];
-      const verifiedUsersWithPromoted = new Set<string>();
+      const verifiedUsersPromoted = new Set<string>();
 
-      // allTrends is sorted by createdAt desc by default in the API, 
-      // but let's ensure we handle verified promotion logic correctly.
-      const sortedByVerified = sortByVerified(baseTrends);
-
-      sortedByVerified.forEach(trend => {
-        if (trend.creator?.verified) {
-          if (!verifiedUsersWithPromoted.has(trend.creator.id)) {
-            promotedTrends.push(trend);
-            verifiedUsersWithPromoted.add(trend.creator.id);
-          } else {
-            regularTrends.push(trend);
-          }
+      sortedByTime.forEach(trend => {
+        if (trend.creator?.verified && !verifiedUsersPromoted.has(trend.creator.id)) {
+          promotedTrends.push(trend);
+          verifiedUsersPromoted.add(trend.creator.id);
         } else {
           regularTrends.push(trend);
         }
       });
 
+      // Promoted trends at top, then everything else sorted by time created (newest first)
       return [...promotedTrends, ...regularTrends];
     }
 
