@@ -124,7 +124,23 @@ export default function HomePage() {
     const baseTrends = activeTrends;
 
     // If no subcategory selected (main category view), sort by verified
-    if (!selectedSubcategory) return sortByVerified(baseTrends);
+    if (!selectedSubcategory) {
+      // Limit each verified user to only 1 active trend in the main feed
+      const verifiedUserTrendsMap = new Map<string, TrendWithCreator>();
+      const otherTrends: TrendWithCreator[] = [];
+
+      sortByVerified(baseTrends).forEach(trend => {
+        if (trend.creator?.verified) {
+          if (!verifiedUserTrendsMap.has(trend.creator.id)) {
+            verifiedUserTrendsMap.set(trend.creator.id, trend);
+          }
+        } else {
+          otherTrends.push(trend);
+        }
+      });
+
+      return [...Array.from(verifiedUserTrendsMap.values()), ...otherTrends];
+    }
 
     const now = new Date();
 
