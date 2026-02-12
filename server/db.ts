@@ -1,9 +1,17 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
+import dns from "node:dns";
 
-neonConfig.webSocketConstructor = ws;
+// Prefer IPv4 in local development to avoid Windows IPv6 ENETUNREACH to Supabase.
+if (process.env.NODE_ENV !== "production") {
+  try {
+    // Node >= 17
+    dns.setDefaultResultOrder("ipv4first");
+  } catch {
+    // ignore (older Node)
+  }
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -12,4 +20,4 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });

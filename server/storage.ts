@@ -1,8 +1,8 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { neonConfig, Pool } from "@neondatabase/serverless";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { eq, and, desc, sql, isNull, inArray } from "drizzle-orm";
 import * as schema from "@shared/schema";
+import dns from "node:dns";
 import type {
   User,
   InsertUser,
@@ -28,7 +28,15 @@ import type {
   InsertEmailVerificationCode,
 } from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Prefer IPv4 in local development to avoid Windows IPv6 ENETUNREACH to Supabase.
+if (process.env.NODE_ENV !== "production") {
+  try {
+    // Node >= 17
+    dns.setDefaultResultOrder("ipv4first");
+  } catch {
+    // ignore (older Node)
+  }
+}
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
 const db = drizzle(pool, { schema });
@@ -59,14 +67,14 @@ export interface IStorage {
   getPostsByTrend(trendId: string): Promise<Post[]>;
   getPostsByUser(userId: string): Promise<Post[]>;
   getRankedPostsForTrend(trendId: string): Promise<Array<Post & { user: User }>>;
+  
   createPost(post: InsertPost): Promise<Post>;
   updatePost(id: string, data: Partial<Post>): Promise<Post | undefined>;
+  deletePost(id: string): Promise<void>;
   
   // Votes
   getVote(postId: string, userId: string): Promise<Vote | undefined>;
   getVotesByUser(userId: string, trendId: string): Promise<Vote[]>;
-  createVote(vote: InsertVote): Promise<Vote>;
-  deleteVote(postId: string, userId: string): Promise<void>;
   incrementVote(postId: string, userId: string, trendId: string): Promise<Vote>;
   decrementVote(postId: string, userId: string): Promise<Vote | null>;
   
@@ -87,129 +95,94 @@ export interface IStorage {
   // View Tracking
   getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined>;
   updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking>;
-  trackTrendView(userId: string, trendId: string): Promise<void>;
-  getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number>, subcategory: Record<string, number> }>;
   
-  // Saved Items
+  // Saved Trends
+  isTrendSaved(userId: string, trendId: string): Promise<boolean>;
   saveTrend(userId: string, trendId: string): Promise<SavedTrend>;
   unsaveTrend(userId: string, trendId: string): Promise<void>;
-  isTrendSaved(userId: string, trendId: string): Promise<boolean>;
   getSavedTrends(userId: string): Promise<Trend[]>;
+  
+  // Saved Posts
+  isPostSaved(userId: string, postId: string): Promise<boolean>;
   savePost(userId: string, postId: string): Promise<SavedPost>;
   unsavePost(userId: string, postId: string): Promise<void>;
-  isPostSaved(userId: string, postId: string): Promise<boolean>;
   getSavedPosts(userId: string): Promise<Post[]>;
-  deletePost(id: string): Promise<void>;
   
   // Notifications
   createNotification(notification: InsertNotification): Promise<Notification>;
-  getNotifications(userId: string, limit?: number): Promise<Array<Notification & { actor: User | null }>>;
+  getNotifications(userId: string, limit?: number): Promise<Notification[]>;
   getUnreadCount(userId: string): Promise<number>;
-  markAsRead(notificationId: string): Promise<void>;
+  markAsRead(id: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
-  deleteNotification(notificationId: string): Promise<void>;
-  getNotificationTracking(userId: string, type: string): Promise<any>;
-  recordNotificationSent(userId: string, type: string, variant?: number): Promise<void>;
-
+  deleteNotification(id: string): Promise<void>;
+  getNewContentCounts(userId: string): Promise<any>;
+  
   // OneSignal Subscriptions
   saveOneSignalSubscription(subscription: InsertOneSignalSubscription): Promise<OneSignalSubscription>;
   getOneSignalSubscription(userId: string): Promise<OneSignalSubscription | undefined>;
-  getActiveOneSignalSubscriptions(limit?: number): Promise<OneSignalSubscription[]>;
-
-  // Disqualified Users
-  disqualifyUser(userId: string, trendId: string): Promise<void>;
-  isUserDisqualified(userId: string, trendId: string): Promise<boolean>;
-
-  // Analytics
-  getTrendAnalytics(trendId: string): Promise<{
-    totalPosts: number;
-    totalVotes: number;
-    totalComments: number;
-    uniqueParticipants: number;
-    averageVotesPerPost: number;
-    topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
-    engagementRate: number;
-    views: number;
-  }>;
-
-  // Email Verification
+  
+  // Email Verification Codes
   createVerificationCode(email: string, code: string, expiresAt: Date): Promise<EmailVerificationCode>;
   getVerificationCode(code: string): Promise<EmailVerificationCode | undefined>;
   deleteVerificationCode(code: string): Promise<void>;
-  deleteExpiredVerificationCodes(): Promise<void>;
+  
+  // Disqualification
+  disqualifyUser(userId: string, trendId: string): Promise<void>;
+  isUserDisqualified(userId: string, trendId: string): Promise<boolean>;
+  
+  // Analytics
+  trackTrendView(userId: string, trendId: string): Promise<void>;
+  getTrendAnalytics(trendId: string): Promise<any>;
 }
 
-export class DbStorage implements IStorage {
+export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    const result = await db.select().from(schema.users).where(eq(schema.users.id, id));
-    return result[0];
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(schema.users).where(sql`LOWER(TRIM(${schema.users.username})) = LOWER(TRIM(${username}))`);
-    return result[0];
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.username, username));
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await db.select().from(schema.users).where(eq(schema.users.email, email));
-    return result[0];
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    return user;
   }
 
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const result = await db.select().from(schema.users).where(eq(schema.users.googleId, googleId));
-    return result[0];
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.googleId, googleId));
+    return user;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(schema.users).values(insertUser).returning();
-    return result[0];
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db.insert(schema.users).values(userData).returning();
+    return user;
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
-    const result = await db.update(schema.users).set(data).where(eq(schema.users.id, id)).returning();
-    return result[0];
+    const [user] = await db.update(schema.users).set(data).where(eq(schema.users.id, id)).returning();
+    return user;
   }
 
   async upsertUser(userData: Partial<User>): Promise<User> {
-    if (!userData.id) throw new Error("User ID is required");
-    
-    // Check if user already exists by email
-    if (userData.email) {
-      const existingUser = await this.getUserByEmail(userData.email);
-      if (existingUser) {
-        // Update existing user
-        const updatedData = {
-          profilePicture: userData.profilePicture,
-          fullName: userData.fullName,
-        };
-        const result = await db
-          .update(schema.users)
-          .set(updatedData)
-          .where(eq(schema.users.id, existingUser.id))
-          .returning();
-        return result[0];
-      }
+    if (!userData.username) {
+      throw new Error("Username is required for upsert");
     }
-    
-    // Map Replit Auth fields to existing schema
-    const mappedData = {
-      id: userData.id,
-      email: userData.email,
-      username: userData.username || `user_${userData.id.substring(0, 8)}`,
-      fullName: userData.fullName || userData.email?.split("@")[0],
-      profilePicture: userData.profilePicture,
-    };
-    
-    const result = await db
-      .insert(schema.users)
-      .values(mappedData as any)
-      .onConflictDoUpdate({
-        target: schema.users.id,
-        set: mappedData as any,
-      })
-      .returning();
-    return result[0];
+
+    // Try to find existing user by username
+    const existing = await this.getUserByUsername(userData.username);
+    if (existing) {
+      const updated = await this.updateUser(existing.id, userData);
+      if (!updated) throw new Error("Failed to update user");
+      return updated;
+    }
+
+    // Create new user
+    const created = await this.createUser(userData as InsertUser);
+    return created;
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -218,297 +191,227 @@ export class DbStorage implements IStorage {
 
   // Trends
   async getTrend(id: string): Promise<Trend | undefined> {
-    const result = await db.select().from(schema.trends).where(eq(schema.trends.id, id));
-    return result[0];
+    const [trend] = await db.select().from(schema.trends).where(eq(schema.trends.id, id));
+    return trend;
   }
 
   async getAllTrends(category?: string): Promise<Trend[]> {
     if (category) {
-      return await db.select().from(schema.trends).where(eq(schema.trends.category, category)).orderBy(desc(schema.trends.createdAt));
+      return await db
+        .select()
+        .from(schema.trends)
+        .where(eq(schema.trends.category, category))
+        .orderBy(desc(schema.trends.createdAt));
     }
     return await db.select().from(schema.trends).orderBy(desc(schema.trends.createdAt));
   }
 
   async getTrendsByUser(userId: string): Promise<Trend[]> {
-    return await db.select().from(schema.trends).where(eq(schema.trends.userId, userId)).orderBy(desc(schema.trends.createdAt));
+    return await db
+      .select()
+      .from(schema.trends)
+      .where(eq(schema.trends.userId, userId))
+      .orderBy(desc(schema.trends.createdAt));
   }
 
-  async createTrend(trend: InsertTrend): Promise<Trend> {
-    const trendData = {
-      ...trend,
-      endDate: typeof trend.endDate === 'string' ? new Date(trend.endDate) : trend.endDate,
-    };
-    const result = await db.insert(schema.trends).values(trendData).returning();
-    return result[0];
+  async createTrend(trendData: InsertTrend): Promise<Trend> {
+    const [trend] = await db.insert(schema.trends).values(trendData).returning();
+    return trend;
   }
 
   async updateTrend(id: string, data: Partial<Trend>): Promise<Trend | undefined> {
-    const result = await db.update(schema.trends).set(data).where(eq(schema.trends.id, id)).returning();
-    return result[0];
+    const [trend] = await db.update(schema.trends).set(data).where(eq(schema.trends.id, id)).returning();
+    return trend;
   }
 
   async deleteTrend(id: string): Promise<void> {
-    try {
-      console.log(`[deleteTrend] Starting deletion for trend: ${id}`);
-      
-      // Step 1: Get all posts for this trend
-      const posts = await db.select({ id: schema.posts.id }).from(schema.posts).where(eq(schema.posts.trendId, id));
-      const postIds = posts.map(p => p.id);
-      console.log(`[deleteTrend] Found ${postIds.length} posts`);
-      
-      // Step 2: Get all comments on posts in this trend
-      let postCommentIds: string[] = [];
-      if (postIds.length > 0) {
-        const postComments = await db.select({ id: schema.comments.id }).from(schema.comments).where(inArray(schema.comments.postId, postIds));
-        postCommentIds = postComments.map(c => c.id);
-        console.log(`[deleteTrend] Found ${postCommentIds.length} post comments`);
-        
-        // Delete notifications for these comments
-        if (postCommentIds.length > 0) {
-          console.log(`[deleteTrend] Deleting notifications for post comments...`);
-          await db.delete(schema.notifications).where(inArray(schema.notifications.commentId, postCommentIds));
-        }
-        
-        // Delete all post comments
-        console.log(`[deleteTrend] Deleting post comments...`);
-        await db.delete(schema.comments).where(inArray(schema.comments.postId, postIds));
-      }
-      
-      // Step 3: Get and delete trend-level chat comments
-      const trendComments = await db.select({ id: schema.comments.id }).from(schema.comments).where(and(
-        eq(schema.comments.trendId, id),
-        isNull(schema.comments.postId)
-      ));
-      const trendCommentIds = trendComments.map(c => c.id);
-      console.log(`[deleteTrend] Found ${trendCommentIds.length} trend comments`);
-      
-      if (trendCommentIds.length > 0) {
-        console.log(`[deleteTrend] Deleting notifications for trend comments...`);
-        await db.delete(schema.notifications).where(inArray(schema.notifications.commentId, trendCommentIds));
-        console.log(`[deleteTrend] Deleting trend comments...`);
-        await db.delete(schema.comments).where(inArray(schema.comments.id, trendCommentIds));
-      }
-      
-      // Step 4: Delete notifications for this trend
-      console.log(`[deleteTrend] Deleting trend notifications...`);
-      await db.delete(schema.notifications).where(eq(schema.notifications.trendId, id));
-      
-      // Step 5: Delete votes and saved posts for posts in this trend
-      if (postIds.length > 0) {
-        console.log(`[deleteTrend] Deleting votes...`);
-        await db.delete(schema.votes).where(inArray(schema.votes.postId, postIds));
-        console.log(`[deleteTrend] Deleting saved posts...`);
-        await db.delete(schema.savedPosts).where(inArray(schema.savedPosts.postId, postIds));
-        console.log(`[deleteTrend] Deleting post notifications...`);
-        await db.delete(schema.notifications).where(inArray(schema.notifications.postId, postIds));
-      }
-      
-      // Step 6: Delete all posts for this trend
-      if (postIds.length > 0) {
-        console.log(`[deleteTrend] Deleting posts...`);
-        await db.delete(schema.posts).where(inArray(schema.posts.id, postIds));
-      }
-      
-      // Step 7: Delete saved trends
-      console.log(`[deleteTrend] Deleting saved trends...`);
-      await db.delete(schema.savedTrends).where(eq(schema.savedTrends.trendId, id));
-      
-      // Step 8: Delete view tracking for this trend
-      console.log(`[deleteTrend] Deleting view tracking...`);
-      await db.delete(schema.viewTracking).where(and(
-        eq(schema.viewTracking.type, 'chat'),
-        eq(schema.viewTracking.identifier, id)
-      ));
-      
-      // Step 9: Delete the trend itself
-      console.log(`[deleteTrend] Deleting trend...`);
-      await db.delete(schema.trends).where(eq(schema.trends.id, id));
-      
-      console.log(`[deleteTrend] ✅ Successfully deleted trend: ${id}`);
-    } catch (error) {
-      console.error(`[deleteTrend] ❌ Error deleting trend ${id}:`, error);
-      throw error;
-    }
+    await db.delete(schema.trends).where(eq(schema.trends.id, id));
   }
 
   async incrementTrendParticipants(trendId: string): Promise<void> {
-    await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} + 1` }).where(eq(schema.trends.id, trendId));
+    await db
+      .update(schema.trends)
+      .set({ participants: sql`${schema.trends.participants} + 1` })
+      .where(eq(schema.trends.id, trendId));
   }
 
   async decrementTrendParticipants(trendId: string): Promise<void> {
-    await db.update(schema.trends).set({ participants: sql`${schema.trends.participants} - 1` }).where(eq(schema.trends.id, trendId));
+    await db
+      .update(schema.trends)
+      .set({ participants: sql`GREATEST(${schema.trends.participants} - 1, 0)` })
+      .where(eq(schema.trends.id, trendId));
   }
 
   // Posts
   async getPost(id: string): Promise<Post | undefined> {
-    const result = await db.select().from(schema.posts).where(eq(schema.posts.id, id));
-    return result[0];
+    const [post] = await db.select().from(schema.posts).where(eq(schema.posts.id, id));
+    return post;
   }
 
   async getPostsByTrend(trendId: string): Promise<Post[]> {
-    return await db.select().from(schema.posts).where(eq(schema.posts.trendId, trendId)).orderBy(desc(schema.posts.votes));
+    return await db
+      .select()
+      .from(schema.posts)
+      .where(eq(schema.posts.trendId, trendId))
+      .orderBy(desc(schema.posts.createdAt));
   }
 
   async getPostsByUser(userId: string): Promise<Post[]> {
-    return await db.select().from(schema.posts).where(eq(schema.posts.userId, userId)).orderBy(desc(schema.posts.createdAt));
+    return await db
+      .select()
+      .from(schema.posts)
+      .where(eq(schema.posts.userId, userId))
+      .orderBy(desc(schema.posts.createdAt));
   }
 
   async getRankedPostsForTrend(trendId: string): Promise<Array<Post & { user: User }>> {
-    const posts = await db.select()
-      .from(schema.posts)
-      .where(and(eq(schema.posts.trendId, trendId), eq(schema.posts.isDisqualified, 0)))
-      .orderBy(desc(schema.posts.votes), schema.posts.createdAt);
-    
-    const postsWithUsers = await Promise.all(
-      posts.map(async (post) => {
-        const user = await this.getUser(post.userId);
-        return { ...post, user: user! };
+    const results = await db
+      .select({
+        post: schema.posts,
+        user: schema.users,
       })
-    );
-    
-    return postsWithUsers;
+      .from(schema.posts)
+      .leftJoin(schema.users, eq(schema.posts.userId, schema.users.id))
+      .where(eq(schema.posts.trendId, trendId))
+      .orderBy(desc(schema.posts.votes));
+
+    return results
+      .filter((r) => r.user !== null)
+      .map((r) => ({ ...r.post, user: r.user as User }));
   }
 
-  async createPost(post: InsertPost): Promise<Post> {
-    // Support backwards compatibility: use mediaUrl if provided, otherwise use imageUrl
-    const postData = {
-      ...post,
-      mediaUrl: post.mediaUrl || post.imageUrl || '',
-      mediaType: post.mediaType || 'image',
-      imageUrl: post.imageUrl || post.mediaUrl || '', // Keep imageUrl for backwards compat
-    };
-    const result = await db.insert(schema.posts).values(postData).returning();
-    return result[0];
+  async createPost(postData: InsertPost): Promise<Post> {
+    const [post] = await db.insert(schema.posts).values(postData).returning();
+    return post;
   }
 
   async updatePost(id: string, data: Partial<Post>): Promise<Post | undefined> {
-    const result = await db.update(schema.posts).set(data).where(eq(schema.posts.id, id)).returning();
-    return result[0];
+    const [post] = await db.update(schema.posts).set(data).where(eq(schema.posts.id, id)).returning();
+    return post;
+  }
+
+  async deletePost(id: string): Promise<void> {
+    await db.delete(schema.posts).where(eq(schema.posts.id, id));
   }
 
   // Votes
   async getVote(postId: string, userId: string): Promise<Vote | undefined> {
-    const result = await db.select().from(schema.votes).where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)));
-    return result[0];
+    const [vote] = await db
+      .select()
+      .from(schema.votes)
+      .where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)));
+    return vote;
   }
 
   async getVotesByUser(userId: string, trendId: string): Promise<Vote[]> {
-    return await db.select().from(schema.votes).where(and(eq(schema.votes.userId, userId), eq(schema.votes.trendId, trendId)));
-  }
-
-  async createVote(vote: InsertVote): Promise<Vote> {
-    const result = await db.insert(schema.votes).values(vote).returning();
-    await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} + 1` }).where(eq(schema.posts.id, vote.postId));
-    return result[0];
-  }
-
-  async deleteVote(postId: string, userId: string): Promise<void> {
-    await db.delete(schema.votes).where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)));
-    await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} - 1` }).where(eq(schema.posts.id, postId));
+    return await db
+      .select()
+      .from(schema.votes)
+      .where(and(eq(schema.votes.userId, userId), eq(schema.votes.trendId, trendId)));
   }
 
   async incrementVote(postId: string, userId: string, trendId: string): Promise<Vote> {
-    const existingVote = await this.getVote(postId, userId);
-    
-    if (existingVote) {
-      const result = await db
+    const existing = await this.getVote(postId, userId);
+
+    if (existing) {
+      const [updated] = await db
         .update(schema.votes)
-        .set({ count: sql`${schema.votes.count} + 1` })
-        .where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)))
+        .set({ count: (existing.count || 0) + 1 })
+        .where(eq(schema.votes.id, existing.id))
         .returning();
-      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} + 1` }).where(eq(schema.posts.id, postId));
-      return result[0];
-    } else {
-      const result = await db.insert(schema.votes).values({ postId, userId, trendId, count: 1 }).returning();
-      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} + 1` }).where(eq(schema.posts.id, postId));
-      return result[0];
+
+      // update post vote count
+      await db
+        .update(schema.posts)
+        .set({ votes: sql`${schema.posts.votes} + 1` })
+        .where(eq(schema.posts.id, postId));
+
+      return updated;
     }
+
+    const [vote] = await db
+      .insert(schema.votes)
+      .values({ postId, userId, trendId, count: 1 })
+      .returning();
+
+    await db
+      .update(schema.posts)
+      .set({ votes: sql`${schema.posts.votes} + 1` })
+      .where(eq(schema.posts.id, postId));
+
+    return vote;
   }
 
   async decrementVote(postId: string, userId: string): Promise<Vote | null> {
-    const existingVote = await this.getVote(postId, userId);
-    
-    if (!existingVote) {
+    const existing = await this.getVote(postId, userId);
+
+    if (!existing) return null;
+
+    const current = existing.count || 0;
+
+    if (current <= 1) {
+      await db.delete(schema.votes).where(eq(schema.votes.id, existing.id));
+
+      await db
+        .update(schema.posts)
+        .set({ votes: sql`GREATEST(${schema.posts.votes} - 1, 0)` })
+        .where(eq(schema.posts.id, postId));
+
       return null;
     }
-    
-    if (existingVote.count <= 1) {
-      await db.delete(schema.votes).where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)));
-      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} - 1` }).where(eq(schema.posts.id, postId));
-      return null;
-    } else {
-      const result = await db
-        .update(schema.votes)
-        .set({ count: sql`${schema.votes.count} - 1` })
-        .where(and(eq(schema.votes.postId, postId), eq(schema.votes.userId, userId)))
-        .returning();
-      await db.update(schema.posts).set({ votes: sql`${schema.posts.votes} - 1` }).where(eq(schema.posts.id, postId));
-      return result[0];
-    }
+
+    const [updated] = await db
+      .update(schema.votes)
+      .set({ count: current - 1 })
+      .where(eq(schema.votes.id, existing.id))
+      .returning();
+
+    await db
+      .update(schema.posts)
+      .set({ votes: sql`GREATEST(${schema.posts.votes} - 1, 0)` })
+      .where(eq(schema.posts.id, postId));
+
+    return updated;
   }
 
   // Comments
   async getComment(id: string): Promise<Comment | undefined> {
-    const result = await db.select().from(schema.comments).where(eq(schema.comments.id, id));
-    return result[0];
+    const [comment] = await db.select().from(schema.comments).where(eq(schema.comments.id, id));
+    return comment;
   }
 
   async getCommentsByPost(postId: string): Promise<Comment[]> {
-    return await db.select().from(schema.comments).where(eq(schema.comments.postId, postId)).orderBy(desc(schema.comments.createdAt));
+    return await db
+      .select()
+      .from(schema.comments)
+      .where(eq(schema.comments.postId, postId))
+      .orderBy(desc(schema.comments.createdAt));
   }
 
   async getCommentsByTrend(trendId: string): Promise<Comment[]> {
-    return await db.select().from(schema.comments).where(
-      and(
-        eq(schema.comments.trendId, trendId),
-        isNull(schema.comments.postId)
-      )
-    ).orderBy(desc(schema.comments.createdAt));
+    return await db
+      .select()
+      .from(schema.comments)
+      .where(eq(schema.comments.trendId, trendId))
+      .orderBy(desc(schema.comments.createdAt));
   }
 
-  async createComment(comment: InsertComment): Promise<Comment> {
-    const result = await db.insert(schema.comments).values(comment).returning();
-    if (comment.trendId) {
-      await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} + 1` }).where(eq(schema.trends.id, comment.trendId));
-    }
-    if (comment.postId) {
-      await db.update(schema.posts).set({ commentCount: sql`${schema.posts.commentCount} + 1` }).where(eq(schema.posts.id, comment.postId));
-    }
-    return result[0];
+  async createComment(commentData: InsertComment): Promise<Comment> {
+    const [comment] = await db.insert(schema.comments).values(commentData).returning();
+    return comment;
   }
 
   async deleteComment(id: string): Promise<void> {
-    const comment = await this.getComment(id);
-    if (comment) {
-      // Step 1: Find all nested replies (comments that have this comment as parent)
-      const nestedReplies = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.parentId, id));
-      const nestedReplyIds = nestedReplies.map(r => r.id);
-      
-      // Step 2: Recursively delete all nested replies
-      for (const replyId of nestedReplyIds) {
-        await this.deleteComment(replyId); // Recursive call handles nested structure
-      }
-      
-      // Step 3: Delete notifications that reference this comment
-      await db.delete(schema.notifications).where(eq(schema.notifications.commentId, id));
-      
-      // Step 4: Delete the comment itself
-      await db.delete(schema.comments).where(eq(schema.comments.id, id));
-      
-      // Step 5: Update counts on parent trend/post
-      if (comment.trendId) {
-        await db.update(schema.trends).set({ chatCount: sql`${schema.trends.chatCount} - 1` }).where(eq(schema.trends.id, comment.trendId));
-      }
-      if (comment.postId) {
-        await db.update(schema.posts).set({ commentCount: sql`${schema.posts.commentCount} - 1` }).where(eq(schema.posts.id, comment.postId));
-      }
-    }
+    await db.delete(schema.comments).where(eq(schema.comments.id, id));
   }
 
   // Follows
   async getFollow(followerId: string, followingId: string): Promise<Follow | undefined> {
-    const result = await db.select().from(schema.follows).where(and(eq(schema.follows.followerId, followerId), eq(schema.follows.followingId, followingId)));
-    return result[0];
+    const [follow] = await db
+      .select()
+      .from(schema.follows)
+      .where(and(eq(schema.follows.followerId, followerId), eq(schema.follows.followingId, followingId)));
+    return follow;
   }
 
   async getFollowers(userId: string): Promise<Follow[]> {
@@ -519,500 +422,229 @@ export class DbStorage implements IStorage {
     return await db.select().from(schema.follows).where(eq(schema.follows.followerId, userId));
   }
 
-  async createFollow(follow: InsertFollow): Promise<Follow> {
-    const result = await db.insert(schema.follows).values(follow).returning();
-    await db.update(schema.users).set({ followers: sql`${schema.users.followers} + 1` }).where(eq(schema.users.id, follow.followingId));
-    await db.update(schema.users).set({ following: sql`${schema.users.following} + 1` }).where(eq(schema.users.id, follow.followerId));
-    return result[0];
+  async createFollow(followData: InsertFollow): Promise<Follow> {
+    const [follow] = await db.insert(schema.follows).values(followData).returning();
+    return follow;
   }
 
   async deleteFollow(followerId: string, followingId: string): Promise<void> {
-    await db.delete(schema.follows).where(and(eq(schema.follows.followerId, followerId), eq(schema.follows.followingId, followingId)));
-    await db.update(schema.users).set({ followers: sql`${schema.users.followers} - 1` }).where(eq(schema.users.id, followingId));
-    await db.update(schema.users).set({ following: sql`${schema.users.following} - 1` }).where(eq(schema.users.id, followerId));
+    await db
+      .delete(schema.follows)
+      .where(and(eq(schema.follows.followerId, followerId), eq(schema.follows.followingId, followingId)));
   }
 
   // View Tracking
   async getViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking | undefined> {
-    const result = await db.select().from(schema.viewTracking).where(
-      and(
-        eq(schema.viewTracking.userId, userId),
-        eq(schema.viewTracking.type, type),
-        eq(schema.viewTracking.identifier, identifier)
-      )
-    );
-    return result[0];
+    const [tracking] = await db
+      .select()
+      .from(schema.viewTracking)
+      .where(and(eq(schema.viewTracking.userId, userId), eq(schema.viewTracking.type, type), eq(schema.viewTracking.identifier, identifier)));
+    return tracking;
   }
 
   async updateViewTracking(userId: string, type: string, identifier: string): Promise<ViewTracking> {
     const existing = await this.getViewTracking(userId, type, identifier);
-    
+
     if (existing) {
-      const result = await db
+      const [updated] = await db
         .update(schema.viewTracking)
         .set({ lastViewedAt: new Date() })
         .where(eq(schema.viewTracking.id, existing.id))
         .returning();
-      return result[0];
-    } else {
-      const result = await db.insert(schema.viewTracking).values({ userId, type, identifier }).returning();
-      return result[0];
+      return updated;
     }
+
+    const [created] = await db
+      .insert(schema.viewTracking)
+      .values({ userId, type, identifier, lastViewedAt: new Date() })
+      .returning();
+    return created;
   }
 
-  async trackTrendView(userId: string, trendId: string): Promise<void> {
-    const existing = await this.getViewTracking(userId, 'trend', trendId);
-    
-    if (!existing) {
-      await db.insert(schema.viewTracking).values({ userId, type: 'trend', identifier: trendId });
-      await db.update(schema.trends).set({ views: sql`${schema.trends.views} + 1` }).where(eq(schema.trends.id, trendId));
-    } else {
-      await db
-        .update(schema.viewTracking)
-        .set({ lastViewedAt: new Date() })
-        .where(eq(schema.viewTracking.id, existing.id));
-    }
+  // Saved Trends
+  async isTrendSaved(userId: string, trendId: string): Promise<boolean> {
+    const [saved] = await db
+      .select()
+      .from(schema.savedTrends)
+      .where(and(eq(schema.savedTrends.userId, userId), eq(schema.savedTrends.trendId, trendId)));
+    return !!saved;
   }
 
-  async getNewContentCounts(userId: string): Promise<{ category: Record<string, number>, chat: Record<string, number>, subcategory: Record<string, number> }> {
-    const categoryCounts: Record<string, number> = {};
-    const chatCounts: Record<string, number> = {};
-    const subcategoryCounts: Record<string, number> = {};
-    
-    const viewRecords = await db.select().from(schema.viewTracking).where(eq(schema.viewTracking.userId, userId));
-    
-    const categoryRecords = viewRecords.filter(r => r.type === 'category');
-    const categories = ['AI', 'Arts', 'Entertainment', 'Fashion', 'Food', 'Gaming', 'Photography', 'Sports', 'Technology', 'Other'];
-    
-    for (const category of categories) {
-      const record = categoryRecords.find(r => r.identifier === category);
-      const lastViewed = record?.lastViewedAt || new Date(0);
-      const newTrends = await db.select().from(schema.trends).where(
-        and(
-          eq(schema.trends.category, category),
-          sql`${schema.trends.createdAt} > ${lastViewed}`
-        )
-      );
-      categoryCounts[category] = newTrends.length;
-    }
-    
-    const chatRecords = viewRecords.filter(r => r.type === 'chat');
-    for (const record of chatRecords) {
-      const lastViewed = record.lastViewedAt || new Date(0);
-      const newMessages = await db.select().from(schema.comments).where(
-        and(
-          eq(schema.comments.trendId, record.identifier),
-          isNull(schema.comments.postId),
-          sql`${schema.comments.createdAt} > ${lastViewed}`
-        )
-      );
-      chatCounts[record.identifier] = newMessages.length;
-    }
-    
-    const subcategoryNames = ['New', 'Trending', 'Ending Soon', 'Ended'];
-    const subcategoryRecords = viewRecords.filter(r => r.type === 'subcategory');
-    const allTrends = await db.select().from(schema.trends);
-    const now = new Date();
-    const ENGAGEMENT_THRESHOLD = 300;
-
-    for (const sub of subcategoryNames) {
-      const record = subcategoryRecords.find(r => r.identifier === sub);
-      const lastViewed = record?.lastViewedAt || new Date(0);
-
-      let matchingTrends: typeof allTrends;
-      switch (sub) {
-        case "New":
-          matchingTrends = allTrends.filter(t => {
-            const created = t.createdAt ? new Date(t.createdAt) : now;
-            const hoursSince = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-            const isActive = !t.endDate || new Date(t.endDate) > now;
-            return hoursSince <= 72 && isActive;
-          });
-          break;
-        case "Trending":
-          matchingTrends = allTrends.filter(t => {
-            const isActive = !t.endDate || new Date(t.endDate) > now;
-            const engagement = (t.views || 0) + (t.participants || 0) * 2 + (t.chatCount || 0) * 3;
-            return isActive && engagement >= ENGAGEMENT_THRESHOLD;
-          });
-          break;
-        case "Ending Soon":
-          matchingTrends = allTrends.filter(t => {
-            if (!t.endDate) return false;
-            const end = new Date(t.endDate);
-            const daysLeft = (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-            return daysLeft > 0 && daysLeft <= 3;
-          });
-          break;
-        case "Ended":
-          matchingTrends = allTrends.filter(t => {
-            if (!t.endDate) return false;
-            return new Date(t.endDate) <= now;
-          });
-          break;
-        default:
-          matchingTrends = [];
-      }
-
-      const newCount = matchingTrends.filter(t => {
-        const created = t.createdAt ? new Date(t.createdAt) : new Date(0);
-        return created > lastViewed;
-      }).length;
-      subcategoryCounts[sub] = newCount;
-    }
-    
-    return { category: categoryCounts, chat: chatCounts, subcategory: subcategoryCounts };
-  }
-
-  // Saved Items
   async saveTrend(userId: string, trendId: string): Promise<SavedTrend> {
-    const result = await db.insert(schema.savedTrends).values({ userId, trendId }).returning();
-    return result[0];
+    const [saved] = await db.insert(schema.savedTrends).values({ userId, trendId }).returning();
+    return saved;
   }
 
   async unsaveTrend(userId: string, trendId: string): Promise<void> {
-    await db.delete(schema.savedTrends).where(and(eq(schema.savedTrends.userId, userId), eq(schema.savedTrends.trendId, trendId)));
-  }
-
-  async isTrendSaved(userId: string, trendId: string): Promise<boolean> {
-    const result = await db.select().from(schema.savedTrends).where(and(eq(schema.savedTrends.userId, userId), eq(schema.savedTrends.trendId, trendId)));
-    return result.length > 0;
+    await db
+      .delete(schema.savedTrends)
+      .where(and(eq(schema.savedTrends.userId, userId), eq(schema.savedTrends.trendId, trendId)));
   }
 
   async getSavedTrends(userId: string): Promise<Trend[]> {
-    const savedRecords = await db.select().from(schema.savedTrends).where(eq(schema.savedTrends.userId, userId)).orderBy(desc(schema.savedTrends.createdAt));
-    const trends = await Promise.all(
-      savedRecords.map(async (record) => {
-        const trend = await this.getTrend(record.trendId);
-        return trend!;
-      })
-    );
-    return trends.filter(t => t !== undefined);
+    const saved = await db
+      .select()
+      .from(schema.savedTrends)
+      .where(eq(schema.savedTrends.userId, userId));
+
+    if (!saved.length) return [];
+
+    const trendIds = saved.map((s) => s.trendId);
+    return await db.select().from(schema.trends).where(inArray(schema.trends.id, trendIds));
+  }
+
+  // Saved Posts
+  async isPostSaved(userId: string, postId: string): Promise<boolean> {
+    const [saved] = await db
+      .select()
+      .from(schema.savedPosts)
+      .where(and(eq(schema.savedPosts.userId, userId), eq(schema.savedPosts.postId, postId)));
+    return !!saved;
   }
 
   async savePost(userId: string, postId: string): Promise<SavedPost> {
-    const result = await db.insert(schema.savedPosts).values({ userId, postId }).returning();
-    return result[0];
+    const [saved] = await db.insert(schema.savedPosts).values({ userId, postId }).returning();
+    return saved;
   }
 
   async unsavePost(userId: string, postId: string): Promise<void> {
-    await db.delete(schema.savedPosts).where(and(eq(schema.savedPosts.userId, userId), eq(schema.savedPosts.postId, postId)));
-  }
-
-  async isPostSaved(userId: string, postId: string): Promise<boolean> {
-    const result = await db.select().from(schema.savedPosts).where(and(eq(schema.savedPosts.userId, userId), eq(schema.savedPosts.postId, postId)));
-    return result.length > 0;
+    await db
+      .delete(schema.savedPosts)
+      .where(and(eq(schema.savedPosts.userId, userId), eq(schema.savedPosts.postId, postId)));
   }
 
   async getSavedPosts(userId: string): Promise<Post[]> {
-    const savedRecords = await db.select().from(schema.savedPosts).where(eq(schema.savedPosts.userId, userId)).orderBy(desc(schema.savedPosts.createdAt));
-    const posts = await Promise.all(
-      savedRecords.map(async (record) => {
-        const post = await this.getPost(record.postId);
-        return post!;
-      })
-    );
-    return posts.filter(p => p !== undefined);
-  }
+    const saved = await db
+      .select()
+      .from(schema.savedPosts)
+      .where(eq(schema.savedPosts.userId, userId));
 
-  async deletePost(id: string): Promise<void> {
-    try {
-      console.log(`[deletePost] Starting deletion for post: ${id}`);
-      
-      // Step 1: Get all comments for this post
-      const comments = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.postId, id));
-      const commentIds = comments.map(c => c.id);
-      console.log(`[deletePost] Found ${commentIds.length} comments`);
-      
-      // Step 2: Delete notifications for these comments
-      if (commentIds.length > 0) {
-        console.log(`[deletePost] Deleting notifications for comments...`);
-        await db.delete(schema.notifications).where(inArray(schema.notifications.commentId, commentIds));
-      }
-      
-      // Step 3: Delete all comments for this post
-      console.log(`[deletePost] Deleting comments...`);
-      await db.delete(schema.comments).where(eq(schema.comments.postId, id));
-      
-      // Step 4: Delete votes for this post
-      console.log(`[deletePost] Deleting votes...`);
-      await db.delete(schema.votes).where(eq(schema.votes.postId, id));
-      
-      // Step 5: Delete saved post records
-      console.log(`[deletePost] Deleting saved posts...`);
-      await db.delete(schema.savedPosts).where(eq(schema.savedPosts.postId, id));
-      
-      // Step 6: Delete notifications related to this post
-      console.log(`[deletePost] Deleting post notifications...`);
-      await db.delete(schema.notifications).where(eq(schema.notifications.postId, id));
-      
-      // Step 7: Delete the post itself
-      console.log(`[deletePost] Deleting post...`);
-      await db.delete(schema.posts).where(eq(schema.posts.id, id));
-      
-      console.log(`[deletePost] ✅ Successfully deleted post: ${id}`);
-    } catch (error) {
-      console.error(`[deletePost] ❌ Error deleting post ${id}:`, error);
-      throw error;
-    }
+    if (!saved.length) return [];
+
+    const postIds = saved.map((s) => s.postId);
+    return await db.select().from(schema.posts).where(inArray(schema.posts.id, postIds));
   }
 
   // Notifications
-  async createNotification(notification: InsertNotification): Promise<Notification> {
-    const result = await db.insert(schema.notifications).values(notification).returning();
-    return result[0];
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [notification] = await db.insert(schema.notifications).values(notificationData).returning();
+    return notification;
   }
 
-  async getNotifications(userId: string, limit: number = 50): Promise<Array<Notification & { actor: User | null }>> {
-    const notifications = await db
+  async getNotifications(userId: string, limit = 50): Promise<Notification[]> {
+    return await db
       .select()
       .from(schema.notifications)
       .where(eq(schema.notifications.userId, userId))
       .orderBy(desc(schema.notifications.createdAt))
       .limit(limit);
-    
-    // Fetch actor details for each notification
-    const notificationsWithActor = await Promise.all(
-      notifications.map(async (notif) => {
-        const actor = notif.actorId ? await this.getUser(notif.actorId) : null;
-        return { ...notif, actor: actor || null };
-      })
-    );
-    
-    return notificationsWithActor;
   }
 
   async getUnreadCount(userId: string): Promise<number> {
     const result = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(*)` })
       .from(schema.notifications)
       .where(and(eq(schema.notifications.userId, userId), eq(schema.notifications.isRead, 0)));
-    
-    return result[0]?.count || 0;
+    return Number(result[0]?.count || 0);
   }
 
-  async markAsRead(notificationId: string): Promise<void> {
-    await db
-      .update(schema.notifications)
-      .set({ isRead: 1 })
-      .where(eq(schema.notifications.id, notificationId));
+  async markAsRead(id: string): Promise<void> {
+    await db.update(schema.notifications).set({ isRead: 1 }).where(eq(schema.notifications.id, id));
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    await db
-      .update(schema.notifications)
-      .set({ isRead: 1 })
-      .where(eq(schema.notifications.userId, userId));
+    await db.update(schema.notifications).set({ isRead: 1 }).where(eq(schema.notifications.userId, userId));
   }
 
-  async deleteNotification(notificationId: string): Promise<void> {
-    await db.delete(schema.notifications).where(eq(schema.notifications.id, notificationId));
+  async deleteNotification(id: string): Promise<void> {
+    await db.delete(schema.notifications).where(eq(schema.notifications.id, id));
   }
 
-  async getNotificationTracking(userId: string, type: string): Promise<any> {
-    try {
-      const result = await db
-        .select()
-        .from(schema.notificationTracking)
-        .where(and(eq(schema.notificationTracking.userId, userId), eq(schema.notificationTracking.type, type)));
-      return result[0];
-    } catch {
-      return null;
-    }
-  }
-
-  async recordNotificationSent(userId: string, type: string, variant: number = 0): Promise<void> {
-    try {
-      const existing = await this.getNotificationTracking(userId, type);
-      const now = new Date();
-
-      if (existing) {
-        const lastSent = new Date(existing.lastSentAt);
-        const daysDiff = Math.floor((now.getTime() - lastSent.getTime()) / (1000 * 60 * 60 * 24));
-        const newCount = daysDiff >= 1 ? 1 : (existing.countToday || 0) + 1;
-
-        await db.update(schema.notificationTracking)
-          .set({ lastSentAt: now, countToday: newCount, lastVariant: variant })
-          .where(and(eq(schema.notificationTracking.userId, userId), eq(schema.notificationTracking.type, type)));
-      } else {
-        await db.insert(schema.notificationTracking).values({
-          userId,
-          type,
-          lastSentAt: now,
-          countToday: 1,
-          lastVariant: variant,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to record notification sent:", error);
-    }
+  async getNewContentCounts(userId: string): Promise<any> {
+    const unreadNotifications = await this.getUnreadCount(userId);
+    return { unreadNotifications };
   }
 
   // OneSignal Subscriptions
-  async saveOneSignalSubscription(subscription: InsertOneSignalSubscription): Promise<OneSignalSubscription> {
-    const existing = await db
-      .select()
-      .from(schema.oneSignalSubscriptions)
-      .where(eq(schema.oneSignalSubscriptions.userId, subscription.userId));
-
-    if (existing.length > 0) {
-      // Update existing subscription
-      const result = await db
-        .update(schema.oneSignalSubscriptions)
-        .set({ ...subscription, updatedAt: new Date() })
-        .where(eq(schema.oneSignalSubscriptions.userId, subscription.userId))
-        .returning();
-      return result[0];
-    } else {
-      // Insert new subscription
-      const result = await db
-        .insert(schema.oneSignalSubscriptions)
-        .values(subscription)
-        .returning();
-      return result[0];
-    }
+  async saveOneSignalSubscription(subscriptionData: InsertOneSignalSubscription): Promise<OneSignalSubscription> {
+    const [subscription] = await db.insert(schema.oneSignalSubscriptions).values(subscriptionData).returning();
+    return subscription;
   }
 
   async getOneSignalSubscription(userId: string): Promise<OneSignalSubscription | undefined> {
-    const result = await db
+    const [sub] = await db
       .select()
       .from(schema.oneSignalSubscriptions)
-      .where(eq(schema.oneSignalSubscriptions.userId, userId));
-    return result[0];
+      .where(and(eq(schema.oneSignalSubscriptions.userId, userId), eq(schema.oneSignalSubscriptions.isActive, 1)));
+    return sub;
   }
 
-  async getActiveOneSignalSubscriptions(limit: number = 100): Promise<OneSignalSubscription[]> {
-    const result = await db
-      .select()
-      .from(schema.oneSignalSubscriptions)
-      .where(eq(schema.oneSignalSubscriptions.isActive, 1))
-      .limit(limit);
-    return result;
-  }
-
-  // Disqualified Users
-  async disqualifyUser(userId: string, trendId: string): Promise<void> {
-    await db
-      .insert(schema.disqualifiedUsers)
-      .values({ userId, trendId })
-      .onConflictDoNothing();
-  }
-
-  async isUserDisqualified(userId: string, trendId: string): Promise<boolean> {
-    const result = await db
-      .select()
-      .from(schema.disqualifiedUsers)
-      .where(and(eq(schema.disqualifiedUsers.userId, userId), eq(schema.disqualifiedUsers.trendId, trendId)));
-    return result.length > 0;
-  }
-
-  // Analytics
-  async getTrendAnalytics(trendId: string): Promise<{
-    totalPosts: number;
-    totalVotes: number;
-    totalComments: number;
-    uniqueParticipants: number;
-    averageVotesPerPost: number;
-    topPosts: Array<{ id: string; caption: string; votes: number; username: string; mediaType?: string; mediaUrl?: string; imageUrl?: string }>;
-    engagementRate: number;
-    views: number;
-  }> {
-    // Get posts for this trend
-    const posts = await db
-      .select()
-      .from(schema.posts)
-      .where(eq(schema.posts.trendId, trendId));
-
-    const postIds = posts.map(p => p.id);
-
-    // Get all votes for posts in this trend
-    const votes = postIds.length > 0 
-      ? await db
-          .select()
-          .from(schema.votes)
-          .where(inArray(schema.votes.postId, postIds))
-      : [];
-
-    // Get all comments for posts in this trend
-    const comments = postIds.length > 0
-      ? await db
-          .select()
-          .from(schema.comments)
-          .where(inArray(schema.comments.postId, postIds))
-      : [];
-
-    // Calculate unique participants
-    const uniqueParticipants = new Set(posts.map(p => p.userId)).size;
-
-    // Get total votes sum
-    const totalVotes = votes.length;
-
-    // Calculate average votes per post
-    const averageVotesPerPost = posts.length > 0 ? totalVotes / posts.length : 0;
-
-    // Get top 5 posts with media info
-    const topPosts = await db
-      .select({
-        id: schema.posts.id,
-        caption: schema.posts.caption,
-        votes: sql<number>`COALESCE(COUNT(${schema.votes.id}), 0)`,
-        username: schema.users.username,
-        mediaType: schema.posts.mediaType,
-        mediaUrl: schema.posts.mediaUrl,
-        imageUrl: schema.posts.imageUrl,
-      })
-      .from(schema.posts)
-      .leftJoin(schema.votes, eq(schema.posts.id, schema.votes.postId))
-      .leftJoin(schema.users, eq(schema.posts.userId, schema.users.id))
-      .where(eq(schema.posts.trendId, trendId))
-      .groupBy(schema.posts.id, schema.users.id, schema.users.username)
-      .orderBy(desc(sql<number>`COUNT(${schema.votes.id})`))
-      .limit(5);
-
-    // Calculate engagement rate (total interactions / potential interactions)
-    const trend = await this.getTrend(trendId);
-    const engagementRate = trend && uniqueParticipants > 0 
-      ? ((totalVotes + comments.length) / (uniqueParticipants * 10)) * 100 
-      : 0;
-
-    return {
-      totalPosts: posts.length,
-      totalVotes,
-      totalComments: comments.length,
-      uniqueParticipants,
-      averageVotesPerPost: parseFloat(averageVotesPerPost.toFixed(2)),
-      topPosts: topPosts.map(p => ({
-        id: p.id,
-        caption: p.caption || "",
-        votes: Number(p.votes) || 0,
-        username: p.username || "Unknown",
-        mediaType: p.mediaType || undefined,
-        mediaUrl: p.mediaUrl || undefined,
-        imageUrl: p.imageUrl || undefined,
-      })),
-      engagementRate: parseFloat(engagementRate.toFixed(2)),
-      views: trend?.views || 0,
-    };
-  }
-
-  // Email Verification
+  // Email Verification Codes
   async createVerificationCode(email: string, code: string, expiresAt: Date): Promise<EmailVerificationCode> {
-    const result = await db.insert(schema.emailVerificationCodes).values({ email, code, expiresAt }).returning();
-    return result[0];
+    const [record] = await db
+      .insert(schema.emailVerificationCodes)
+      .values({ email, code, expiresAt })
+      .returning();
+    return record;
   }
 
   async getVerificationCode(code: string): Promise<EmailVerificationCode | undefined> {
-    const result = await db.select().from(schema.emailVerificationCodes).where(eq(schema.emailVerificationCodes.code, code));
-    return result[0];
+    const [record] = await db
+      .select()
+      .from(schema.emailVerificationCodes)
+      .where(eq(schema.emailVerificationCodes.code, code));
+    return record;
   }
 
   async deleteVerificationCode(code: string): Promise<void> {
     await db.delete(schema.emailVerificationCodes).where(eq(schema.emailVerificationCodes.code, code));
   }
 
-  async deleteExpiredVerificationCodes(): Promise<void> {
-    await db.delete(schema.emailVerificationCodes).where(sql`${schema.emailVerificationCodes.expiresAt} < NOW()`);
+  // Disqualification
+  async disqualifyUser(userId: string, trendId: string): Promise<void> {
+    // Mark user's posts in trend as disqualified by setting isDisqualified=1
+    await db
+      .update(schema.posts)
+      .set({ isDisqualified: 1 })
+      .where(and(eq(schema.posts.userId, userId), eq(schema.posts.trendId, trendId)));
+  }
+
+  async isUserDisqualified(userId: string, trendId: string): Promise<boolean> {
+    const posts = await db
+      .select()
+      .from(schema.posts)
+      .where(and(eq(schema.posts.userId, userId), eq(schema.posts.trendId, trendId)));
+    return posts.some((p) => p.isDisqualified === 1);
+  }
+
+  // Analytics
+  async trackTrendView(userId: string, trendId: string): Promise<void> {
+    // Increment trend views
+    await db
+      .update(schema.trends)
+      .set({ views: sql`${schema.trends.views} + 1` })
+      .where(eq(schema.trends.id, trendId));
+
+    // Store view tracking
+    await this.updateViewTracking(userId, "trend", trendId);
+  }
+
+  async getTrendAnalytics(trendId: string): Promise<any> {
+    const posts = await this.getPostsByTrend(trendId);
+    const uniqueParticipants = new Set(posts.map((p) => p.userId)).size;
+    const totalVotes = posts.reduce((sum, p) => sum + (p.votes || 0), 0);
+
+    const trend = await this.getTrend(trendId);
+
+    return {
+      trendId,
+      trendName: trend?.name || "Unknown",
+      views: trend?.views || 0,
+      participants: uniqueParticipants,
+      totalPosts: posts.length,
+      totalVotes,
+    };
   }
 }
 
-export const storage = new DbStorage();
+export const storage = new DatabaseStorage();

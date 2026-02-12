@@ -39,6 +39,9 @@ export function AuthModal({
   const [otpExpired, setOtpExpired] = useState(false);
   const { toast } = useToast();
 
+  // Feature flag: show development OTP in the UI only when enabled via VITE_SHOW_DEV_OTP
+  const showDevOtp = (import.meta as any).env?.VITE_SHOW_DEV_OTP === "true";
+
   // Timer effect for OTP countdown
   useEffect(() => {
     if (!showOTPVerification || timeLeft <= 0) return;
@@ -122,12 +125,12 @@ export function AuthModal({
       console.log("Register response:", data);
       toast({ title: "Check your email!", description: "We sent you a verification code" });
       setShowOTPVerification(true);
-      // Store dev OTP code if available
-      if (data.devOtpCode) {
+      // Store dev OTP code if available and feature flag enabled
+      if (showDevOtp && data.devOtpCode) {
         console.log("Setting dev OTP code:", data.devOtpCode);
         setDevOtpCode(data.devOtpCode);
-      } else {
-        console.warn("No devOtpCode in response");
+      } else if (!showDevOtp && data.devOtpCode) {
+        console.debug("Dev OTP present in response but VITE_SHOW_DEV_OTP is disabled.");
       }
     } catch (error: any) {
       toast({ 
@@ -200,7 +203,7 @@ export function AuthModal({
       setOtpCode("");
       setTimeLeft(180);
       setOtpExpired(false);
-      if (data.devOtpCode) {
+      if (showDevOtp && data.devOtpCode) {
         setDevOtpCode(data.devOtpCode);
       }
     } catch (error: any) {
@@ -277,7 +280,7 @@ export function AuthModal({
             </div>
 
             {/* Dev OTP Code */}
-            {devOtpCode && (
+            {showDevOtp && devOtpCode && (
               <div className="p-4 bg-blue-50 dark:bg-blue-950 border-2 border-blue-200 dark:border-blue-800 rounded-lg text-center">
                 <p className="text-xs text-blue-600 dark:text-blue-300 mb-2">Development Mode</p>
                 <p className="text-2xl text-blue-600 dark:text-blue-300 font-mono font-bold tracking-widest">{devOtpCode}</p>

@@ -13,7 +13,7 @@ import {
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { R2StorageService } from "./r2Storage";
-import { extractMentions } from "@/lib/mentions";
+import { extractMentions } from "../client/src/lib/mentions";
 import { sendPushNotification } from "./onesignal";
 import * as notificationService from "./notificationService";
 import { z } from "zod";
@@ -189,10 +189,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await sendOTPEmail(email, code);
 
       const response: any = { message: "OTP sent to email. Please verify to complete registration." };
-      // Include code in development mode for testing
-      if (process.env.NODE_ENV === "development") {
-        response.devOtpCode = code;
-      }
+      // Only include dev OTP if explicitly enabled (OFF by default)
+const allowDevOtp =
+  process.env.ALLOW_DEV_OTP === "true" &&
+  process.env.NODE_ENV !== "production";
+
+if (allowDevOtp) {
+  response.devOtpCode = code;
+}
       res.status(201).json(response);
     } catch (error) {
       console.error("Register error:", error);
