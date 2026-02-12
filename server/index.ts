@@ -5,7 +5,12 @@ import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { Pool } from "pg";
+import pg from 'pg';
+import type { Pool as PgPool } from 'pg';
+
+// pg is a CommonJS module; access the Pool constructor from the default import
+const Pool = (pg as any).Pool;
+
 import { registerRoutes } from "./routes";
 import { serveStatic, log } from "./helpers";
 import fs from "fs";
@@ -38,8 +43,9 @@ const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-this-in-
 const PgSession = connectPgSimple(session);
 
 // Create PostgreSQL pool for session store
-const sessionPool = new Pool({
+const sessionPool: PgPool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
 });
 
 // Configure session middleware
