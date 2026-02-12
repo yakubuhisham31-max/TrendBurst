@@ -1,5 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import pg from 'pg';
+const Pool = (pg as any).Pool;
+import type { Pool as PgPool } from 'pg';
 import { eq, and, desc, sql, isNull, inArray } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import dns from "node:dns";
@@ -38,7 +40,7 @@ if (process.env.NODE_ENV !== "production") {
   }
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+const pool: PgPool = new Pool({ connectionString: process.env.DATABASE_URL! });
 const db = drizzle(pool, { schema });
 
 export interface IStorage {
