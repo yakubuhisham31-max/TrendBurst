@@ -101,6 +101,12 @@ export default function FeedChatPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/comments/trend", trendId] });
       queryClient.invalidateQueries({ queryKey: [`/api/trends/${trendId}`] });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/trends');
+        }
+      });
       setMessage("");
       setReplyingTo(null);
     },
@@ -127,6 +133,12 @@ export default function FeedChatPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/comments/trend", trendId] });
       queryClient.invalidateQueries({ queryKey: [`/api/trends/${trendId}`] });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/trends');
+        }
+      });
       toast({
         title: "Message deleted",
         description: "Your message has been deleted successfully.",

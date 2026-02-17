@@ -92,6 +92,12 @@ export default function PostCommentsDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/comments/post/${postId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/trends');
+        }
+      });
       setNewComment("");
       setReplyingTo(null);
     },
@@ -118,6 +124,12 @@ export default function PostCommentsDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/comments/post/${postId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/trend", trendId] });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/trends');
+        }
+      });
       toast({
         title: "Comment deleted",
         description: "Your comment has been deleted successfully.",

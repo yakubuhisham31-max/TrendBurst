@@ -36,6 +36,7 @@ export default function RankingsPage() {
   const { data: rankingsData, isLoading } = useQuery<RankingsResponse>({
     queryKey: [`/api/rankings/${trendId}`],
     enabled: !!trendId,
+    refetchInterval: 15000,
   });
 
   // Vote increment mutation
