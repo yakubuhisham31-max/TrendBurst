@@ -1,0 +1,404 @@
+You are working inside an existing repo (do NOT refactor, do NOT rewrite architecture, do NOT rename folders, do NOT change endpoints). Implement minimal, targeted changes to eliminate deployment-only inconsistencies between Replit preview and production (Vercel frontend + Render backend). Assume the app already “works” in Replit preview, but production differs.
+
+Repo context (use this structure, don’t invent new structure)
+
+Frontend is in client/ (Vite SPA).
+
+Backend is in server/ (Express + sessions + Postgres via pg).
+
+DB migrations/schema exist in a .sql schema file in the repo (TrendX/TrendBurst schema, includes tables like posts, trends, votes, comments, notifications, view_tracking, disqualified_users).
+
+Backend entry is server/index.ts (or server/server.ts depending on current naming).
+
+API routes are in server/routes.ts.
+
+Email sending logic is in server/emailService.ts.
+
+OneSignal integration exists in backend and/or in public/ service worker files (e.g., OneSignalSDKWorker.js, OneSignalSDKUpdaterWorker.js) and frontend initialization likely in client/src/.
+
+
+Hard constraints
+
+NO refactoring (no moving files, no large rewrites, no “clean architecture”).
+
+Keep existing DB tables and endpoints.
+
+Only add small guards, filters, fallbacks, and production-safe defaults.
+
+Any change must be justified as “production vs dev difference” (cookies/CORS/realtime/proxy/cache/env).
+
+
+Goal
+
+Make production behavior match Replit preview for these issues:
+
+1. Auto-refresh missing in deployed version
+
+
+2. View counts inconsistent (counts multiple times per user)
+
+
+3. Comment/chat counts not updating
+
+
+4. Disqualified posts appearing in rankings
+
+
+5. Analytics route + notification badge inconsistencies
+
+
+6. OneSignal push not working in production
+
+
+7. “Verified user” email sent too early
+
+
+
+
+---
+
+A) Fix production-only realtime/refresh differences (minimal)
+
+1) Add a production-safe “realtime fallback”
+
+In frontend (client/src/**), locate the code responsible for:
+
+refreshing feeds / rankings / notifications / analytics
+
+updating comment/chat counts
+
+
+If it depends on WebSockets/SSE only, add a small polling fallback in production:
+
+Use setInterval (e.g., 10–20s) to re-fetch the critical endpoints when:
+
+websocket is disconnected, OR
+
+the app is running in production, OR
+
+the tab regains focus (visibilitychange)
+
+
+Keep the existing realtime approach; only add fallback.
+
+
+Files to check:
+
+client/src/main.tsx
+
+client/src/App.tsx
+
+client/src/hooks/* (realtime hooks)
+
+client/src/pages/* (rankings, analytics, notifications)
+
+client/src/lib/* (api client)
+
+
+Verification requirement:
+
+In production build (npm run build then serve), verify that:
+
+rankings update within polling interval
+
+notification badge updates within polling interval
+
+analytics loads (not blank)
+
+comment/chat counts update after posting
+
+
+
+
+---
+
+B) Fix production-only counting inconsistencies (server-side)
+
+2) Unique view counting per user/session
+
+In backend routes (server/routes.ts) locate the endpoint that increments view counts for trend cards (or trends). Update it minimally so it counts one view per user (or per session if user not logged in):
+
+Use the existing view_tracking table if present:
+
+type = 'category' or a trend-specific type used by the app
+
+identifier = trend_id (or the same identifier the app already uses)
+
+
+Implement an UPSERT pattern:
+
+If a record exists for (user_id, type, identifier), DO NOT increment the trend view count.
+
+If no record exists, insert into view_tracking and increment the trend’s views once.
+
+
+If user_id is not available (guest), use sessionID or a stable cookie-based id (do not invent a new auth system).
+
+
+Files to edit minimally:
+
+server/routes.ts (view endpoint)
+
+Any DB helper file used (if exists)
+
+
+Verification requirement:
+
+In production build + deployed backend URL, confirm:
+
+refreshing the trend card page does NOT increase views repeatedly for the same logged-in user
+
+viewing from a different account increments once
+
+
+
+
+---
+
+3) Comment/chat counts not updating (prod-safe)
+
+Find where comment count and chat count are computed:
+
+If they rely on client-side optimistic state only, ensure the server returns authoritative counts.
+
+If they rely on websockets only, ensure the polling fallback fetches counts.
+
+If the DB has comment_count / chat_count columns, ensure they are updated on insert/delete in the API route (minimal increment/decrement), not only in dev.
+
+
+Files to check/edit:
+
+server/routes.ts (comment create/delete, chat message create)
+
+client/src/pages/* (where counts are displayed)
+
+
+Verification requirement:
+
+In production build + deployed backend:
+
+add a comment → count increases without needing a full reload
+
+add a chat message → chat count increases
+
+
+
+
+---
+
+C) Fix “disqualified posts appearing in ranking” (query difference)
+
+4) Enforce filtering on ranking endpoints
+
+Locate ranking query endpoint (likely in server/routes.ts) and ensure disqualified posts are excluded in the server query:
+
+Filter by posts.is_disqualified = 0 (or false depending on schema).
+
+If disqualification is tracked via a table, ensure join/where excludes those posts.
+
+Do not change ranking algorithm; only add the missing filter.
+
+
+Files to edit:
+
+server/routes.ts (ranking endpoint)
+
+Any query helper
+
+
+Verification requirement:
+
+In production build:
+
+mark a post disqualified
+
+confirm it never appears in ranking response
+
+
+
+
+---
+
+D) Analytics route + notification badge (prod mismatch)
+
+5) Analytics not showing in dashboard
+
+Find analytics route handler (server) and analytics page fetch (client). Ensure production uses correct API base and returns non-empty JSON:
+
+Ensure the frontend uses the deployed API base (through existing /api proxy on Vercel) instead of hardcoding localhost.
+
+Ensure the backend analytics endpoint does NOT rely on dev-only assumptions (like localhost origin/cookies).
+
+Keep response format identical; only fix prod-only dependency.
+
+
+Files to check:
+
+client/src/** for API base usage (fetch('/api/...') preferred)
+
+server/routes.ts for analytics route
+
+
+6) Notification badge not showing
+
+Locate unread notification count logic:
+
+Ensure there is a server endpoint that returns unread count for the current user.
+
+In production, add small polling fallback to refresh unread count (ties into section A).
+
+Ensure server query uses current session user and correct DB table (notifications with is_read = 0).
+
+
+Files to check/edit:
+
+server/routes.ts (notifications endpoints)
+
+client/src/components/* (bell/icon badge)
+
+client/src/hooks/*
+
+
+Verification requirement:
+
+In production build:
+
+create a notification → badge count increments
+
+mark read → badge decrements
+
+
+
+
+---
+
+E) OneSignal production readiness (minimal)
+
+7) OneSignal push not working in production
+
+Do NOT redesign OneSignal. Only ensure the correct production keys and domain configuration are used and that service worker files are served correctly.
+
+Backend:
+
+Confirm env var names used in code for OneSignal:
+
+ONESIGNAL_APP_ID
+
+ONESIGNAL_REST_API_KEY (or whatever current code expects—do not rename, but ensure consistent usage)
+
+
+Ensure production code does not silently fall back to dev/no-op when keys are present.
+
+
+Frontend/service worker:
+
+Ensure OneSignalSDKWorker.js and OneSignalSDKUpdaterWorker.js are accessible in production from the app root.
+
+Ensure the OneSignal init uses the production site origin (no localhost).
+
+If the repo has public/ service worker files, ensure Vite builds them into dist/ properly (minimal config change only if needed).
+
+
+Files to check:
+
+server/routes.ts (push trigger endpoints)
+
+server/* (onesignal client usage)
+
+public/OneSignalSDKWorker.js, public/OneSignalSDKUpdaterWorker.js, public/manifest.json
+
+client/src/** (OneSignal init)
+
+
+Verification requirement:
+
+In production build + deployed Vercel domain:
+
+OneSignal initializes without console errors
+
+a test push trigger results in a delivered notification (or at least a successful OneSignal API response)
+
+
+
+
+---
+
+F) “Verified user” email sent too early (prod behavior)
+
+8) Gate “verified user” email trigger correctly
+
+Locate the code path that sends “verified user” email (likely server/emailService.ts called from server/routes.ts during signup/login).
+
+Minimal fix:
+
+Ensure “verified user” email is sent ONLY when a user is actually verified (e.g., users.verified = 1) OR after a specific admin verification action endpoint—not during initial signup.
+
+If signup currently sends it in dev for convenience, remove that dev shortcut from production path.
+
+Keep OTP email behavior intact.
+
+
+Files to check/edit:
+
+server/routes.ts (signup/verify endpoints)
+
+server/emailService.ts (verified email function and where it’s called)
+
+
+Verification requirement:
+
+In production build:
+
+signup → user receives OTP/verification email only
+
+“verified user” email only sends after the verified flag is set (or the existing verification flow completes)
+
+
+
+
+---
+
+Production-like testing requirements (MANDATORY)
+
+After implementing minimal changes:
+
+1. Run local production mode:
+
+npm ci
+
+npm run build
+
+run the server in production mode (existing start script) and serve built client
+
+
+
+2. Validate against deployed URLs:
+
+Frontend: Vercel URL
+
+Backend: Render URL (and through Vercel /api proxy)
+
+
+
+3. Confirm no routes depend on localhost in production behavior.
+
+
+
+
+---
+
+Output format requirements (MANDATORY)
+
+At the end, respond with:
+
+1. List of files changed (exact paths)
+
+
+2. What changed in each file (1–3 bullets each)
+
+
+3. Verification checklist with steps and expected results for each of the 7 issues above
+
+
+
+Do NOT include refactors, do NOT include unrelated cleanup, do NOT change folder structure
