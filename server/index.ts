@@ -36,7 +36,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Trust proxy for Replit deployment (needed for secure cookies behind reverse proxy)
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 // Session configuration
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-this-in-production";
