@@ -6,11 +6,21 @@ Mini Feed, or "Trendx", is a social media platform centered on trend-based conte
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Updates (December 8, 2025)
+## Recent Updates (February 20, 2026)
+- **Production Deployment Fixes:** Targeted fixes for production inconsistencies
+  - View counts now unique per user per trend (no duplicate increments)
+  - Comment/chat counts update in real-time via DB increment/decrement on create/delete
+  - Rankings exclude disqualified posts (isDisqualified=0 filter)
+  - Welcome email sent on signup (not "account verified" email); verification badge email remains admin-only
+  - Auto-refresh: staleTime=30s, refetchOnWindowFocus=true, predicate-based cache invalidation
+  - OneSignal workers confirmed in Vite build output (publicDir → dist)
+  - Notification badge has 60s refetchInterval
+
+## Previous Updates (December 8, 2025)
 - **Email System Upgraded:** Switched from SendGrid to Brevo for email delivery
   - Brevo API integration fully configured with BREVO_API_KEY
   - OTP emails sent automatically during signup verification
-  - Account verified confirmation email sent after OTP verification
+  - Welcome email sent after OTP verification (email confirmed)
   - Verification badge email system: Call `PATCH /api/users/{userId}/verify` to send badge confirmation
   - Sender email: `trendx.social1@gmail.com` (verified in Brevo)
 - **OTP Email Verification:** Secure 6-digit OTP-based email verification for signup
