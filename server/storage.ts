@@ -135,6 +135,10 @@ export interface IStorage {
   // Analytics
   trackTrendView(userId: string, trendId: string): Promise<void>;
   getTrendAnalytics(trendId: string): Promise<any>;
+  incrementPostCommentCount(postId: string): Promise<void>;
+  decrementPostCommentCount(postId: string): Promise<void>;
+  incrementTrendChatCount(trendId: string): Promise<void>;
+  decrementTrendChatCount(trendId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -274,7 +278,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(schema.posts)
       .leftJoin(schema.users, eq(schema.posts.userId, schema.users.id))
-      .where(eq(schema.posts.trendId, trendId))
+      .where(and(eq(schema.posts.trendId, trendId), eq(schema.posts.isDisqualified, 0)))
       .orderBy(desc(schema.posts.votes));
 
     return results
@@ -621,14 +625,32 @@ export class DatabaseStorage implements IStorage {
 
   // Analytics
   async trackTrendView(userId: string, trendId: string): Promise<void> {
-    // Increment trend views
-    await db
-      .update(schema.trends)
-      .set({ views: sql`${schema.trends.views} + 1` })
-      .where(eq(schema.trends.id, trendId));
+    const existing = await this.getViewTracking(userId, "trend", trendId);
 
-    // Store view tracking
+    if (!existing) {
+      await db
+        .update(schema.trends)
+        .set({ views: sql`${schema.trends.views} + 1` })
+        .where(eq(schema.trends.id, trendId));
+    }
+
     await this.updateViewTracking(userId, "trend", trendId);
+  }
+
+  async incrementPostCommentCount(postId: string): Promise<void> {
+    await db.update(schema.posts).set({ commentCount: sql`COALESCE(${schema.posts.commentCount}, 0) + 1` }).where(eq(schema.posts.id, postId));
+  }
+
+  async decrementPostCommentCount(postId: string): Promise<void> {
+    await db.update(schema.posts).set({ commentCount: sql`GREATEST(COALESCE(${schema.posts.commentCount}, 0) - 1, 0)` }).where(eq(schema.posts.id, postId));
+  }
+
+  async incrementTrendChatCount(trendId: string): Promise<void> {
+    await db.update(schema.trends).set({ chatCount: sql`COALESCE(${schema.trends.chatCount}, 0) + 1` }).where(eq(schema.trends.id, trendId));
+  }
+
+  async decrementTrendChatCount(trendId: string): Promise<void> {
+    await db.update(schema.trends).set({ chatCount: sql`GREATEST(COALESCE(${schema.trends.chatCount}, 0) - 1, 0)` }).where(eq(schema.trends.id, trendId));
   }
 
   async getTrendAnalytics(trendId: string): Promise<any> {

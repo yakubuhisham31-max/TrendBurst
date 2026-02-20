@@ -1192,6 +1192,13 @@ if (allowDevOtp) {
       }
 
       const comment = await storage.createComment(result.data);
+
+      if (comment.postId) {
+        await storage.incrementPostCommentCount(comment.postId);
+      }
+      if (comment.trendId) {
+        await storage.incrementTrendChatCount(comment.trendId);
+      }
       
       // Create notification for comment on post or reply to comment
       const commenter = await storage.getUser((req as any).session.userId);
@@ -1303,6 +1310,13 @@ if (allowDevOtp) {
 
       if (comment.userId !== (req as any).session.userId) {
         return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
+      }
+
+      if (comment.postId) {
+        await storage.decrementPostCommentCount(comment.postId);
+      }
+      if (comment.trendId) {
+        await storage.decrementTrendChatCount(comment.trendId);
       }
 
       await storage.deleteComment(req.params.id);

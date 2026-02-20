@@ -53,7 +53,7 @@ export async function sendVerificationBadgeEmail(email: string, username: string
   }
 }
 
-export async function sendAccountVerifiedEmail(email: string, username: string): Promise<void> {
+export async function sendWelcomeEmail(email: string, username: string): Promise<void> {
   const apiKey = process.env.BREVO_API_KEY;
   
   if (!apiKey) {
@@ -64,7 +64,7 @@ export async function sendAccountVerifiedEmail(email: string, username: string):
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || "noreply@trendx.social";
 
   try {
-    console.log(`📧 Sending account verified email via Brevo to ${email}`);
+    console.log(`📧 Sending welcome email via Brevo to ${email}`);
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -81,31 +81,35 @@ export async function sendAccountVerifiedEmail(email: string, username: string):
             email: email,
           },
         ],
-        subject: "Your Trendx Account is Verified",
+        subject: "Welcome to Trendx!",
         htmlContent: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #00d4ff;">Account Verified</h2>
+            <h2 style="color: #00d4ff;">Welcome to Trendx!</h2>
             <p>Hi ${username},</p>
-            <p>Your Trendx account has been successfully verified. You can now access all features.</p>
+            <p>Your email has been verified and your Trendx account is ready to go. Start exploring trends, creating posts, and connecting with the community.</p>
             <p style="color: #999; font-size: 12px; margin-top: 30px;">If you didn't create this account, please contact support.</p>
           </div>
         `,
       }),
     });
 
-    console.log(`📬 Brevo verified account email response status: ${response.status}`);
+    console.log(`📬 Brevo welcome email response status: ${response.status}`);
     
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(`❌ Brevo verified account email error:`, errorData);
+      console.error(`❌ Brevo welcome email error:`, errorData);
       throw new Error(`Brevo error: ${response.status}`);
     }
 
     const responseData = await response.json();
-    console.log(`✅ Account verified email sent to ${email}. Message ID:`, responseData.messageId);
+    console.log(`✅ Welcome email sent to ${email}. Message ID:`, responseData.messageId);
   } catch (error) {
-    console.error(`❌ Failed to send account verified email via Brevo:`, error);
+    console.error(`❌ Failed to send welcome email via Brevo:`, error);
   }
+}
+
+export async function sendAccountVerifiedEmail(email: string, username: string): Promise<void> {
+  return sendWelcomeEmail(email, username);
 }
 
 export async function sendOTPEmail(email: string, code: string): Promise<void> {
