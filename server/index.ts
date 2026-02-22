@@ -5,7 +5,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { Pool, type Pool as PgPool } from "pg";
+import pkg from "pg";
+const { Pool } = pkg;
+import type { Pool as PgPool } from "pg";
 
 import { registerRoutes } from "./routes";
 import { serveStatic, log } from "./helpers";
