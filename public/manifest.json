@@ -1,0 +1,21 @@
+{
+  "name": "Trendx - Viral Trends & Challenges",
+  "short_name": "Trendx",
+  "description": "Create trends, share posts, vote, and engage with the community on Trendx - the competitive social platform for trending content.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0EA5E9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "entertainment"],
+  "gcm_sender_id": "482941778795",
+  "gcm_sender_id_comment": "Do not change the GCM Sender ID"
+}

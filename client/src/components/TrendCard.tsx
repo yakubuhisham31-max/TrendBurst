@@ -1,0 +1,432 @@
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Eye, Users, MessageCircle, MoreVertical, Share2, Bookmark, Bell, BellOff, BellRing, Trash2, Flame, Clock, X, Calendar } from "lucide-react";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
+import { useLocation } from "wouter";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getTrendStatus, getDaysLeft } from "@/lib/trendStatus";
+import { useToast } from "@/hooks/use-toast";
+import ShareDialog from "./ShareDialog";
+import FollowButton from "./FollowButton";
+import VerificationBadge from "./VerificationBadge";
+import { useAuth } from "@/hooks/useAuth";
+
+const categoryIcons: Record<string, JSX.Element> = {
+  "AI": <span className="text-sm">🤖</span>,
+  "Arts": <span className="text-sm">🎨</span>,
+  "Entertainment": <span className="text-sm">🎬</span>,
+  "Fashion": <span className="text-sm">👗</span>,
+  "Food": <span className="text-sm">🍔</span>,
+  "Gaming": <span className="text-sm">🎮</span>,
+  "Photography": <span className="text-sm">📸</span>,
+  "Sports": <span className="text-sm">⚽</span>,
+  "Technology": <span className="text-sm">💻</span>,
+  "Other": <span className="text-sm">✨</span>,
+};
+
+interface TrendCardProps {
+  id: string;
+  coverImage?: string;
+  trendName: string;
+  username: string;
+  userAvatar?: string;
+  userVerified?: number | boolean | null;
+  category: string;
+  views: number;
+  participants: number;
+  chatCount: number;
+  createdAt: Date;
+  endDate?: Date;
+  description?: string;
+  isTrending?: boolean;
+  isHost?: boolean;
+  trendNameFont?: string;
+  trendNameColor?: string;
+  onClick?: () => void;
+  onDelete?: () => void;
+  onAuthModalOpen?: () => void;
+}
+
+type NotificationStatus = "all" | "posts" | "muted";
+
+const fontMap: Record<string, string> = {
+  "inter": "Inter, sans-serif",
+  "poppins": "'Poppins', sans-serif",
+  "playfair": "'Playfair Display', serif",
+  "georgia": "Georgia, serif",
+  "courier": "'Courier New', monospace",
+  "comic-sans": "'Comic Sans MS', cursive",
+};
+
+export default function TrendCard({
+  id,
+  coverImage,
+  trendName,
+  username,
+  userAvatar,
+  userVerified,
+  category,
+  views,
+  participants,
+  chatCount,
+  createdAt,
+  endDate,
+  description,
+  isTrending = false,
+  isHost = false,
+  trendNameFont = "inter",
+  trendNameColor = "#FFFFFF",
+  onClick,
+  onDelete,
+  onAuthModalOpen,
+}: TrendCardProps) {
+  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("muted");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Check if trend is saved
+  const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
+    queryKey: ["/api/saved/trends", id, "status"],
+    enabled: !!user,
+  });
+
+  const isSaved = savedStatus?.isSaved || false;
+
+  // Save trend mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (isSaved) {
+        await apiRequest("DELETE", `/api/saved/trends/${id}`);
+      } else {
+        await apiRequest("POST", `/api/saved/trends/${id}`, {});
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/trends", id, "status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved/trends"] });
+      toast({
+        title: isSaved ? "Trend unsaved" : "Trend saved",
+        description: isSaved ? "Trend removed from your saved collection" : "Trend added to your saved collection",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete trend mutation
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/trends/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (
+            key.startsWith('/api/trends') || 
+            key.startsWith('/api/dashboard') ||
+            key.startsWith('/api/saved')
+          );
+        }
+      });
+      toast({
+        title: "Trend deleted",
+        description: "Your trend has been deleted successfully",
+      });
+      if (onDelete) onDelete();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete trend",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Track view mutation
+  const trackViewMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      await apiRequest("POST", `/api/trends/${id}/view`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/trends');
+        }
+      });
+    },
+  });
+
+  const status = getTrendStatus(endDate);
+  const daysLeft = getDaysLeft(endDate);
+
+  const cycleNotifications = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNotificationStatus((prev) => {
+      if (prev === "all") return "posts";
+      if (prev === "posts") return "muted";
+      return "all";
+    });
+  };
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    saveMutation.mutate();
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShareOpen(true);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteMutation.mutate();
+  };
+
+  const getNotificationIcon = () => {
+    if (notificationStatus === "muted") return <BellOff className="w-4 h-4" />;
+    if (notificationStatus === "posts") return <Bell className="w-4 h-4" />;
+    return <BellRing className="w-4 h-4" />;
+  };
+
+  const getNotificationLabel = () => {
+    if (notificationStatus === "muted") return "Muted";
+    if (notificationStatus === "posts") return "Posts only";
+    return "Posts & chat";
+  };
+
+  const handleCardClick = () => {
+    trackViewMutation.mutate();
+    if (onClick) onClick();
+  };
+
+  return (
+    <Card
+      className="overflow-hidden rounded-2xl shadow-lg transition-all duration-200 hover-elevate hover:shadow-xl cursor-pointer"
+      onClick={handleCardClick}
+      data-testid="card-trend"
+    >
+      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+        {coverImage ? (
+          <img
+            src={coverImage}
+            alt={trendName}
+            className="w-full h-full object-cover object-center"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-chart-2/20" />
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+
+        {/* Top Section */}
+        <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-3 z-10">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar 
+              className="w-12 h-12 border-2 border-white/30 cursor-pointer hover-elevate flex-shrink-0" 
+              data-testid="avatar-user"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  onAuthModalOpen?.();
+                  return;
+                }
+                setLocation(`/profile/${username}`);
+              }}
+            >
+              <AvatarImage src={userAvatar} alt={username} />
+              <AvatarFallback className="bg-[#00C8FF] text-white">
+                {username.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1 min-w-0">
+                <span 
+                  className="text-sm font-medium text-white drop-shadow-md cursor-pointer hover:underline truncate" 
+                  data-testid="text-username"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!user) {
+                      onAuthModalOpen?.();
+                      return;
+                    }
+                    setLocation(`/profile/${username}`);
+                  }}
+                >
+                  {username}
+                </span>
+                <VerificationBadge verified={userVerified} size="sm" />
+              </div>
+              <span className="text-xs text-white/90 drop-shadow" data-testid="text-time">
+                {formatDistanceToNow(createdAt, { addSuffix: true })}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {user?.username !== username && (
+              <FollowButton 
+                username={username} 
+                size="sm" 
+                variant="outline"
+                className="h-8 px-3 text-white border-white/40 hover:bg-white/20 hover:border-white/60 bg-black/20"
+              />
+            )}
+            {isTrending && (
+              <Badge 
+                className="bg-white/15 backdrop-blur-md text-white px-3 py-1 gap-1.5 items-center border border-white/20 rounded-full shadow-lg transition-all duration-300 group-hover:bg-yellow-500/90 group-hover:text-yellow-950 group-hover:border-transparent group-hover:scale-105" 
+                data-testid="badge-trending"
+              >
+                <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Trending</span>
+              </Badge>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-white hover:bg-white/20"
+                  data-testid="button-trend-menu"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" data-testid="menu-trend-options">
+                <DropdownMenuItem onClick={handleShare} data-testid="menu-item-share">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSave} data-testid="menu-item-save">
+                  <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                  {isSaved ? 'Unsave' : 'Save'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={cycleNotifications} data-testid="menu-item-notifications">
+                  {getNotificationIcon()}
+                  <span className="ml-2">{getNotificationLabel()}</span>
+                </DropdownMenuItem>
+                {isHost && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleDelete} 
+                      className="text-destructive focus:text-destructive"
+                      data-testid="menu-item-delete"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Trend
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Middle Section */}
+        <div className="absolute top-[58%] left-4 right-4 -translate-y-1/2 flex flex-col items-start gap-1">
+          <Badge 
+            className="bg-black/50 text-white backdrop-blur-sm px-2 py-0.5 text-xs rounded-full border-0 gap-1.5 flex items-center"
+            data-testid={`badge-category-${category.toLowerCase()}`}
+          >
+            {categoryIcons[category] && categoryIcons[category]}
+            {category}
+          </Badge>
+          <h3 
+            className="text-2xl font-bold drop-shadow-lg line-clamp-2"
+            style={{ 
+              color: trendNameColor,
+              fontFamily: fontMap[trendNameFont] || "Inter, sans-serif"
+            }}
+            data-testid="text-trend-name"
+          >
+            {trendName}
+          </h3>
+          {description && (
+            <p className="text-sm text-white/90 drop-shadow-md line-clamp-2" data-testid="text-description">
+              {description}
+            </p>
+          )}
+        </div>
+
+        {/* Bottom Section */}
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+          <div className="flex items-center gap-4 text-white text-sm drop-shadow">
+            <div className="flex items-center gap-1.5" data-testid="stat-views">
+              <Eye className="w-4 h-4" />
+              <span>{views}</span>
+            </div>
+            <div className="flex items-center gap-1.5" data-testid="stat-participants">
+              <Users className="w-4 h-4" />
+              <span>{participants}</span>
+            </div>
+            <div className="flex items-center gap-1.5" data-testid="stat-chat">
+              <MessageCircle className="w-4 h-4" />
+              <span>{chatCount}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {status === "ending-soon" && (
+              <div 
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-sm text-amber-300 text-xs font-semibold border border-amber-400/50 drop-shadow"
+                data-testid="badge-ending-soon"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Ending</span>
+              </div>
+            )}
+            {status === "ended" && (
+              <div 
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-sm text-red-300 text-xs font-semibold border border-red-400/50 drop-shadow"
+                data-testid="badge-ended"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Ended</span>
+              </div>
+            )}
+            {status === "active" && daysLeft !== null && (
+              <div 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/90 to-cyan-500/90 backdrop-blur-sm text-white text-xs font-semibold border border-white/30 drop-shadow-lg"
+                data-testid="badge-days-left"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        url={`/feed/${id}`}
+        title={trendName}
+        description={description}
+      />
+    </Card>
+  );
+}

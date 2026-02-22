@@ -1,0 +1,65 @@
+📢 OneSignal SDK loading...
+(index):26 ✅ Browser supports Service Workers
+(index):28 📊 Existing service worker registrations before OneSignal init: 1
+(index):30   1. https://trendx.social/
+(index):41 🔄 OneSignal.init() starting...
+(index):42 📍 Current domain: https://trendx.social
+(index):43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+(index):48 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):63 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+(index):69 ✅ Site is HTTPS - OneSignal can register service workers
+(index):72 📢 Calling OneSignal.init() with config...
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+(index):75 🎉 OneSignal.init() completed successfully!
+(index):76 Init result: undefined
+(index):78 ✅ OneSignal SDK initialized successfully
+(index):79 📱 Push notifications are enabled for this domain
+(index):82 🔧 Attempting manual service worker registration...
+(index):85 📝 Registering /OneSignalSDKWorker.js...
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C8XZXpwE.js:385 👤 USER IDENTIFICATION LOGGED
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C8XZXpwE.js:385 🆔 Trendx User ID (External ID): fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-C8XZXpwE.js:385 👤 Username: Icey
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C8XZXpwE.js:385 🔔 ONESIGNAL USER IDENTIFICATION
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C8XZXpwE.js:385 👤 User: Icey (fe48a989-b30c-41f7-a4a0-f4f1fedf38a6)
+index-C8XZXpwE.js:385 ⏳ Waiting for OneSignal SDK initialization...
+index-C8XZXpwE.js:385 ✅ User linked to OneSignal with external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-C8XZXpwE.js:385 📡 Service Workers registered: 1
+index-C8XZXpwE.js:385    1. / (Active: ✓)
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C8XZXpwE.js:385 ℹ️  Click notification bell to subscribe to push
+index-C8XZXpwE.js:385    Backend sends to external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-C8XZXpwE.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+(index):87 ✅ OneSignalSDKWorker registered: https://trendx.social/
+(index):95 👤 OneSignal.User available
+(index):112 📡 [500ms] Service workers registered: 1
+(index):117   [500ms] 1. Scope: https://trendx.social/
+(index):118   [500ms]    Active: Yes
+(index):112 📡 [2s] Service workers registered: 1
+(index):117   [2s] 1. Scope: https://trendx.social/
+(index):118   [2s]    Active: Yes
+(index):112 📡 [5s] Service workers registered: 1
+(index):117   [5s] 1. Scope: https://trendx.social/
+(index):118   [5s]    Active: Yes
+(index):137 🔔 Current permission: true
+(index):148 ✅ OneSignal SDK initialized - ready to request push permissions
+(index):149    📱 Click the notification bell to enable push notifications

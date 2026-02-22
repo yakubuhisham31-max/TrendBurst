@@ -1,0 +1,62 @@
+modules = ["nodejs-20", "web", "bash", "postgresql-16"]
+run = "npm run dev"
+hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["zip", "nano"]
+
+[deployment]
+deploymentTarget = "autoscale"
+build = ["npm", "run", "build"]
+run = ["npm", "run", "start"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[env]
+PORT = "5000"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development npx tsx server/index.ts"
+waitForPort = 5000
+
+[agent]
+integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_object_storage:1.0.0"]
+expertMode = true
+
+[objectStorage]
+defaultBucketID = "replit-objstore-3bc55f7e-cd7f-4920-912a-0aaf438f192d"
+
+[userenv]
+
+[userenv.shared]
+R2_ACCESS_KEY_ID = "1ca458767631cd24f5383caa1148777d"
+R2_SECRET_ACCESS_KEY = "3db1b5a9936c3876cb2e1b87234cdf89b24d035685259411161d0c627d38c1a1"
+R2_ENDPOINT = "https://ca1f17100b850585f2cfa3678eab748e.r2.cloudflarestorage.com"
+R2_BUCKET_NAME = "trendx-media"
+R2_PUBLIC_DOMAIN = "https://pub-f7315c49d83c402e911f51afd971a703.r2.dev"
+VITE_ONESIGNAL_APP_ID = "39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9"
+VITE_GOOGLE_CLIENT_ID = "261187831632-0nrmdddainssf5kc1e60i37r2g8qugr2.apps.googleusercontent.com"
+SENDGRID_FROM_EMAIL = "trendx.social1@gmail.com"

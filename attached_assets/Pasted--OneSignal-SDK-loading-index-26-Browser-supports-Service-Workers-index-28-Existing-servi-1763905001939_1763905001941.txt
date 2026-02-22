@@ -1,0 +1,51 @@
+ OneSignal SDK loading...
+(index):26 ✅ Browser supports Service Workers
+(index):28 📊 Existing service worker registrations before OneSignal init: 0
+(index):41 🔄 OneSignal.init() starting...
+(index):42 📍 Current domain: https://trendx.social
+(index):43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+(index):48 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):65 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, serviceWorkerPath: '/OneSignalSDKWorker.js', …}
+(index):71 ✅ Site is HTTPS - OneSignal can register service workers
+(index):74 📢 Calling OneSignal.init() with config...
+(index):77 🎉 OneSignal.init() completed successfully!
+(index):78 Init result: undefined
+(index):80 ✅ OneSignal SDK initialized successfully
+(index):81 📱 Push notifications are enabled for this domain
+(index):85 👤 OneSignal.User available
+(index):88 👤 External ID: undefined
+(index):100 📡 [500ms] Service workers registered: 0
+(index):102  ⚠️  [500ms] NO SERVICE WORKERS REGISTERED!
+(anonymous) @ (index):102
+setTimeout
+(anonymous) @ (index):97
+checkServiceWorkers @ (index):96
+(anonymous) @ (index):118
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+(index):100 📡 [2s] Service workers registered: 0
+(index):102  ⚠️  [2s] NO SERVICE WORKERS REGISTERED!
+(anonymous) @ (index):102
+setTimeout
+(anonymous) @ (index):97
+checkServiceWorkers @ (index):96
+(anonymous) @ (index):119
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):100 📡 [5s] Service workers registered: 0
+(index):102  ⚠️  [5s] NO SERVICE WORKERS REGISTERED!

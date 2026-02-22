@@ -1,0 +1,81 @@
+📢 OneSignal SDK loading...
+(index):26 ✅ Browser supports Service Workers
+(index):28 📊 Existing service worker registrations before OneSignal init: 1
+(index):30   1. https://trendx.social/
+(index):41 🔄 OneSignal.init() starting...
+(index):42 📍 Current domain: https://trendx.social
+(index):43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+(index):48 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):65 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, serviceWorkerPath: '/OneSignalSDKWorker.js', …}
+(index):71 ✅ Site is HTTPS - OneSignal can register service workers
+(index):74 📢 Calling OneSignal.init() with config...
+Log.ts:34  [Service Worker Installation] Installing service worker failed SecurityError: Failed to register a ServiceWorker: The origin of the provided scriptURL ('https://onesignalsdkworker.js') does not match the current origin ('https://trendx.social').
+(anonymous) @ Log.ts:34
+be @ ServiceWorkerManager.ts:421
+await in be
+(anonymous) @ init.ts:23
+e @ OneSignal.ts:196
+await in e
+Ne @ OneSignal.ts:203
+init @ OneSignal.ts:165
+await in init
+(anonymous) @ (index):75
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+The script has an unsupported MIME type ('text/html').
+(index):147  ❌ OneSignal SDK initialization failed
+(anonymous) @ (index):147
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):148  Error: Failed to register a ServiceWorker for scope ('https://trendx.social/') with script ('https://trendx.social/OneSignalSDK.sw.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510'): The script has an unsupported MIME type ('text/html').
+(anonymous) @ (index):148
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):149  Stack: undefined
+(anonymous) @ (index):149
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):150  ⚠️ OneSignal SDK not available on this domain
+(anonymous) @ (index):150
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):151  ℹ️  Push notifications work on production (trendx.social)
+(anonymous) @ (index):151
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):152  ℹ️  Backend notification system is working - HTTP 200 responses confirmed

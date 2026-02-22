@@ -1,0 +1,56 @@
+📢 OneSignal SDK loading...
+(index):26 ✅ Browser supports Service Workers
+(index):28 📊 Existing service worker registrations before OneSignal init: 0
+(index):41 🔄 OneSignal.init() starting...
+(index):42 📍 Current domain: https://trendx.social
+(index):43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+(index):48 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):65 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, serviceWorkerPath: '/OneSignalSDKWorker.js', …}
+(index):71 ✅ Site is HTTPS - OneSignal can register service workers
+(index):74 📢 Calling OneSignal.init() with config...
+(index):77 🎉 OneSignal.init() completed successfully!
+(index):78 Init result: undefined
+(index):80 ✅ OneSignal SDK initialized successfully
+(index):81 📱 Push notifications are enabled for this domain
+(index):84 🔧 Attempting manual service worker registration...
+(index):87 📝 Registering /OneSignalSDKWorker.js...
+(index):1  Tracking Prevention blocked access to storage for https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js.
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+sw.ts:20  Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1
+(index):89 ✅ OneSignalSDKWorker registered: https://trendx.social/
+(index):95 📝 Registering /OneSignalSDKUpdaterWorker.js...
+OneSignalSDKUpdaterWorker.js:1  Uncaught NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDKUpdater.sw.js' failed to load.
+    at OneSignalSDKUpdaterWorker.js:1:1
+(anonymous) @ OneSignalSDKUpdaterWorker.js:1
+An unknown error occurred when fetching the script.
+(index):99  ⚠️  OneSignalSDKUpdaterWorker registration failed: Failed to register a ServiceWorker for scope ('https://trendx.social/') with script ('https://trendx.social/OneSignalSDKUpdaterWorker.js'): ServiceWorker script evaluation failed
+(anonymous) @ (index):99
+await in (anonymous)
+(anonymous) @ OneSignal.ts:302
+push @ OneSignal.ts:267
+(anonymous) @ pageSdkInit.ts:21
+(anonymous) @ pageSdkInit.ts:50
+(anonymous) @ pageSdkInit.ts:60
+(anonymous) @ pageSdkInit.ts:60
+(index):105 👤 OneSignal.User available
+(index):108 👤 External ID: undefined
+(index):120 📡 [500ms] Service workers registered: 1
+(index):125   [500ms] 1. Scope: https://trendx.social/
+(index):126   [500ms]    Active: Yes
+(index):120 📡 [2s] Service workers registered: 1
+(index):125   [2s] 1. Scope: https://trendx.social/
+(index):126   [2s]    Active: Yes
+(index):120 📡 [5s] Service workers registered: 1
+(index):125   [5s] 1. Scope: https://trendx.social/
+(index):126   [5s]    Active: Yes

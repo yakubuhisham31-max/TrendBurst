@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+Allow: /api/
+Allow: /favicon.png
+Allow: /manifest.json
+Disallow: /login
+Disallow: /register
+Disallow: /feed
+Disallow: /rankings
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /edit
+Disallow: /create
+Disallow: /*?*
+
+User-agent: Googlebot
+Allow: /
+Allow: /api/
+Allow: /favicon.png
+Allow: /manifest.json
+Disallow: /login
+Disallow: /register
+Disallow: /feed
+Disallow: /rankings
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /edit
+Disallow: /create
+Disallow: /*?*
+
+Sitemap: https://trendx.social/sitemap.xml
+Crawl-delay: 1

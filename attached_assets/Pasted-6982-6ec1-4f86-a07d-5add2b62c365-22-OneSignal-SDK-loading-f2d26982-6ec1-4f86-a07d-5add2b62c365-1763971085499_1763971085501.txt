@@ -1,0 +1,77 @@
+6982-6ec1-4f86-a07d-5add2b62c365:22 📢 OneSignal SDK loading...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:26 ✅ Browser supports Service Workers
+f2d26982-6ec1-4f86-a07d-5add2b62c365:28 📊 Existing service worker registrations before OneSignal init: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:30   1. https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:41 🔄 OneSignal.init() starting...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:42 📍 Current domain: https://trendx.social
+f2d26982-6ec1-4f86-a07d-5add2b62c365:43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+f2d26982-6ec1-4f86-a07d-5add2b62c365:48 📡 OneSignalSDKWorker.js check: 200 ✓
+f2d26982-6ec1-4f86-a07d-5add2b62c365:63 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+f2d26982-6ec1-4f86-a07d-5add2b62c365:69 ✅ Site is HTTPS - OneSignal can register service workers
+f2d26982-6ec1-4f86-a07d-5add2b62c365:72 📢 Calling OneSignal.init() with config...
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 👤 USER IDENTIFICATION LOGGED
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 🆔 Trendx User ID (External ID): fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DbABZG7y.js:385 👤 Username: Icey
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 🔔 ONESIGNAL USER IDENTIFICATION
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 👤 User: Icey (fe48a989-b30c-41f7-a4a0-f4f1fedf38a6)
+index-DbABZG7y.js:385 ⏳ Waiting for OneSignal SDK initialization...
+index-DbABZG7y.js:385 ✅ User linked to OneSignal with external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DbABZG7y.js:385 📡 Service Workers registered: 1
+index-DbABZG7y.js:385    1. / (Active: ✓)
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 ℹ️  Click notification bell to subscribe to push
+index-DbABZG7y.js:385    Backend sends to external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ OneSignalSDK.sw.js:1
+(anonymous) @ OneSignalSDK.sw.js:1
+setTimeout
+lt @ OneSignalSDK.sw.js:1
+(anonymous) @ OneSignalSDK.sw.js:1
+(anonymous) @ OneSignalSDK.sw.js:1
+(anonymous) @ /OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+f2d26982-6ec1-4f86-a07d-5add2b62c365:75 🎉 OneSignal.init() completed successfully!
+f2d26982-6ec1-4f86-a07d-5add2b62c365:76 Init result: undefined
+f2d26982-6ec1-4f86-a07d-5add2b62c365:78 ✅ OneSignal SDK initialized successfully
+f2d26982-6ec1-4f86-a07d-5add2b62c365:79 📱 Push notifications are enabled for this domain
+f2d26982-6ec1-4f86-a07d-5add2b62c365:82 🔧 Attempting manual service worker registration...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:85 📝 Registering /OneSignalSDKWorker.js...
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+f2d26982-6ec1-4f86-a07d-5add2b62c365:87 ✅ OneSignalSDKWorker registered: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:95 👤 OneSignal.User available
+f2d26982-6ec1-4f86-a07d-5add2b62c365:112 📡 [500ms] Service workers registered: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:117   [500ms] 1. Scope: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:118   [500ms]    Active: Yes
+f2d26982-6ec1-4f86-a07d-5add2b62c365:112 📡 [2s] Service workers registered: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:117   [2s] 1. Scope: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:118   [2s]    Active: Yes
+f2d26982-6ec1-4f86-a07d-5add2b62c365:112 📡 [5s] Service workers registered: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:117   [5s] 1. Scope: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:118   [5s]    Active: Yes
+f2d26982-6ec1-4f86-a07d-5add2b62c365:137 🔔 Current permission: true
+f2d26982-6ec1-4f86-a07d-5add2b62c365:148 ✅ OneSignal SDK initialized - ready to request push permissions
+f2d26982-6ec1-4f86-a07d-5add2b62c365:149    📱 Click the notification bell to enable push notifications
+index-DbABZG7y.js:385 ✅ Push notifications already enabled - saving subscription...
+index-DbABZG7y.js:385 ⏳ Waiting for OneSignal to create subscription (up to 10s)...
+index-DbABZG7y.js:385 ✅ Got subscription ID after 500ms
+index-DbABZG7y.js:385    📱 Push Subscription ID: 277f0daa-9c64-4de5-8c7e-e930f451abaf
+index-DbABZG7y.js:385    🆔 OneSignal User ID: pending
+index-DbABZG7y.js:385    🔑 Push Token: ✓ present
+index-DbABZG7y.js:385 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DbABZG7y.js:385 ✅ SUBSCRIPTION SAVED TO DATABASE
+index-DbABZG7y.js:385    Trendx User ID: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DbABZG7y.js:385    OneSignal External ID: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DbABZG7y.js:385    Subscription ID: 277f0daa-9c64-4de5-8c7e-e930f451abaf
+index-DbABZG7y.js:385   

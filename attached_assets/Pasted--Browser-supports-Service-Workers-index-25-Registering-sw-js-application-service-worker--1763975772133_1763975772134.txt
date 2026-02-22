@@ -1,0 +1,164 @@
+✅ Browser supports Service Workers
+(index):25 📝 Registering /sw.js (application service worker)...
+(index):40 📢 OneSignal SDK loading...
+(index):45 📊 Service worker registrations: 1
+(index):47   1. https://trendx.social/
+sw.js:3 🔧 Service Worker script loaded
+sw.js:49 ✅ Service Worker ready to receive messages
+sw.js:26 🛠️ Service Worker installing...
+(index):27 ✅ Application Service Worker registered: https://trendx.social/
+(index):56 🔄 OneSignal.init() starting...
+(index):57 📍 Current domain: https://trendx.social
+(index):58 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-Bfe1OiU0.js:389 👤 USER IDENTIFICATION LOGGED
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-Bfe1OiU0.js:389 🆔 Trendx User ID (External ID): fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-Bfe1OiU0.js:389 👤 Username: Icey
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-Bfe1OiU0.js:385 🔍 Checking push notification status...
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-Bfe1OiU0.js:389 🔔 ONESIGNAL USER IDENTIFICATION
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-Bfe1OiU0.js:389 👤 User: Icey (fe48a989-b30c-41f7-a4a0-f4f1fedf38a6)
+index-Bfe1OiU0.js:389 ⏳ Waiting for OneSignal SDK initialization...
+(index):63 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):78 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+(index):84 ✅ Site is HTTPS - OneSignal can register service workers
+(index):87 📢 Calling OneSignal.init() with config...
+sw.js:31 ✅ Service Worker activated
+index-Bfe1OiU0.js:385 📊 Push status response: {isEnabled: true, subscription: {…}}
+index-Bfe1OiU0.js:385 ✅ Push notifications already enabled - button will show 'Enabled'
+index-Bfe1OiU0.js:389 ✅ User linked to OneSignal with external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-Bfe1OiU0.js:389 📡 Service Workers registered: 1
+index-Bfe1OiU0.js:389    1. / (Active: ✓)
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-Bfe1OiU0.js:389 ℹ️  Click notification bell to subscribe to push
+index-Bfe1OiU0.js:389    Backend sends to external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-Bfe1OiU0.js:389 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ OneSignalSDK.sw.js:1
+(anonymous) @ OneSignalSDK.sw.js:1
+setTimeout
+lt @ OneSignalSDK.sw.js:1
+(anonymous) @ OneSignalSDK.sw.js:1
+(anonymous) @ OneSignalSDK.sw.js:1
+(anonymous) @ /OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+(index):90 🎉 OneSignal.init() completed successfully!
+(index):91 Init result: undefined
+(index):93 ✅ OneSignal SDK initialized successfully
+(index):94 📱 Push notifications are enabled for this domain
+(index):99 📝 Registering /OneSignalSDKWorker.js...
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+(index):101 ✅ OneSignalSDKWorker registered: https://trendx.social/
+(index):109 👤 OneSignal.User available
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToDeactivateSession @ SessionManager.ts:78
+handleOnBlur @ SessionManager.ts:258Understand this error
+(index):126 📡 [500ms] Service workers registered: 1
+(index):131   [500ms] 1. Scope: https://trendx.social/
+(index):132   [500ms]    Active: Yes
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+(index):126 📡 [2s] Service workers registered: 1
+(index):131   [2s] 1. Scope: https://trendx.social/
+(index):132   [2s]    Active: Yes
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+(index):126 📡 [5s] Service workers registered: 1
+(index):131   [5s] 1. Scope: https://trendx.social/
+(index):132   [5s]    Active: Yes
+(index):151 🔔 Current permission: true
+(index):162 ✅ OneSignal SDK initialized - ready to request push permissions
+(index):163    📱 Click the notification bell to enable push notifications
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: Test push message from DevTools.
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}isTrusted: truebubbles: falsecancelBubble: falsecancelable: falsecomposed: falsecurrentTarget: ServiceWorkerGlobalScope {clients: Clients, registration: ServiceWorkerRegistration, serviceWorker: ServiceWorker, onactivate: null, onfetch: null, …}data: PushMessageData {}defaultPrevented: falseeventPhase: 0returnValue: truesrcElement: ServiceWorkerGlobalScope {clients: Clients, registration: ServiceWorkerRegistration, serviceWorker: ServiceWorker, onactivate: null, onfetch: null, …}target: ServiceWorkerGlobalScope {clients: Clients, registration: ServiceWorkerRegistration, serviceWorker: ServiceWorker, onactivate: null, onfetch: null, …}timeStamp: 40238.799999952316type: "push"[[Prototype]]: PushEvent
+sw.js:39    Data: {"alert":"Trendx just followed you. You're on their radar now — keep the heat coming. 🔥","title":"New Follower 👀🔥","icon":"https://trendx.social/favicon.png","custom":{"i":"55d6c125-5e4a-40bf-9133-acaf186a2e2f","a":{"type":"new_follower","userId":"e5682fe8-8bd5-4766-ba54-ccd9417c757e"}},"badge":"https://trendx.social/favicon.png"}
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToUpsertSession @ SessionManager.ts:50
+handleOnFocus @ SessionManager.ts:228Understand this error
+sw.js:37 📬 Push notification received: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:39    Data: {"alert":"Trendx commented on your post","title":"New Comment","icon":"https://trendx.social/favicon.png","custom":{"i":"8b7fa962-553a-4eb6-b7d6-129b933ba7c8","a":{"postId":"51a6b1c0-c948-4709-8e94-27397c3296d3","trendId":"f2d26982-6ec1-4f86-a07d-5add2b62c365"}},"badge":"https://trendx.social/favicon.png"}
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToDeactivateSession @ SessionManager.ts:78
+handleOnBlur @ SessionManager.ts:258Understand this error
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToUpsertSession @ SessionManager.ts:50
+handleOnFocus @ SessionManager.ts:228Understand this error
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToDeactivateSession @ SessionManager.ts:78
+handleOnBlur @ SessionManager.ts:258Understand this error
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToUpsertSession @ SessionManager.ts:50
+handleOnFocus @ SessionManager.ts:228Understand this error
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToDeactivateSession @ SessionManager.ts:78
+handleOnBlur @ SessionManager.ts:258Understand this error
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToUpsertSession @ SessionManager.ts:50
+handleOnFocus @ SessionManager.ts:228Understand this error
+Log.ts:34 `[Worker Messenger] [Page -> SW] Could not get ServiceWorkerRegistration to postMessage!
+(anonymous) @ Log.ts:34
+directPostMessageToSW @ page.ts:98
+await in directPostMessageToSW
+unicast @ page.ts:84
+notifySWToDeactivateSession @ SessionManager.ts:78
+handleOnBlur @ SessionManager.ts:258Understand this error

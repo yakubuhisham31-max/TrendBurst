@@ -1,0 +1,116 @@
+You are working inside the repo “TrendBurst-main” (full-stack Vite + React client, Express server, Drizzle/Postgres, Cloudflare R2 uploads, Brevo email OTP, OneSignal push).
+
+GOAL:
+Make production (Vercel frontend + Render backend) behave EXACTLY like Replit preview, with MINIMAL code changes.
+This is NOT a refactor. Do NOT reorganize folders, do NOT rewrite architecture, do NOT rename endpoints. Only targeted fixes for deployment inconsistencies.
+
+CONSTRAINTS:
+- No refactoring, no rewrites, no “cleanups”.
+- Only touch code that directly impacts: polling/auto-refresh, view counting logic, comment/chat counters, ranking disqualified filtering, analytics route visibility, notification badge refresh, OneSignal production setup, and verified-email trigger timing.
+- Preserve existing API shapes and DB schema names.
+- After changes: run “npm run build” and “npm start” locally AND validate against the deployed URLs.
+
+REPO CONTEXT (use these paths):
+- Backend entry: server/index.ts
+- API routes: server/routes.ts
+- DB logic: server/storage.ts
+- OneSignal sender: server/onesignal.ts
+- Email OTP + verified mail: server/emailService.ts
+- Frontend: client/src/*
+- Root static files exist: OneSignalSDKWorker.js, OneSignalSDKUpdaterWorker.js, public/, and SUPABASE_MIGRATION_SCHEMA.sql
+- Vercel rewrite file: vercel.json (if present) ONLY adjust if strictly needed.
+
+TASKS (implement ALL):
+
+A) Fix production auto-refresh missing (minimal + safe)
+1) Identify the key screens that appear stale in production (feeds, trend detail, notifications badge, comments/chat counts, analytics).
+2) Add minimal React Query polling ONLY where needed:
+   - Ensure queries that must feel “live” in prod have a small refetchInterval OR invalidation after mutations.
+   - Do NOT add polling everywhere; keep it targeted.
+3) Ensure mutation success handlers invalidate the correct query keys (the project uses query keys like “/api/...”, see client/src/lib/queryClient.ts usage patterns).
+
+B) Fix view counts being higher in production (unique per user)
+In server/storage.ts:
+1) Current trackTrendView increments trend.views every call. This creates multiple views per user.
+2) Change logic so trend.views increments ONLY on the first view per user per trend (or per 24h if you prefer; pick ONE policy and apply consistently).
+3) Use existing view_tracking table (schema.viewTracking) already in Drizzle:
+   - If a view_tracking record exists for (userId, type="trend", identifier=trendId) and is “recent enough”, do NOT increment views.
+   - Still update lastViewedAt as needed.
+4) Ensure the change is compatible with Supabase Postgres and existing schema.
+
+C) Fix comment count + chat count not updating
+In server/routes.ts and/or server/storage.ts:
+1) When a comment is created/deleted on a post, update:
+   - posts.comment_count and/or trends.chat_count as appropriate (match existing columns: posts.commentCount, trends.chatCount, etc—use the actual Drizzle field names already in schema).
+2) Ensure the relevant frontend queries are invalidated after:
+   - creating a comment
+   - deleting a comment
+   - sending a chat message (if chats exist)
+3) Do the smallest DB update possible (single update statement per event).
+
+D) Disqualified posts appearing in rankings
+In server/storage.ts:
+1) getRankedPostsForTrend() currently does not filter posts.isDisqualified.
+2) Modify ranking queries (and any “top posts/leaderboard” endpoints in server/routes.ts) to exclude disqualified posts (isDisqualified === 1).
+3) Ensure any analytics calculations that are based on posts also exclude disqualified posts, if that matches existing intended behavior.
+
+E) Analytics page not showing in production
+This should be treated as “deployment inconsistency”, not redesign.
+1) Find the analytics route/page in client (likely client/src/pages/* or a dashboard route).
+2) Confirm it depends on an API endpoint (e.g., /api/analytics/* or /api/trends/:id/analytics).
+3) Fix ONLY what prevents production from loading:
+   - wrong API base path
+   - missing rewrite usage
+   - missing query invalidation / stale caching
+   - auth/session not being sent (credentials include)
+4) Do NOT change routing library. Keep existing router.
+5) If the analytics page is gated by role/admin, ensure production reads the same user/session fields as Replit.
+
+F) Notification badge “red dot” issues in production
+1) Find the unread count query (client/src/components/NotificationBell.tsx uses /api/notifications/unread-count).
+2) Ensure it refreshes reliably in production:
+   - Add targeted refetchInterval OR invalidate it after events that create notifications.
+3) On the backend, confirm /api/notifications/unread-count uses req.session.userId and does not silently return 0 when session exists.
+
+G) OneSignal push not working in production (Vercel frontend)
+This repo has OneSignalSDKWorker.js and OneSignalSDKUpdaterWorker.js at repo root, but Vercel only serves what’s in the frontend build output.
+Fix it with minimal build/static changes:
+1) Ensure these files are served from the Vercel root domain EXACTLY at:
+   - https://<frontend-domain>/OneSignalSDKWorker.js
+   - https://<frontend-domain>/OneSignalSDKUpdaterWorker.js
+2) Do the minimal change: copy/move the worker files into the Vite public folder that gets bundled for Vercel.
+   - If the client public dir is client/public, put them there.
+   - Ensure Vite build outputs them to dist root.
+3) Ensure the OneSignal init script exists in the built index.html (client entry HTML).
+4) Do NOT change OneSignal API logic; only fix the production hosting/paths + ensure env names are consistent:
+   - ONESIGNAL_APP_ID
+   - ONESIGNAL_REST_API_KEY (backend)
+5) If there’s any domain hardcoding in server/onesignal.ts that breaks when using a custom domain, make it use an env var (e.g., FRONTEND_URL) but ONLY change what’s required for production correctness.
+
+H) “Verified user” email sent too early
+In server/routes.ts:
+1) The OTP verification flow currently sends sendAccountVerifiedEmail() immediately after account creation/OTP verification.
+2) Change behavior:
+   - On successful signup/OTP verify: send a “welcome” email (or keep existing welcome notification), BUT DO NOT send “account verified” email unless the user is actually verified (verified flag set to 1).
+   - The “account verified” email should only be sent in the admin verify endpoint (PATCH /api/users/:userId/verify) after setting verified=1.
+3) Keep the rest of the signup flow identical (session, response format, etc).
+
+I) Production-like testing requirements (MUST DO)
+After implementing changes:
+1) Provide a short list: “Changed files:” with exact file paths.
+2) Provide “Verification steps” that include:
+   - Local: npm install, npm run build, npm start, test main flows
+   - Deployed: confirm on Vercel domain and custom domain:
+     - views increment once per user per trend (or per 24h—state which)
+     - comment_count/chat_count update immediately
+     - rankings exclude disqualified posts
+     - analytics page loads and shows data
+     - notification badge appears and updates
+     - OneSignal workers accessible at root URLs and subscription works
+     - verified email only triggers when verified flag is set via admin endpoint
+
+OUTPUT FORMAT:
+- First: a checklist of what you changed (by task letter A–H)
+- Second: “Changed files:” list
+- Third: “Verification steps:” list
+No extra explanations, no refactors, no unrelated edits.

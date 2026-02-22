@@ -1,0 +1,46 @@
+📢 OneSignal SDK loading...
+e84ba487-aad9-4545-b45b-067cd216374b:26 ✅ Browser supports Service Workers
+e84ba487-aad9-4545-b45b-067cd216374b:28 📊 Existing service worker registrations before OneSignal init: 1
+e84ba487-aad9-4545-b45b-067cd216374b:30   1. https://trendx.social/
+e84ba487-aad9-4545-b45b-067cd216374b:41 🔄 OneSignal.init() starting...
+e84ba487-aad9-4545-b45b-067cd216374b:42 📍 Current domain: https://trendx.social
+e84ba487-aad9-4545-b45b-067cd216374b:43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+e84ba487-aad9-4545-b45b-067cd216374b:48 📡 OneSignalSDKWorker.js check: 200 ✓
+e84ba487-aad9-4545-b45b-067cd216374b:63 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+e84ba487-aad9-4545-b45b-067cd216374b:69 ✅ Site is HTTPS - OneSignal can register service workers
+e84ba487-aad9-4545-b45b-067cd216374b:72 📢 Calling OneSignal.init() with config...
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+e84ba487-aad9-4545-b45b-067cd216374b:75 🎉 OneSignal.init() completed successfully!
+e84ba487-aad9-4545-b45b-067cd216374b:76 Init result: undefined
+e84ba487-aad9-4545-b45b-067cd216374b:78 ✅ OneSignal SDK initialized successfully
+e84ba487-aad9-4545-b45b-067cd216374b:79 📱 Push notifications are enabled for this domain
+e84ba487-aad9-4545-b45b-067cd216374b:82 🔧 Attempting manual service worker registration...
+e84ba487-aad9-4545-b45b-067cd216374b:85 📝 Registering /OneSignalSDKWorker.js...
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+e84ba487-aad9-4545-b45b-067cd216374b:87 ✅ OneSignalSDKWorker registered: https://trendx.social/
+e84ba487-aad9-4545-b45b-067cd216374b:95 👤 OneSignal.User available
+e84ba487-aad9-4545-b45b-067cd216374b:98 👤 External ID: undefined
+e84ba487-aad9-4545-b45b-067cd216374b:110 📡 [500ms] Service workers registered: 1
+e84ba487-aad9-4545-b45b-067cd216374b:115   [500ms] 1. Scope: https://trendx.social/
+e84ba487-aad9-4545-b45b-067cd216374b:116   [500ms]    Active: Yes
+e84ba487-aad9-4545-b45b-067cd216374b:110 📡 [2s] Service workers registered: 1
+e84ba487-aad9-4545-b45b-067cd216374b:115   [2s] 1. Scope: https://trendx.social/
+e84ba487-aad9-4545-b45b-067cd216374b:116   [2s]    Active: Yes
+e84ba487-aad9-4545-b45b-067cd216374b:110 📡 [5s] Service workers registered: 1
+e84ba487-aad9-4545-b45b-067cd216374b:115   [5s] 1. Scope: https://trendx.social/
+e84ba487-aad9-4545-b45b-067cd216374b:116   [5s]    Active: Yes
+e84ba487-aad9-4545-b45b-067cd216374b:135 🔔 Current permission: true

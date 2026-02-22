@@ -1,0 +1,88 @@
+ Browser supports Service Workers
+f2d26982-6ec1-4f86-a07d-5add2b62c365:25 📝 Registering /sw.js (application service worker)...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:50 📢 OneSignal SDK loading...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:55 📊 Service worker registrations: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:57   1. https://trendx.social/
+sw.js:3 🔧 Service Worker script loaded
+sw.js:112 ✅ Service Worker ready to receive messages
+f2d26982-6ec1-4f86-a07d-5add2b62c365:27 ✅ Application Service Worker registered: https://trendx.social/
+sw.js:26 🛠️ Service Worker installing...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:66 🔄 OneSignal.init() starting...
+f2d26982-6ec1-4f86-a07d-5add2b62c365:67 📍 Current domain: https://trendx.social
+f2d26982-6ec1-4f86-a07d-5add2b62c365:68 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+f2d26982-6ec1-4f86-a07d-5add2b62c365:73 📡 OneSignalSDKWorker.js check: 200 ✓
+f2d26982-6ec1-4f86-a07d-5add2b62c365:88 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+f2d26982-6ec1-4f86-a07d-5add2b62c365:94 ✅ Site is HTTPS - OneSignal can register service workers
+f2d26982-6ec1-4f86-a07d-5add2b62c365:97 📢 Calling OneSignal.init() with config...
+sw.js:31 ✅ Service Worker activated
+OneSignalSDK.sw.js:1 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js?appId=39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9&sdkVersion=160510:1Understand this warning
+f2d26982-6ec1-4f86-a07d-5add2b62c365:100 🎉 OneSignal.init() completed successfully!
+f2d26982-6ec1-4f86-a07d-5add2b62c365:101 Init result: undefined
+f2d26982-6ec1-4f86-a07d-5add2b62c365:103 ✅ OneSignal SDK initialized successfully
+f2d26982-6ec1-4f86-a07d-5add2b62c365:104 📱 Push notifications are enabled for this domain
+f2d26982-6ec1-4f86-a07d-5add2b62c365:109 📝 Registering /OneSignalSDKWorker.js...
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DdVbaDxW.js:380 👤 USER IDENTIFICATION LOGGED
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DdVbaDxW.js:380 🆔 Trendx User ID (External ID): fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DdVbaDxW.js:380 👤 Username: Icey
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DdVbaDxW.js:380 🔔 ONESIGNAL USER IDENTIFICATION
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DdVbaDxW.js:380 👤 User: Icey (fe48a989-b30c-41f7-a4a0-f4f1fedf38a6)
+index-DdVbaDxW.js:380 ⏳ Waiting for OneSignal SDK initialization...
+index-DdVbaDxW.js:380 ✅ User linked to OneSignal with external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DdVbaDxW.js:380 📡 Service Workers registered: 1
+index-DdVbaDxW.js:380    1. / (Active: ✓)
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-DdVbaDxW.js:380 ℹ️  Click notification bell to subscribe to push
+index-DdVbaDxW.js:380    Backend sends to external_id: fe48a989-b30c-41f7-a4a0-f4f1fedf38a6
+index-DdVbaDxW.js:380 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sw.ts:20 Event handler of 'message' event must be added on the initial evaluation of worker script.
+F @ sw.ts:20
+(anonymous) @ ServiceWorker.ts:167
+setTimeout
+lt @ ServiceWorker.ts:165
+(anonymous) @ ServiceWorker.ts:1187
+(anonymous) @ worker.ts:8
+(anonymous) @ OneSignalSDKWorker.js:1Understand this warning
+f2d26982-6ec1-4f86-a07d-5add2b62c365:111 ✅ OneSignalSDKWorker registered: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:119 👤 OneSignal.User available
+f2d26982-6ec1-4f86-a07d-5add2b62c365:136 📡 [500ms] Service workers registered: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:141   [500ms] 1. Scope: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:142   [500ms]    Active: Yes
+f2d26982-6ec1-4f86-a07d-5add2b62c365:136 📡 [2s] Service workers registered: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:141   [2s] 1. Scope: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:142   [2s]    Active: Yes
+f2d26982-6ec1-4f86-a07d-5add2b62c365:136 📡 [5s] Service workers registered: 1
+f2d26982-6ec1-4f86-a07d-5add2b62c365:141   [5s] 1. Scope: https://trendx.social/
+f2d26982-6ec1-4f86-a07d-5add2b62c365:142   [5s]    Active: Yes
+f2d26982-6ec1-4f86-a07d-5add2b62c365:161 🔔 Current permission: true
+f2d26982-6ec1-4f86-a07d-5add2b62c365:172 ✅ OneSignal SDK initialized - ready to request push permissions
+f2d26982-6ec1-4f86-a07d-5add2b62c365:173    📱 Click the notification bell to enable push notifications
+sw.js:37 📬 PUSH EVENT RECEIVED
+sw.js:38    Event: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:47    📝 Raw push data: {"alert":"Trendx commented on your post","title":"New Comment","icon":"https://trendx.social/favicon.png","custom":{"i":"18c4cf6d-5095-45fb-8d09-e9c86fe4f413","a":{"postId":"51a6b1c0-c948-4709-8e94-27397c3296d3","trendId":"f2d26982-6ec1-4f86-a07d-5add2b62c365"}},"badge":"https://trendx.social/favicon.png"}
+sw.js:52    ✅ Parsed JSON: {alert: 'Trendx commented on your post', title: 'New Comment', icon: 'https://trendx.social/favicon.png', custom: {…}, badge: 'https://trendx.social/favicon.png'}
+sw.js:64    🔔 Will display: "New Comment"
+sw.js:65    📝 Body: "Trendx commented on your post"
+sw.js:66    🎯 Tag: "18c4cf6d-5095-45fb-8d09-e9c86fe4f413"
+sw.js:77    📤 Showing notification with options: {body: 'Trendx commented on your post', icon: 'https://trendx.social/favicon.png', badge: 'https://trendx.social/favicon.png', tag: '18c4cf6d-5095-45fb-8d09-e9c86fe4f413', requireInteraction: false, …}
+sw.js:82 ✅ NOTIFICATION DISPLAYED SUCCESSFULLY
+sw.js:37 📬 PUSH EVENT RECEIVED
+sw.js:38    Event: PushEvent {isTrusted: true, data: PushMessageData, type: 'push', target: ServiceWorkerGlobalScope, currentTarget: ServiceWorkerGlobalScope, …}
+sw.js:47    📝 Raw push data: {"alert":"Trendx just followed you. You're on their radar now — keep the heat coming. 🔥","title":"New Follower 👀🔥","icon":"https://trendx.social/favicon.png","custom":{"i":"5da3ced2-7832-4743-bf1b-d61197e1e312","a":{"type":"new_follower","userId":"e5682fe8-8bd5-4766-ba54-ccd9417c757e"}},"badge":"https://trendx.social/favicon.png"}
+sw.js:52    ✅ Parsed JSON: {alert: "Trendx just followed you. You're on their radar now — keep the heat coming. 🔥", title: 'New Follower 👀🔥', icon: 'https://trendx.social/favicon.png', custom: {…}, badge: 'https://trendx.social/favicon.png'}
+sw.js:64    🔔 Will display: "New Follower 👀🔥"
+sw.js:65    📝 Body: "Trendx just followed you. You're on their radar now — keep the heat coming. 🔥"
+sw.js:66    🎯 Tag: "5da3ced2-7832-4743-bf1b-d61197e1e312"
+sw.js:77    📤 Showing notification with options: {body: "Trendx just followed you. You're on their radar now — keep the heat coming. 🔥", icon: 'https://trendx.social/favicon.png', badge: 'https://trendx.social/favicon.png', tag: '5da3ced2-7832-4743-bf1b-d61197e1e312', requireInteraction: false, …}
+sw.js:82 

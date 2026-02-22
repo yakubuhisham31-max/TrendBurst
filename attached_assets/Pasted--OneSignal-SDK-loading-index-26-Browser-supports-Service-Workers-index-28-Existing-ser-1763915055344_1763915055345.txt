@@ -1,0 +1,49 @@
+📢 OneSignal SDK loading...
+(index):26 ✅ Browser supports Service Workers
+(index):28 📊 Existing service worker registrations before OneSignal init: 1
+(index):30   1. https://trendx.social/
+(index):41 🔄 OneSignal.init() starting...
+(index):42 📍 Current domain: https://trendx.social
+(index):43 🌐 OneSignal App ID: 39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9
+(index):48 📡 OneSignalSDKWorker.js check: 200 ✓
+(index):63 📋 OneSignal config: {appId: '39eb07fa-42bb-4d6d-86bb-87ebbd5e39b9', safari_web_id: 'web.onesignal.auto.511f3fe8-4f38-4cfd-9441-4579acc1dc24', allowLocalhostAsSecureOrigin: true, autoResubscribe: true, notifyButton: {…}}
+(index):69 ✅ Site is HTTPS - OneSignal can register service workers
+(index):72 📢 Calling OneSignal.init() with config...
+(index):75 🎉 OneSignal.init() completed successfully!
+(index):76 Init result: undefined
+(index):78 ✅ OneSignal SDK initialized successfully
+(index):79 📱 Push notifications are enabled for this domain
+(index):82 🔧 Attempting manual service worker registration...
+(index):85 📝 Registering /OneSignalSDKWorker.js...
+(index):87 ✅ OneSignalSDKWorker registered: https://trendx.social/
+(index):95 👤 OneSignal.User available
+(index):112 📡 [500ms] Service workers registered: 1
+(index):117   [500ms] 1. Scope: https://trendx.social/
+(index):118   [500ms]    Active: Yes
+(index):112 📡 [2s] Service workers registered: 1
+(index):117   [2s] 1. Scope: https://trendx.social/
+(index):118   [2s]    Active: Yes
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C1gt6TxM.js:379 👤 USER IDENTIFICATION LOGGED
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C1gt6TxM.js:379 🆔 Trendx User ID (External ID): 826ae9d4-d8c7-4d8e-9769-e7966148e62e
+index-C1gt6TxM.js:379 👤 Username: Icey
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C1gt6TxM.js:379 🔔 ONESIGNAL USER IDENTIFICATION
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C1gt6TxM.js:379 👤 User: Icey (826ae9d4-d8c7-4d8e-9769-e7966148e62e)
+index-C1gt6TxM.js:379 ⏳ Waiting for OneSignal SDK initialization...
+index-C1gt6TxM.js:379 ✅ User linked to OneSignal with external_id: 826ae9d4-d8c7-4d8e-9769-e7966148e62e
+index-C1gt6TxM.js:379 📡 Service Workers registered: 1
+index-C1gt6TxM.js:379    1. / (Active: ✓)
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+index-C1gt6TxM.js:379 ℹ️  Click notification bell to subscribe to push
+index-C1gt6TxM.js:379    Backend sends to external_id: 826ae9d4-d8c7-4d8e-9769-e7966148e62e
+index-C1gt6TxM.js:379 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(index):112 📡 [5s] Service workers registered: 1
+(index):117   [5s] 1. Scope: https://trendx.social/
+(index):118   [5s]    Active: Yes
+(index):137 🔔 Current permission: true
+(index):148 ✅ OneSignal SDK initialized - ready to request push permissions
+(index):149    📱 Click the notification bell to enable push notifications

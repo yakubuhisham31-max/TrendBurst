@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://trendburst.onrender.com/api/$1" },
+    { "source": "/objects/(.*)", "destination": "https://trendburst.onrender.com/objects/$1" },
+    { "source": "/uploads/(.*)", "destination": "https://trendburst.onrender.com/uploads/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
