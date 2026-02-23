@@ -29,9 +29,9 @@ export default function FollowButton({
     enabled: !!username && !!user,
   });
 
-  // Fetch follow status
+  // Fetch follow status using new follow-stats endpoint (by user id)
   const { data: followStatus, isLoading } = useQuery<{ isFollowing: boolean }>({
-    queryKey: ["/api/follows", targetUser?.id, "status"],
+    queryKey: ["/api/users", targetUser?.id, "follow-stats"],
     enabled: !!targetUser?.id && !!user,
   });
 
@@ -45,7 +45,7 @@ export default function FollowButton({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/follows", targetUser?.id, "status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", targetUser?.id, "follow-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users", username] });
     },
     onError: (error: Error) => {
@@ -64,7 +64,7 @@ export default function FollowButton({
       await apiRequest("DELETE", `/api/follows/${targetUser.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/follows", targetUser?.id, "status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", targetUser?.id, "follow-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users", username] });
     },
     onError: (error: Error) => {

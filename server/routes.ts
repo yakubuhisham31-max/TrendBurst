@@ -1942,7 +1942,7 @@ if (allowDevOtp) {
           }
         } catch (e) {
           console.error("Failed to update user points:", e);
-               }
+                             }
       }
       
       await storage.deletePost(req.params.id);
@@ -2328,6 +2328,67 @@ if (allowDevOtp) {
     } catch (error) {
       console.error(`❌ Test email error:`, error);
       res.status(500).json({ message: "Error sending test email", error: String(error) });
+    }
+  });
+
+  // GET /api/users/:id/follow-stats - follower/following counts and whether current user follows them
+  app.get("/api/users/:id/follow-stats", async (req, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const followers = await storage.getFollowers(targetUserId);
+      const following = await storage.getFollowing(targetUserId);
+
+      let isFollowing = false;
+      const currentUserId = (req as any).session?.userId;
+      if (currentUserId && currentUserId !== targetUserId) {
+        const follow = await storage.getFollow(currentUserId, targetUserId);
+        isFollowing = !!follow;
+      }
+
+      res.json({
+        followersCount: followers.length,
+        followingCount: following.length,
+        isFollowing,
+      });
+    } catch (error) {
+      console.error("Failed to fetch follow stats:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/users/:id/followers - list follower users (sanitized)
+  app.get("/api/users/:id/followers", async (req, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const followers = await storage.getFollowers(targetUserId);
+      const users = await Promise.all(
+        followers.map(async (f) => {
+          const u = await storage.getUser(f.followerId);
+          return u ? sanitizeUser(u) : null;
+        })
+      );
+      res.json(users.filter(Boolean));
+    } catch (error) {
+      console.error("Failed to fetch followers list:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/users/:id/following - list users that target user is following
+  app.get("/api/users/:id/following", async (req, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const following = await storage.getFollowing(targetUserId);
+      const users = await Promise.all(
+        following.map(async (f) => {
+          const u = await storage.getUser(f.followingId);
+          return u ? sanitizeUser(u) : null;
+        })
+      );
+      res.json(users.filter(Boolean));
+    } catch (error) {
+      console.error("Failed to fetch following list:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

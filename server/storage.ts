@@ -430,6 +430,27 @@ export class DatabaseStorage implements IStorage {
 
   async createFollow(followData: InsertFollow): Promise<Follow> {
     const [follow] = await db.insert(schema.follows).values(followData).returning();
+
+    // Attempt to update cached follower/following counts on users table. Wrap in try/catch
+    // so follow creation itself doesn't fail if these updates encounter an error.
+    (async () => {
+      try {
+        // increment following for followerId
+        await db
+          .update(schema.users)
+          .set({ following: sql`${schema.users.following} + 1` })
+          .where(eq(schema.users.id, followData.followerId));
+
+        // increment followers for followingId
+        await db
+          .update(schema.users)
+          .set({ followers: sql`${schema.users.followers} + 1` })
+          .where(eq(schema.users.id, followData.followingId));
+      } catch (err) {
+        console.error('Failed to update users follower/following counts after createFollow:', err);
+      }
+    })();
+
     return follow;
   }
 
@@ -437,6 +458,23 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(schema.follows)
       .where(and(eq(schema.follows.followerId, followerId), eq(schema.follows.followingId, followingId)));
+
+    // Decrement counts safely; run async so failure doesn't break flow
+    (async () => {
+      try {
+        await db
+          .update(schema.users)
+          .set({ following: sql`GREATEST(${schema.users.following} - 1, 0)` })
+          .where(eq(schema.users.id, followerId));
+
+        await db
+          .update(schema.users)
+          .set({ followers: sql`GREATEST(${schema.users.followers} - 1, 0)` })
+          .where(eq(schema.users.id, followingId));
+      } catch (err) {
+        console.error('Failed to decrement users follower/following counts after deleteFollow:', err);
+      }
+    })();
   }
 
   // View Tracking
