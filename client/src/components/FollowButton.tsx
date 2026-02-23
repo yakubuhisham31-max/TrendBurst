@@ -39,10 +39,25 @@ export default function FollowButton({
   const followMutation = useMutation({
     mutationFn: async () => {
       if (!targetUser?.id) throw new Error("User not found");
-      const response = await apiRequest("POST", "/api/follows", {
-        followingId: targetUser.id,
+      const res = await fetch("/api/follows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ followingId: targetUser.id }),
+        credentials: "include",
       });
-      return response.json();
+
+      if (!res.ok) {
+        const text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          if (json.message) throw new Error(json.message);
+        } catch {
+          // fall through
+        }
+        throw new Error(text || res.statusText);
+      }
+
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", targetUser?.id, "follow-stats"] });
@@ -61,7 +76,24 @@ export default function FollowButton({
   const unfollowMutation = useMutation({
     mutationFn: async () => {
       if (!targetUser?.id) throw new Error("User not found");
-      await apiRequest("DELETE", `/api/follows/${targetUser.id}`);
+      const res = await fetch(`/api/follows/${targetUser.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          if (json.message) throw new Error(json.message);
+        } catch {
+          // fall through
+        }
+        throw new Error(text || res.statusText);
+      }
+
+      return res.ok;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", targetUser?.id, "follow-stats"] });
