@@ -959,100 +959,134 @@ if (allowDevOtp) {
   // POST /api/votes/increment - Increment vote on post (protected, check 10-vote limit per trend)
   app.post("/api/votes/increment", isAuthenticated, async (req, res) => {
     try {
+      const userId = (req as any).session.userId;
       const { postId, trendId } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
       if (!postId || !trendId) {
         return res.status(400).json({ message: "postId and trendId are required" });
       }
 
       // Check 10-vote limit per trend (sum of all vote counts)
-      const userVotes = await storage.getVotesByUser((req as any).session.userId, trendId);
+      const userVotes = await storage.getVotesByUser(userId, trendId);
       const totalVotes = userVotes.reduce((sum, vote) => sum + (vote.count || 0), 0);
-      
+
       if (totalVotes >= 10) {
         return res.status(400).json({ message: "You have reached the maximum of 10 votes for this trend" });
       }
 
-      // Get all posts in trend BEFORE vote
-      const postsBeforeVote = await storage.getPostsByTrend(trendId);
-      const rankedBefore = [...postsBeforeVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
-      const rankBefore = rankedBefore.findIndex(p => p.id === postId) + 1;
+      // Perform the DB vote update first
+      const vote = await storage.incrementVote(postId, userId, trendId);
 
-      const vote = await storage.incrementVote(postId, (req as any).session.userId, trendId);
-      
-      // Get all posts in trend AFTER vote
-      const postsAfterVote = await storage.getPostsByTrend(trendId);
-      const rankedAfter = [...postsAfterVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
-      const rankAfter = rankedAfter.findIndex(p => p.id === postId) + 1;
+      // Respond immediately to client
+      res.status(201).json(vote);
 
-      // Get the post and trend info for notifications
-      const post = await storage.getPost(postId);
-      const trend = await storage.getTrend(trendId);
-      const voter = await storage.getUser((req as any).session.userId);
-      
-      // Create notification for vote on post
-      if (post && post.userId !== (req as any).session.userId) {
-        await storage.createNotification({
-          userId: post.userId,
-          actorId: (req as any).session.userId,
-          type: 'vote_on_post',
-          postId: postId,
-          trendId: trendId,
-          voteCount: vote.count,
-        });
-        // Send push notification
-        await sendPushNotification({
-          userId: post.userId,
-          heading: "Vote Received",
-          content: `${voter?.username} voted ${vote.count}x on your post`,
-          data: { postId, trendId },
-        });
-      }
-      
-      // Send rank change notifications if rank improved
-      if (post && rankAfter < rankBefore && trend) {
-        await notificationService.sendRankGainedNotification(post.userId, trend.name || "Unknown Trend", trendId);
-      }
-      
-      // Check if other posts' ranks got worse (someone else's post dropped in rank due to this vote)
-      for (let i = 0; i < Math.min(rankedBefore.length, rankedAfter.length); i++) {
-        const postBefore = rankedBefore[i];
-        const postAfter = rankedAfter.find(p => p.id === postBefore.id);
-        if (postAfter) {
-          const oldRank = i + 1;
-          const newRank = rankedAfter.findIndex(p => p.id === postBefore.id) + 1;
-          
-          // If rank got worse and it's not the post we just voted on
-          if (newRank > oldRank && postBefore.id !== postId && trend) {
-            await notificationService.sendRankLostNotification(postBefore.userId, trend.name || "Unknown Trend", trendId);
-          }
-        }
-      }
+      // Fire-and-forget: run side-effects (notifications, push, rank) asynchronously
+      (async () => {
+        try {
+          // Fetch posts after the vote to compute rank/changes
+          const postsAfterVote = await storage.getPostsByTrend(trendId);
+          const rankedAfter = [...postsAfterVote].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+          const rankAfter = rankedAfter.findIndex(p => p.id === postId) + 1;
 
-      // Notify users if trend is "blowing up" (high engagement)
-      try {
-        if (trend && trend.name) {
-          const totalVotes = postsAfterVote.reduce((sum, p) => sum + (p.votes || 0), 0);
-          // If total votes > 50 and post count > 3, notify about trend momentum
-          if (totalVotes > 50 && postsAfterVote.length > 3) {
-            const allUsers = await storage.getAllUsers?.() || [];
-            const randomUsers = allUsers
-              .filter(u => u.id !== post?.userId)
-              .sort(() => Math.random() - 0.5)
-              .slice(0, 5);
-            
-            for (const user of randomUsers) {
-              await notificationService.sendTrendBlowingUpNotification(user.id, trend.name, trendId).catch(err => {
-                console.error("Failed to send trend blowing up notification:", err);
+          // Approximate pre-vote state by subtracting 1 from the voted post's votes
+          const tempPosts = postsAfterVote.map(p => p.id === postId ? { ...p, votes: Math.max(0, (p.votes || 0) - 1) } : p);
+          const rankedBefore = [...tempPosts].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+          const rankBefore = rankedBefore.findIndex(p => p.id === postId) + 1;
+
+          // Retrieve surrounding entities for notifications
+          const post = await storage.getPost(postId);
+          const trend = await storage.getTrend(trendId);
+          const voter = await storage.getUser(userId);
+
+          // Create notification for vote on post and send push
+          if (post && post.userId !== userId) {
+            try {
+              await storage.createNotification({
+                userId: post.userId,
+                actorId: userId,
+                type: 'vote_on_post',
+                postId: postId,
+                trendId: trendId,
+                voteCount: vote.count,
               });
+            } catch (err) {
+              console.error("Failed to create vote notification:", err);
+            }
+
+            try {
+              await sendPushNotification({
+                userId: post.userId,
+                heading: "Vote Received",
+                content: `${voter?.username} voted ${vote.count}x on your post`,
+                data: { postId, trendId },
+              });
+            } catch (err) {
+              console.error("Failed to send vote push notification:", err);
             }
           }
+
+          // Send rank change notification if improved
+          if (post && rankAfter < rankBefore && trend) {
+            try {
+              await notificationService.sendRankGainedNotification(post.userId, trend.name || "Unknown Trend", trendId);
+            } catch (err) {
+              console.error("Failed to send rank gained notification:", err);
+            }
+          }
+
+          // Notify users whose rank worsened due to this vote
+          try {
+            for (let i = 0; i < Math.min(rankedBefore.length, rankedAfter.length); i++) {
+              const postBefore = rankedBefore[i];
+              const postAfter = rankedAfter.find(p => p.id === postBefore.id);
+              if (postAfter) {
+                const oldRank = i + 1;
+                const newRank = rankedAfter.findIndex(p => p.id === postBefore.id) + 1;
+
+                if (newRank > oldRank && postBefore.id !== postId && trend) {
+                  try {
+                    await notificationService.sendRankLostNotification(postBefore.userId, trend.name || "Unknown Trend", trendId);
+                  } catch (err) {
+                    console.error("Failed to send rank lost notification:", err);
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error while processing rank change notifications:", err);
+          }
+
+          // Check momentum / blowing-up notifications
+          try {
+            if (trend && trend.name) {
+              const totalVotesAfter = postsAfterVote.reduce((sum, p) => sum + (p.votes || 0), 0);
+              if (totalVotesAfter > 50 && postsAfterVote.length > 3) {
+                const allUsers = await storage.getAllUsers?.() || [];
+                const randomUsers = allUsers
+                  .filter(u => u.id !== post?.userId)
+                  .sort(() => Math.random() - 0.5)
+                  .slice(0, 5);
+
+                for (const user of randomUsers) {
+                  try {
+                    await notificationService.sendTrendBlowingUpNotification(user.id, trend.name, trendId);
+                  } catch (err) {
+                    console.error("Failed to send trend blowing up notification:", err);
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Failed to check trend momentum:", err);
+          }
+        } catch (err) {
+          console.error("Post-vote side-effect error:", err);
         }
-      } catch (err) {
-        console.error("Failed to check trend momentum:", err);
-      }
-      
-      res.status(201).json(vote);
+      })();
     } catch (error) {
       console.error("Vote increment error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -1191,210 +1225,154 @@ if (allowDevOtp) {
         return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
       }
 
+      // Create comment first
       const comment = await storage.createComment(result.data);
 
-      if (comment.postId) {
-        await storage.incrementPostCommentCount(comment.postId);
-      }
-      if (comment.trendId) {
-        await storage.incrementTrendChatCount(comment.trendId);
-      }
-      
-      // Create notification for comment on post or reply to comment
-      const commenter = await storage.getUser((req as any).session.userId);
-      if (comment.postId) {
-        // Comment on a post - notify post owner
-        const post = await storage.getPost(comment.postId);
-        if (post && post.userId !== (req as any).session.userId) {
-          await storage.createNotification({
-            userId: post.userId,
-            actorId: (req as any).session.userId,
-            type: 'comment_on_post',
-            postId: comment.postId,
-            trendId: comment.trendId,
-            commentId: comment.id,
-          });
-          // Send push notification
-          if (commenter?.username) {
-            await sendPushNotification({
-              userId: post.userId,
-              heading: "New Comment",
-              content: `${commenter.username} commented on your post`,
-              data: { postId: String(comment.postId), trendId: String(comment.trendId) },
-            });
-          }
+      // Update counts (these are DB updates and should succeed before responding)
+      try {
+        if (comment.postId) {
+          await storage.incrementPostCommentCount(comment.postId);
         }
+        if (comment.trendId) {
+          await storage.incrementTrendChatCount(comment.trendId);
+        }
+      } catch (err) {
+        console.error("Failed to update comment/post counters:", err);
       }
-      
-      // Send notification if this is a reply to another comment
-      if (comment.parentId) {
-        const parentComment = await storage.getComment(comment.parentId);
-        if (parentComment && parentComment.userId !== (req as any).session.userId) {
-          // Create notification in database
-          await storage.createNotification({
-            userId: parentComment.userId,
-            actorId: (req as any).session.userId,
-            type: 'reply_to_comment',
-            commentId: comment.id,
-            postId: comment.postId,
-            trendId: comment.trendId,
-          });
-          // Send branded push notification
-          if (commenter?.username && comment.trendId) {
+
+      // Respond immediately
+      res.status(201).json(comment);
+
+      // Fire-and-forget: notifications, mentions, replies, push
+      (async () => {
+        try {
+          const commenter = await storage.getUser((req as any).session.userId);
+
+          if (comment.postId) {
             try {
-              const trendForReply = await storage.getTrend(comment.trendId);
-              if (trendForReply) {
-                await notificationService.sendReplyNotification(
-                  parentComment.userId,
-                  commenter.username,
-                  trendForReply.name,
-                  comment.trendId
-                );
+              const post = await storage.getPost(comment.postId);
+              if (post && post.userId !== (req as any).session.userId) {
+                try {
+                  await storage.createNotification({
+                    userId: post.userId,
+                    actorId: (req as any).session.userId,
+                    type: 'comment_on_post',
+                    postId: comment.postId,
+                    trendId: comment.trendId,
+                    commentId: comment.id,
+                  });
+                } catch (err) {
+                  console.error("Failed to create in-db notification for comment:", err);
+                }
+
+                if (commenter?.username) {
+                  try {
+                    await sendPushNotification({
+                      userId: post.userId,
+                      heading: "New Comment",
+                      content: `${commenter.username} commented on your post`,
+                      data: { postId: String(comment.postId), trendId: String(comment.trendId) },
+                    });
+                  } catch (err) {
+                    console.error("Failed to send push for comment:", err);
+                  }
+                }
               }
             } catch (err) {
-              console.error("Failed to send reply notification:", err);
+              console.error("Failed to process comment->post notifications:", err);
             }
           }
-        }
-      }
-      
-      // Handle @mentions in comment
-      const mentions = extractMentions(comment.text);
-      if (mentions.length > 0) {
-        for (const username of mentions) {
-          const mentionedUser = await storage.getUserByUsername(username);
-          if (mentionedUser && mentionedUser.id !== (req as any).session.userId) {
-            // Create notification in database
-            await storage.createNotification({
-              userId: mentionedUser.id,
-              actorId: (req as any).session.userId,
-              type: 'mention',
-              commentId: comment.id,
-              postId: comment.postId,
-              trendId: comment.trendId,
-            });
-            // Send branded push notification
-            if (commenter?.username && comment.trendId) {
-              try {
-                const trendForMention = await storage.getTrend(comment.trendId);
-                if (trendForMention) {
-                  await notificationService.sendMentionNotification(
-                    mentionedUser.id,
-                    commenter.username,
-                    trendForMention.name,
-                    comment.trendId
-                  );
+
+          // Reply notifications
+          if (comment.parentId) {
+            try {
+              const parentComment = await storage.getComment(comment.parentId);
+              if (parentComment && parentComment.userId !== (req as any).session.userId) {
+                try {
+                  await storage.createNotification({
+                    userId: parentComment.userId,
+                    actorId: (req as any).session.userId,
+                    type: 'reply_to_comment',
+                    commentId: comment.id,
+                    postId: comment.postId,
+                    trendId: comment.trendId,
+                  });
+                } catch (err) {
+                  console.error("Failed to create in-db reply notification:", err);
                 }
-              } catch (err) {
-                console.error("Failed to send mention notification:", err);
+
+                if (commenter?.username && comment.trendId) {
+                  try {
+                    const trendForReply = await storage.getTrend(comment.trendId);
+                    if (trendForReply) {
+                      await notificationService.sendReplyNotification(
+                        parentComment.userId,
+                        commenter.username,
+                        trendForReply.name,
+                        comment.trendId
+                      );
+                    }
+                  } catch (err) {
+                    console.error("Failed to send reply push notification:", err);
+                  }
+                }
+              }
+            } catch (err) {
+              console.error("Failed to process reply notifications:", err);
+            }
+          }
+
+          // Mentions
+          try {
+            const mentions = extractMentions(comment.text);
+            if (mentions.length > 0) {
+              for (const username of mentions) {
+                try {
+                  const mentionedUser = await storage.getUserByUsername(username);
+                  if (mentionedUser && mentionedUser.id !== (req as any).session.userId) {
+                    try {
+                      await storage.createNotification({
+                        userId: mentionedUser.id,
+                        actorId: (req as any).session.userId,
+                        type: 'mention',
+                        commentId: comment.id,
+                        postId: comment.postId,
+                        trendId: comment.trendId,
+                      });
+                    } catch (err) {
+                      console.error("Failed to create in-db mention notification:", err);
+                    }
+
+                    if (commenter?.username && comment.trendId) {
+                      try {
+                        const trendForMention = await storage.getTrend(comment.trendId);
+                        if (trendForMention) {
+                          await notificationService.sendMentionNotification(
+                            mentionedUser.id,
+                            commenter.username,
+                            trendForMention.name,
+                            comment.trendId
+                          );
+                        }
+                      } catch (err) {
+                        console.error("Failed to send mention push notification:", err);
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.error("Error while processing a single mention:", err);
+                }
               }
             }
+          } catch (err) {
+            console.error("Failed to process mentions for comment:", err);
           }
+        } catch (err) {
+          console.error("Post-comment side-effect error:", err);
         }
-      }
-      
-      res.status(201).json(comment);
+      })();
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // DELETE /api/comments/:id - Delete comment (protected, only comment owner)
-  app.delete("/api/comments/:id", isAuthenticated, async (req, res) => {
-    try {
-      const comment = await storage.getComment(req.params.id);
-
-      if (!comment) {
-        return res.status(404).json({ message: "Comment not found" });
-      }
-
-      if (comment.userId !== (req as any).session.userId) {
-        return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
-      }
-
-      if (comment.postId) {
-        await storage.decrementPostCommentCount(comment.postId);
-      }
-      if (comment.trendId) {
-        await storage.decrementTrendChatCount(comment.trendId);
-      }
-
-      await storage.deleteComment(req.params.id);
-      res.json({ message: "Comment deleted successfully" });
-    } catch (error) {
-      console.error("❌ Failed to delete comment:", error);
-      res.status(500).json({ message: "Failed to delete comment: " + (error instanceof Error ? error.message : "Unknown error") });
-    }
-  });
-
-  // Follows routes
-
-  // POST /api/follows - Follow user (protected)
-  app.post("/api/follows", isAuthenticated, async (req, res) => {
-    try {
-      const result = insertFollowSchema.safeParse({
-        followerId: (req as any).session.userId,
-        followingId: req.body.followingId,
-      });
-
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
-      }
-
-      if (result.data.followerId === result.data.followingId) {
-        return res.status(400).json({ message: "You cannot follow yourself" });
-      }
-
-      // Check if already following
-      const existingFollow = await storage.getFollow(result.data.followerId, result.data.followingId);
-      if (existingFollow) {
-        return res.status(400).json({ message: "You are already following this user" });
-      }
-
-      const follow = await storage.createFollow(result.data);
-      const follower = await storage.getUser((req as any).session.userId);
-      
-      // Create notification for new follower
-      await storage.createNotification({
-        userId: result.data.followingId,
-        actorId: (req as any).session.userId,
-        type: 'new_follower',
-      });
-      // Send push notification using notification service
-      if (follower?.username) {
-        await notificationService.sendNewFollowerNotification(result.data.followingId, follower.username, (req as any).session.userId).catch((err) => {
-          console.error("Failed to send new follower notification:", err);
-        });
-      }
-      
-      res.status(201).json(follow);
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // DELETE /api/follows/:userId - Unfollow user (protected)
-  app.delete("/api/follows/:userId", isAuthenticated, async (req, res) => {
-    try {
-      const follow = await storage.getFollow((req as any).session.userId, req.params.userId);
-
-      if (!follow) {
-        return res.status(404).json({ message: "Follow relationship not found" });
-      }
-
-      await storage.deleteFollow((req as any).session.userId, req.params.userId);
-      res.json({ message: "Unfollowed successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // GET /api/follows/:userId/status - Check if current user follows another user (protected)
-  app.get("/api/follows/:userId/status", isAuthenticated, async (req, res) => {
-    try {
-      const follow = await storage.getFollow((req as any).session.userId, req.params.userId);
-      res.json({ isFollowing: !!follow });
-    } catch (error) {
+      console.error("Comment creation error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -1438,7 +1416,7 @@ if (allowDevOtp) {
       console.log("Generated public URL:", publicURL);
       res.json({ uploadURL, publicURL });
     } catch (error) {
-      console.error("Error generating R2 upload URL:", error);
+      console.error("Error generating R2 upload URL:", error instanceof Error ? error.stack || error.message : String(error));
       res.status(500).json({ error: "Failed to generate upload URL" });
     }
   });
@@ -1447,7 +1425,7 @@ if (allowDevOtp) {
   app.post("/api/object-storage/upload-url", isAuthenticated, async (req, res) => {
     try {
       const { path } = req.body;
-      
+
       if (!path) {
         return res.status(400).json({ error: "path is required" });
       }
@@ -1456,7 +1434,7 @@ if (allowDevOtp) {
       const { uploadURL, publicURL } = await r2Service.getCustomUploadURL(path);
       res.json({ uploadUrl: uploadURL, publicUrl: publicURL });
     } catch (error) {
-      console.error("Error generating R2 upload URL:", error);
+      console.error("Error generating R2 upload URL (custom path):", error instanceof Error ? error.stack || error.message : String(error));
       res.status(500).json({ error: "Failed to generate upload URL" });
     }
   });
@@ -1472,7 +1450,7 @@ if (allowDevOtp) {
       );
       res.json({ uploadId, key, publicURL, totalChunks });
     } catch (error) {
-      console.error("Error initiating multipart upload:", error);
+      console.error("Error initiating multipart upload:", error instanceof Error ? error.stack || error.message : String(error));
       res.status(500).json({ error: "Failed to initiate upload" });
     }
   });
@@ -1481,21 +1459,21 @@ if (allowDevOtp) {
   app.post("/api/objects/upload/part-urls", isAuthenticated, async (req, res) => {
     try {
       const { key, uploadId, partNumbers } = req.body;
-      
+
       if (!key || !uploadId || !partNumbers) {
         return res.status(400).json({ error: "key, uploadId, and partNumbers are required" });
       }
 
       const r2Service = new R2StorageService();
       const partUrls: Record<number, string> = {};
-      
+
       for (const partNumber of partNumbers) {
         partUrls[partNumber] = await r2Service.getPartUploadURL(key, uploadId, partNumber);
       }
-      
+
       res.json({ partUrls });
     } catch (error) {
-      console.error("Error getting part URLs:", error);
+      console.error("Error getting part URLs:", error instanceof Error ? error.stack || error.message : String(error));
       res.status(500).json({ error: "Failed to get part URLs" });
     }
   });
@@ -1504,10 +1482,10 @@ if (allowDevOtp) {
   app.post("/api/objects/upload/complete", isAuthenticated, async (req, res) => {
     try {
       const { key, uploadId, parts } = req.body;
-      
+
       console.log(`📋 [ROUTE] Complete multipart request received`);
       console.log(`📋 [ROUTE] Key: ${key}, UploadId: ${uploadId}, Parts count: ${parts?.length}`);
-      
+
       if (!key || !uploadId || !parts) {
         console.error(`❌ [ROUTE] Missing required fields - key: ${!!key}, uploadId: ${!!uploadId}, parts: ${!!parts}`);
         return res.status(400).json({ error: "key, uploadId, and parts are required" });
@@ -1517,7 +1495,7 @@ if (allowDevOtp) {
       await r2Service.completeMultipartUpload(key, uploadId, parts);
       res.json({ success: true, publicURL: r2Service.getPublicURL(key) });
     } catch (error) {
-      console.error("❌ [ROUTE] Error completing multipart upload:", error);
+      console.error("❌ [ROUTE] Error completing multipart upload:", error instanceof Error ? error.stack || error.message : String(error));
       const errorMsg = error instanceof Error ? error.message : String(error);
       res.status(500).json({ error: `Failed to complete upload: ${errorMsg}` });
     }
@@ -1964,7 +1942,7 @@ if (allowDevOtp) {
           }
         } catch (e) {
           console.error("Failed to update user points:", e);
-        }
+               }
       }
       
       await storage.deletePost(req.params.id);
