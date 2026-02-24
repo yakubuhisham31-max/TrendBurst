@@ -84,7 +84,7 @@ export default function FollowButton({
 
       if (!res.ok) {
         const text = await res.text();
-        try {
+        try {3
           const json = JSON.parse(text);
           if (json.message) throw new Error(json.message);
         } catch {

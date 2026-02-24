@@ -1942,7 +1942,7 @@ if (allowDevOtp) {
           }
         } catch (e) {
           console.error("Failed to update user points:", e);
-                             }
+                                   }
       }
       
       await storage.deletePost(req.params.id);
@@ -2388,6 +2388,82 @@ if (allowDevOtp) {
       res.json(users.filter(Boolean));
     } catch (error) {
       console.error("Failed to fetch following list:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // POST /api/follows - Follow a user (protected)
+  app.post("/api/follows", isAuthenticated, async (req: any, res) => {
+    try {
+      const followerId = (req as any).session.userId;
+      const { followingId } = req.body || {};
+
+      if (!followerId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (!followingId) {
+        return res.status(400).json({ message: "followingId is required" });
+      }
+
+      if (followerId === followingId) {
+        return res.status(400).json({ message: "You cannot follow yourself" });
+      }
+
+      // Prevent duplicate follows
+      const existing = await storage.getFollow(followerId, followingId);
+      if (existing) {
+        return res.status(400).json({ message: "Already following" });
+      }
+
+      const follow = await storage.createFollow({ followerId, followingId });
+      res.status(201).json(follow);
+    } catch (error) {
+      console.error("Follow create error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // DELETE /api/follows/:userId - Unfollow a user (protected)
+  app.delete("/api/follows/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const followerId = (req as any).session.userId;
+      const followingId = req.params.userId;
+
+      if (!followerId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (!followingId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+
+      await storage.deleteFollow(followerId, followingId);
+      res.json({ message: "Unfollowed successfully" });
+    } catch (error) {
+      console.error("Unfollow error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // GET /api/follows/:userId/status - Check following status (protected)
+  app.get("/api/follows/:userId/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const followerId = (req as any).session.userId;
+      const followingId = req.params.userId;
+
+      if (!followerId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (!followingId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+
+      const follow = await storage.getFollow(followerId, followingId);
+      res.json({ isFollowing: !!follow });
+    } catch (error) {
+      console.error("Follow status error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
