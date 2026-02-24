@@ -1014,7 +1014,7 @@ if (allowDevOtp) {
                 voteCount: vote.count,
               });
             } catch (err) {
-              console.error("Failed to create vote notification:", err);
+              console.error("[notifications][create]", err);
             }
 
             try {
@@ -1262,7 +1262,7 @@ if (allowDevOtp) {
                     commentId: comment.id,
                   });
                 } catch (err) {
-                  console.error("Failed to create in-db notification for comment:", err);
+                  console.error("[notifications][create]", err);
                 }
 
                 if (commenter?.username) {
@@ -1942,7 +1942,7 @@ if (allowDevOtp) {
           }
         } catch (e) {
           console.error("Failed to update user points:", e);
-                                   }
+                                          }
       }
       
       await storage.deletePost(req.params.id);
@@ -1967,10 +1967,23 @@ if (allowDevOtp) {
   // GET /api/notifications/unread-count - Get unread notification count (protected)
   app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
     try {
-      const count = await storage.getUnreadCount((req as any).session.userId);
+      let count = 0;
+      try {
+        // DB query guarded by its own try/catch to ensure we never throw
+        count = await storage.getUnreadCount((req as any).session.userId);
+        if (typeof count !== 'number') {
+          count = Number(count) || 0;
+        }
+      } catch (error) {
+        console.error("[notifications][unread-count]", error);
+        return res.json({ count: 0 });
+      }
+
       res.json({ count });
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      // Fallback: should never happen, but ensure we always return a valid JSON response
+      console.error("[notifications][unread-count][unexpected]", error);
+      res.json({ count: 0 });
     }
   });
 
@@ -2418,6 +2431,19 @@ if (allowDevOtp) {
 
       const follow = await storage.createFollow({ followerId, followingId });
       res.status(201).json(follow);
+
+      // Fire-and-forget: create in-db notification for the followed user
+      (async () => {
+        try {
+          await storage.createNotification({
+            userId: followingId,
+            actorId: followerId,
+            type: 'new_follower',
+          });
+        } catch (error) {
+          console.error("[notifications][create]", error);
+        }
+      })();
     } catch (error) {
       console.error("Follow create error:", error);
       res.status(500).json({ message: "Internal server error" });
